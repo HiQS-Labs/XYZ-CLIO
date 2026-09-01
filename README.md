@@ -1,0 +1,133 @@
+# CLIO
+
+One append-only log of every prompt you type into an AI coding agent — across
+every repo, every agent, one machine.
+
+CLIO installs a shared capture writer plus per-agent registrations. Each
+registered agent appends every submitted prompt to a single centralized JSONL
+file: `~/.claude/prompt-log.jsonl`. (The `~/.claude` path is historical; it is
+the cross-agent log, not a Claude-only one.)
+
+Supported agents:
+
+| Agent | Mechanism |
+| --- | --- |
+| Claude Code | `UserPromptSubmit` hook |
+| ZCode | `UserPromptSubmit` hook |
+| Codex (VS Code / CLI) | rollout-file tailer |
+| Agy (Antigravity CLI) | transcript tailer |
+
+Each line records a timestamp, repo name, git branch, machine name, agent,
+session ID, and the prompt text — with auto-injected context (like
+`<ide_selection>` blocks) stripped, so it is a record of what you actually
+typed.
+
+```json
+{"timestamp":"2026-07-09T18:42:11Z","repo":"hypercart","branch":"main","machine":"fixture","agent":"claude-code","session_id":"abc123","prompt":"..."}
+```
+
+Rows written before the `agent` field existed render as `claude-code` — display
+only; stored rows are never rewritten. The dedup ID is `session_id:timestamp`
+for every agent.
+
+An optional exporter renders the JSONL as human-readable Markdown — newest
+entry first — at any location you choose, such as a note in an Obsidian vault.
+It runs on demand or on a 1-minute `launchd` schedule (macOS). Capture stays
+fast; formatting happens later.
+
+## Why
+
+If you use AI coding agents across many repos, machines, and vendors, there is
+no built-in way to see everything you have asked them over time. This gives you
+one file you can grep, sync to notes, or keep as an audit trail.
+
+- **Cross-device recall.** Answer "where and when did I ask for X on this
+  project?" without digging through per-machine session histories.
+- **Branch-level recall.** Every entry records the branch checked out at prompt
+  time, so an ask can be traced back to its branch even after that branch is
+  merged or deleted.
+- **Cross-agent, cross-project AI memory.** Point the Markdown export at an
+  Obsidian vault; once that vault is indexed for retrieval, an assistant can
+  search across what you asked your coding agents to do, alongside your other
+  notes.
+- **A training corpus of how you actually work.** Thousands of real prompts,
+  each stamped with repo, branch, agent, and time, are a labeled record of the
+  work you keep repeating. Mine it to find the asks you type over and over,
+  then turn those into skills, slash commands, or hooks — or fine-tune or
+  few-shot a model on your own phrasing so an agent drafts the next one the way
+  you would have written it.
+
+## Requirements
+
+- macOS or Linux
+- [`jq`](https://jqlang.org/) — `brew install jq` / `apt install jq`
+- `python3` — only for the Codex and Agy tailers
+
+## Install
+
+Full install, verify, export, auto-sync, and uninstall instructions are in
+[`utils/CLIO/INSTALL.md`](utils/CLIO/INSTALL.md). That file is also the skill
+definition (it carries the `name: clio` frontmatter), so a Claude Code install
+can invoke it directly.
+
+Run the install steps once from the root of this checkout.
+
+## Layout
+
+```
+utils/CLIO/
+  INSTALL.md            # the skill: install / verify / uninstall procedure,
+                        # and the source of truth for the capture writer and
+                        # the Claude + ZCode shims (embedded as heredocs)
+  README.md             # skill-local overview
+  clio-codex-tail.sh    # Codex rollout tailer
+  clio-agy-tail.sh      # Agy transcript tailer
+  prompt-log-to-md.sh   # JSONL -> Markdown exporter
+test/
+  clio-capture.sh       # capture writer + Claude shim, against a throwaway $HOME
+  clio-exporter.sh      # exporter behavior, state file, idempotency
+  clio-codex-tail.sh    # Codex tailer against a fixture rollout
+  clio-agy-tail.sh      # Agy tailer against a fixture transcript
+  fixtures/clio/        # fixture rollout + transcript
+```
+
+The capture writer and the Claude/ZCode shims live as heredocs inside
+`INSTALL.md` rather than as standalone scripts. The test harnesses extract them
+by marker, so `INSTALL.md` stays the single source of truth and cannot drift
+from what the tests exercise.
+
+## Tests
+
+No framework, no dependencies beyond `jq` and `python3`. Each harness runs
+against a throwaway `$HOME` and fixture inputs:
+
+```bash
+bash test/clio-capture.sh
+bash test/clio-exporter.sh
+bash test/clio-codex-tail.sh
+bash test/clio-agy-tail.sh
+```
+
+## Safety
+
+CLIO runs on your machine with a hook that shells out and edits your agent's
+`settings.json`. It logs everything you type into a registered agent, including
+anything sensitive you paste into a prompt, to a plaintext file in your home
+directory. Read the scripts before running them.
+
+## License
+
+CLIO is dual-licensed, matching the rest of the HiQS suite.
+
+**AGPL-3.0-only** is the default and covers nearly every use — see
+[`LICENSE`](LICENSE). You may use, study, modify, self-host, and redistribute
+CLIO under it at no cost.
+
+A **commercial license** is available if you need to offer a modified CLIO to
+third parties over a network, or embed it in a proprietary product, without
+publishing your modifications — see
+[`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md). Terms are negotiated, not
+click-through.
+
+This project is provided **"AS IS," WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND**, either express or implied. Use at your own risk.

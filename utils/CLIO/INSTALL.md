@@ -26,11 +26,25 @@ never rewritten). The dedup ID stays `session_id:timestamp` for every agent.
 
 ## Install
 
-Run once from the root of this CLIO checkout (macOS/Linux). CLIO requires `jq`
-(the Codex and Agy tailers additionally use `python3`):
+Run once (macOS/Linux), either from the root of a CLIO checkout or from an installed
+`clio` skill directory — the resolver below finds CLIO's source files in both layouts.
+CLIO requires `jq` (the Codex and Agy tailers additionally use `python3`):
 
 ```bash
 command -v jq >/dev/null 2>&1 || { echo "jq is required. Install it: brew install jq (macOS) / apt install jq (Linux)"; return 1 2>/dev/null || exit 1; }
+
+# --- resolve CLIO's source files (checkout OR installed skill dir) ----------
+# In a checkout the scripts live under utils/CLIO/; in an installed skill they
+# sit beside INSTALL.md with no prefix. Export CLIO_SRC yourself to override.
+if [ -z "${CLIO_SRC:-}" ]; then
+  for c in "$PWD/utils/CLIO" "$PWD" \
+           "$HOME/.claude/skills/clio" \
+           "$(git rev-parse --show-toplevel 2>/dev/null)/utils/CLIO" \
+           "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/clio"; do
+    [ -f "$c/prompt-log-to-md.sh" ] && { CLIO_SRC="$c"; break; }
+  done
+fi
+[ -n "${CLIO_SRC:-}" ] || { echo "CLIO source not found — set CLIO_SRC to the folder holding prompt-log-to-md.sh"; return 1 2>/dev/null || exit 1; }
 
 mkdir -p ~/.claude/hooks
 
@@ -230,7 +244,7 @@ if [ -d "$HOME/.zcode" ] || [ "${1:-}" = "--with-zcode" ]; then
   fi
 fi
 
-install -m 0755 utils/CLIO/prompt-log-to-md.sh ~/.claude/hooks/prompt-log-to-md.sh
+install -m 0755 "$CLIO_SRC/prompt-log-to-md.sh" ~/.claude/hooks/prompt-log-to-md.sh
 
 echo "✅ Installed. Smoke test (uses the Claude shim; expects agent=claude-code):"
 echo '{"prompt":"a substantive session-opening prompt that runs well past the one hundred character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
@@ -361,11 +375,19 @@ rm -f ~/.claude/prompt-log-to-md.out.log ~/.claude/prompt-log-to-md.err.log
 Codex has no prompt-submit hook, so a read-only tailer turns user prompts from Codex
 session rollouts into JSONL rows. It parses only `event_msg`/`user_message` records,
 never takes prompt text from `response_item` entries (where injected context can be
-combined with user input), and never writes to the source. Run once from the CLIO
-checkout (requires `jq` and `python3`):
+combined with user input), and never writes to the source. Run once from a CLIO checkout
+or an installed `clio` skill directory (requires `jq` and `python3`). This is a separate
+shell from the main install, so it re-resolves `CLIO_SRC` unless you exported it:
 
 ```bash
-install -m 0755 utils/CLIO/clio-codex-tail.sh ~/.claude/hooks/clio-codex-tail.sh
+if [ -z "${CLIO_SRC:-}" ]; then
+  for c in "$PWD/utils/CLIO" "$PWD" "$HOME/.claude/skills/clio"; do
+    [ -f "$c/clio-codex-tail.sh" ] && { CLIO_SRC="$c"; break; }
+  done
+fi
+[ -n "${CLIO_SRC:-}" ] || { echo "CLIO source not found — set CLIO_SRC to the folder holding clio-codex-tail.sh"; return 1 2>/dev/null || exit 1; }
+
+install -m 0755 "$CLIO_SRC/clio-codex-tail.sh" ~/.claude/hooks/clio-codex-tail.sh
 ```
 
 First run starts **now** (existing rollout history is not imported); set
@@ -406,7 +428,14 @@ plain `transcript.jsonl` truncates large text), capturing only rows where `sourc
 `USER_EXPLICIT` and `type` is `USER_INPUT`:
 
 ```bash
-install -m 0755 utils/CLIO/clio-agy-tail.sh ~/.claude/hooks/clio-agy-tail.sh
+if [ -z "${CLIO_SRC:-}" ]; then
+  for c in "$PWD/utils/CLIO" "$PWD" "$HOME/.claude/skills/clio"; do
+    [ -f "$c/clio-agy-tail.sh" ] && { CLIO_SRC="$c"; break; }
+  done
+fi
+[ -n "${CLIO_SRC:-}" ] || { echo "CLIO source not found — set CLIO_SRC to the folder holding clio-agy-tail.sh"; return 1 2>/dev/null || exit 1; }
+
+install -m 0755 "$CLIO_SRC/clio-agy-tail.sh" ~/.claude/hooks/clio-agy-tail.sh
 ```
 
 Then schedule it like the Codex tailer (label `com.claude.clio-agy-tail`, script

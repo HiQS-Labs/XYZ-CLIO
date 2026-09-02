@@ -70,7 +70,9 @@ Full install, verify, export, auto-sync, and uninstall instructions are in
 definition (it carries the `name: clio` frontmatter), so a Claude Code install
 can invoke it directly.
 
-Run the install steps once from the root of this checkout.
+Run the install steps once, from either the root of this checkout or an installed
+`clio` skill directory — the install block resolves CLIO's source files in both
+layouts, and honors a `CLIO_SRC` you set yourself.
 
 ## Layout
 
@@ -79,7 +81,6 @@ utils/CLIO/
   INSTALL.md            # the skill: install / verify / uninstall procedure,
                         # and the source of truth for the capture writer and
                         # the Claude + ZCode shims (embedded as heredocs)
-  README.md             # skill-local overview
   clio-codex-tail.sh    # Codex rollout tailer
   clio-agy-tail.sh      # Agy transcript tailer
   prompt-log-to-md.sh   # JSONL -> Markdown exporter
@@ -89,7 +90,13 @@ test/
   clio-codex-tail.sh    # Codex tailer against a fixture rollout
   clio-agy-tail.sh      # Agy tailer against a fixture transcript
   fixtures/clio/        # fixture rollout + transcript
+FRONTDOOR.md            # onboarding health board, refreshed by re-running its checks
+SHAKEDOWN/              # dated script-path audits of the clio skill
 ```
+
+The root `README.md` is the only overview; `utils/CLIO/INSTALL.md` is the only
+install procedure. There is deliberately no second, skill-local README to drift
+out of sync with this one.
 
 The capture writer and the Claude/ZCode shims live as heredocs inside
 `INSTALL.md` rather than as standalone scripts. The test harnesses extract them

@@ -8,7 +8,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 
 | | |
 | --- | --- |
-| **Last audited** | 2026-09-01 — branch `clio-path-resolution`, working tree at the time of the fix commit |
+| **Last audited** | 2026-09-08 — GH-199 canonical first-prompt fix copied from RebalanceOS; deterministic checks and four harnesses rerun |
 | **Method** | `/frontdoor` walk (7 dimensions) + `/shakedown` static audit and live harness |
 | **Verdict** | ⚠️ **Bumpy** — a newcomer with an AI agent reaches a captured prompt in ~10 minutes with no account, key, or payment required; three low-severity gaps remain, none blocking |
 | **Remediation plan** | [`SHAKEDOWN/2026-09-01/clio-1652.md`](SHAKEDOWN/2026-09-01/clio-1652.md) — the path-resolution audit and its patch |
@@ -46,7 +46,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 | BL-03 | Both tailers reach the writer by absolute path | `$HOME/.claude/hooks/clio-capture.sh`, not a relative path — this is what makes them CWD-robust wherever `launchd` starts them. |
 | BL-04 | Four test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
 
-**Recorded suite state (updated by hand, never auto-derived):** as of 2026-09-01, all
+**Recorded suite state (updated by hand, never auto-derived):** as of 2026-09-08, all
 **4** harnesses pass — `clio-capture`, `clio-exporter`, `clio-codex-tail`, `clio-agy-tail`.
 Re-run them yourself after changes; this board does not execute them.
 

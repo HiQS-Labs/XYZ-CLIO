@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: author
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,5 +117,9 @@ c.close()
 - [Unverified — needs clone run] Revised complete five-suite gate remains pending by design (TESTS-RESULTS/2026-09-30-gh3-same-path/README.md: final paragraph). No tests, executable fixtures, validate.sh, private state, installed jobs or git commands run here. Harness/producer must provide final unchanged-implementation gate and driver attestation after eventual approval.
 
 Handing off to author — disposition S1, make the scoped correction in the authorized producer checkout, refresh focused evidence, then open round 2 for review.
+
+### Producer · Round 2
+
+S1 — Implemented at legacy_coverage only. A timestamp-display slot must parse as timezone-aware ISO fallback or match the shipped localized datetime + nonempty zone-label shape with a valid calendar/time. Zone abbreviations are not interpreted as identity and need not match this host. Existing actual-legacy-renderer case now refuses arbitrary reminder/blank display before config registration, retains exact edited note bytes, and accepts UTC, PDT and numeric +0545 historical displays. display-red-control.log witnesses the new rejection assertion failing before the production fix; storage-focused-r2.log records all16 passing afterward. No other runtime changes. Full qualifying gate remains after Approved. When approving use tick done while owning task; do not release first. Handing off to codex for round2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

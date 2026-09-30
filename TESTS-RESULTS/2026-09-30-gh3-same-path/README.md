@@ -7,3 +7,5 @@ New cases exercise actual unchanged plist arguments, default/custom paths (space
 `schedule-red-control.log` swaps only the disposable installed exporter back to e1edb83: unchanged job leaves expired history in the note, so the real behavior assertion fails. Revised exporter passes that same test. Other failure assertions require unchanged source/backup/config, not just an exit status.
 
 Plan round1 was not valid approval: close-mismatch driver exit4 after reviewer released before done. Round2 exit0 attested Approved (receipt here). Final code review and revised full gate are pending; original GH3 gate is historical only. No fleet deployment claim.
+
+Final round1 found timestamp-display slot accepted arbitrary/blank text. display-red-control.log witnesses the new refusal assertion fail on prior code; storage-focused-r2.log passes16 cases after shape validation. Valid UTC, historical PDT and numeric +0545 labels accepted without host-zone equality. Note/config unchanged on refusal.

@@ -517,6 +517,19 @@ def legacy_coverage(conn, raw):
     for i, entry in enumerate(entries):
         block = body[entry.end():entries[i + 1].start() if i + 1 < len(entries) else len(body)]
         lines = block.split('\n')
+        shown = lines[1].strip() if len(lines) > 1 else ''
+        try:
+            instant(shown)  # UTC/ISO fallback from the legacy exporter.
+        except ValueError:
+            # Historical %Z is a display label, not the current host's zone or
+            # event identity. Validate its shape without interpreting ambiguous PDT/etc.
+            local = re.fullmatch(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([A-Za-z0-9_+:/-]+)', shown)
+            try:
+                if not local:
+                    raise ValueError()
+                datetime.strptime(local[1], '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                raise ValueError('unrecognized historical timestamp display; preserve and reconcile the note') from None
         matched = False
         for row in candidates.get(entry[1], []):
             context = row['machine'] + (' · ' + row['branch'] if row['branch'] else '')

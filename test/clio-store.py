@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -176,6 +177,21 @@ class History(unittest.TestCase):
         self.assertIn('## UNKNOWN', note.read_text())
         store.import_jsonl(self.db, source)
         store.activate(self.db, source)
+        for shown in ('Preserve my unmanaged reminder', ''):
+            edited = re.sub(r'(?m)(^## [^\n]*\n)[^\n]*\n',
+                            lambda m: m[1] + shown + '\n', original.decode()).encode()
+            note.write_bytes(edited)
+            with self.assertRaisesRegex(ValueError, 'timestamp display'):
+                store.migrate_view(self.db, publishers_paused=True)
+            self.assertNotIn('view', store.config())
+            self.assertEqual(note.read_bytes(), edited)
+        for shown in ('2026-09-29T12:00:00Z  ', '2026-09-29 05:00:00 PDT  ',
+                      '2026-09-29 17:45:00 +0545  '):
+            variant = re.sub(r'(?m)(^## [^\n]*\n)[^\n]*\n',
+                             lambda m: m[1] + shown + '\n', original.decode()).encode()
+            with store.database(self.db) as conn:
+                self.assertEqual(store.legacy_coverage(conn, variant)[1], 2)
+        note.write_bytes(original)
         result = store.migrate_view(self.db, publishers_paused=True)
         self.assertEqual(result['covered_entries'], 2)
         self.assertEqual(note.read_bytes(), original)

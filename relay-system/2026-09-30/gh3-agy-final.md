@@ -117,4 +117,12 @@ swept file: yes
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-30T17:48:01Z
+task: CLIO-GH3-AGY-PREMERGE-R2
+reviewer: agy
+status: Approved
+reviewed-head: d26b7802b027dba3534692dd88177698ee50fedf
+added-range: 11250+791
+added-sha256: f1c6004be2f7b79a16b3442947cb8ee7f573064cc2bb6bbb5f1590eb4f3c0238
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

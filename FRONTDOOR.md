@@ -8,7 +8,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 
 | | |
 | --- | --- |
-| **Last audited** | 2026-09-30 — GH-3 opt-in SQLite; focused tests passed, final qualifying gate pending |
+| **Last audited** | 2026-09-30 — GH-3 opt-in SQLite; plan/final reviews approved; final five-suite gate passed |
 | **Method** | `/frontdoor` walk (7 dimensions) + `/shakedown` static audit and live harness |
 | **Verdict** | ⚠️ **Bumpy** — a newcomer with an AI agent reaches a captured prompt in ~10 minutes with no account, key, or payment required; two low-severity gaps remain, none blocking |
 | **Remediation plan** | [`SHAKEDOWN/2026-09-01/clio-1652.md`](SHAKEDOWN/2026-09-01/clio-1652.md) — the path-resolution audit and its patch |
@@ -46,9 +46,10 @@ checks block from the repo root and flip any finding whose check has gone silent
 | BL-03 | Both tailers reach the writer by absolute path | `$HOME/.claude/hooks/clio-capture.sh`, not a relative path — this is what makes them CWD-robust wherever `launchd` starts them. |
 | BL-04 | Five test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
 
-**Recorded suite state (updated by hand, never auto-derived):** GH-3 baseline four
-shell suites passed; focused capture/exporter/Agy and 11 SQLite cases pass. Final
-five-suite qualifying gate is pending final relay approval.
+**Recorded suite state (updated by hand, never auto-derived):** 2026-09-30 final
+gate passed after relay approval: four shell suites and 12 SQLite cases. Evidence:
+`TESTS-RESULTS/2026-09-30-gh3/final-gate.json`. Python fixture ResourceWarnings and
+same-interpreter duplicate skips remain in logs; no failed assertions.
 Re-run them yourself after changes; this board does not execute them.
 
 ## Deterministic checks — re-run to refresh

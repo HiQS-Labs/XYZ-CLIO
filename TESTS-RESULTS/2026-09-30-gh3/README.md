@@ -1,7 +1,7 @@
-# CLIO GH3 pre-change baseline
+# CLIO GH3 evidence
 
-All four existing shell suites returned exit0 in the isolated full CLIO clone. Production files remained at a0674039; only plan/recon documents were added. Logs use throwaway HOME and synthetic prompts. The malformed-input jq diagnostic is expected in capture coverage; the explicit duplicate-interpreter SKIP means no second Bash version was tested.
+Start with `final-gate.json`, `final-approval.json`, `plan-approval.json` and `sqlite-benchmark-final.json`. All five suites passed after final approval on unchanged implementation. Raw `*-final.log` files retain warnings and interpreter skips; synthetic inputs only.
 
-These are **baseline** results, not SQLite implementation or deployed pilot evidence. Relay harness preflight is running separately in a disposable full Forge clone. No plan approval claimed.
+`implementation-evidence.md` records intermediate failures and fixes. Red-control logs are expected failures, not failed final gates. Earlier baseline/focused/benchmark files are historical measurements. Reproduce the frozen corpus with `generate-corpus.py`; data is not committed.
 
-The 10,000-row synthetic lookup baseline is in `jsonl-benchmark-baseline.json`. Reproduce the exact input on another computer with `python3 TESTS-RESULTS/2026-09-30-gh3/generate-corpus.py /tmp/clio-benchmark.jsonl` (output must not already exist). Its SHA256 was checked against the baseline receipt. Query filters/order, result count/hash and all seven timings are in the receipt. No SQLite speedup is claimed yet.
+No installed capture, private history, fleet sync or pilot changed. Phase2/3 remain in `doc/gh3-plan.md` and issue3.

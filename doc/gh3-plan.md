@@ -11,7 +11,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 | Most recently completed phase | What's next |
 |---|---|
-| Phase 1 implemented after Approved plan relay | Final Codex review, then qualifying gate and ready PR |
+| Phase 1 final review Approved; all five qualifying suites passed | Publish ready PR #4; downstream phases blocked on merge/ownership work |
 
 ## Table of contents
 - [Phase 1: Local history and export contract](#phase-1-local-history-and-export-contract)
@@ -70,7 +70,7 @@ Round1 returned non-approval (driver exit5, reviewer FAIL); no implementation st
 - [x] Four-lane recon and explicit authority classification completed; unknowns recorded.
 - [x] Rating persisted/read back; plan relay Approved.
 - [x] Phase 1 requirements have nonempty correctness/failure evidence and measured latency; final review findings tracked below.
-- [ ] Final relay Approved; full qualifying suites run at approved revision.
+- [x] Final relay Approved (round3, ba0f97de3afd); full qualifying suites passed once afterward on unchanged implementation. See final-gate.json.
 - [ ] Ready PR opened, source data/deployment unchanged; status refreshed.
 
 ## Phase 2: Existing Rebalance consumers and fleet publication
@@ -107,3 +107,5 @@ Deployment is separate from start-task's ready-PR authority. Preserve originals;
 Round1 non-approval (exit5): R1 accepted, all replacing output paths now share historical default/marker protection. R2 accepted, existing tailers add source-line/offset identity and capture replay retains first committed observations despite branch/device changes. No new persistence table/service/retry layer. These are fixes to the reviewed stable-replay contract; final round2 reviews implementation and narrowed identity rules. Focused actual tailer fixture commits A, defers B, changes branch and retries: exactly A+B, A original provenance retained.
 
 Round2 non-approval (exit5): R3 accepted, shared guard recognizes standalone historical marker lines, allowing repeated JSONL exports with marker text inside prompts. Witnessed new fixture fail before fix; round3 reviews the one-predicate correction and extended existing case.
+
+Final round3 Approved and attested (exit0); five qualifying suites exit0 at bc444c619fd9. Final benchmark and warnings/skips are recorded under TESTS-RESULTS/2026-09-30-gh3/. PR#4 is the handoff; issue3 stays open for dependent consumer/fleet/pilot work. No installed deployment.

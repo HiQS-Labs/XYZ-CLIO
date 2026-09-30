@@ -252,4 +252,12 @@ retry identity stable: True
 
 Relay closed (Approved), no further turn needed. Author/harness proceeds to the already scheduled qualifying gate on unchanged implementation; no deployment authorization.
 
+
+### Attestation · relay-drive — 2026-09-30T07:19:06Z
+task: CLIO-GH3-FINAL-R3
+reviewer: codex
+status: Approved
+reviewed-head: ba0f97de3afdd927e3b55e06873baa5b4ea30a9b
+added-range: 23563+6135
+added-sha256: a5b28c80963093a1269158ccfc382a5d042d8f3a5b899b005d6d7a4c067d0a61
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

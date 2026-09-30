@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: codex
+NEXT: author
 STATUS: Open
 ROUND: 1 / 3
 
@@ -81,5 +81,59 @@ Focused tests passed; per start-task the final full qualifying four shell suites
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+VERDICT: FAIL
+Basis: Phase 1 is proportionate and most storage contracts match the plan, but two measured gaps remain in protected output paths and stable tailer replay. This is code/plan review, not final-gate or deployment approval.
+
+Scope/evidence: read whole `utils/CLIO/clio-store.py`, `utils/CLIO/INSTALL.md`, `utils/CLIO/prompt-log-to-md.sh`, both tailers, `test/clio-store.py`, capture/exporter/Agy shell suites, README/FRONTDOOR, plan/recon, focused logs and benchmark source/results. MCP `list_projects` pages 0 and 50 exhausted all 77 projects: this CLIO checkout has no indexed project/generation, so direct source fallback was used; no graph completeness claim. No git, test suite, installer or executable fixture was run. Existing FD-05/FD-06 remain disclosed in FRONTDOOR; no additional pre-existing defect found in the swept production files beyond the retry interaction below. The embedded DoD placeholder was graded using the concrete acceptance criteria in the packet and `doc/gh3-plan.md`.
+
+- [Should] R1 — Apply historical-note protection to every replacing export destination. `safe_output` at `utils/CLIO/clio-store.py:459` permits `~/.claude/prompt-log.md`; the default-path/marker protection at :479–482 only guards the Markdown argument. `project --markdown recent.md --jsonl ~/.claude/prompt-log.md` passes :507 and replaces the historical note at :514; `export-device ~/.claude/prompt-log.md` similarly reaches :530. A custom shared note containing `<!-- CLIO:ENTRIES -->` is equally unprotected through those two routes. This can erase foreign-device-only history that the plan explicitly preserves. Move the existing default-path and marker checks into the shared replacing-output guard, preserving regeneration of legitimate recent/compatibility/snapshot files. Verify the refusal in the existing isolated storage suite.
+  Observed input: synthetic HOME target `.claude/prompt-log.md`, with an empty source/import catalog; the pure `safe_output` probe below returned the target instead of refusing it. The concrete callers and replacement sites are cited above; no historical file was actually overwritten during review.
+  Affected scope: destinations of `project` (both outputs) and `export-device` that are the legacy default Markdown path or an existing CLIO historical-marker note.
+  Falsifier: a historical note containing one foreign-only entry supplied as `--jsonl` or snapshot output must remain byte-identical with nonzero refusal; ordinary separate recent MD, compat JSONL and device snapshot outputs must still regenerate successfully. A guard already rejecting these destinations would falsify this finding.
+
+- [Should] R2 — Make tailer replay independent of current checkout metadata. `normalize` hashes branch/machine/repo along with source content (`utils/CLIO/clio-store.py:160`, :201), while Codex resolves current repo/branch on each poll (`utils/CLIO/clio-codex-tail.sh:252`) and only advances the whole chunk after every row succeeds (:267–281). If the first row commits and a later row fails, or capture commits before a tailer crash, a branch change before retry produces another accepted identity for that same source row. The probe below measured different IDs with only branch changed. This contradicts the plan's “afterDB beforeprojection/cursor → stable-ID replay.” Preserve a deterministic source-event identity or freeze the delivered row context through retries at the existing tailer/writer seam; retain distinct same-second prompts and immutable stored payloads, without a new service or general retry framework. Extend the existing storage acceptance case in a disposable clone.
+  Observed input: `{timestamp:"2026-09-29T12:00:00Z",session_id:"same-source-session",prompt:"same source prompt",agent:"codex",repo:"fixture",checkout:"/fixture/repo",machine:"fixture-mac",branch:"main"}`, retried from the same source event with `branch:"feature"`; hashes below differ. Chunk retry and live branch derivation are explicit source paths, not an assumption that all metadata is unstable.
+  Affected scope: replay of already accepted Codex source rows after a deferred chunk/crash, when current checkout branch changes; human machine renaming creates the analogous exposure but is not required to reproduce this finding.
+  Falsifier: accept source row A, defer later row B or stop before cursor publication, change checkout branch, replay unchanged A/B: A must remain one stored event with its original provenance, B must eventually appear once. Two genuinely distinct source prompts in the same second must remain separate. Frozen-context/source-identity handling that already achieves this would falsify the finding.
+
+Measured evidence for R1/R2 (pure functions; exit 0; no DB/source mutations). Exact command:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import importlib.util, os
+from pathlib import Path
+from unittest.mock import patch
+spec=importlib.util.spec_from_file_location('s','utils/CLIO/clio-store.py'); s=importlib.util.module_from_spec(spec); spec.loader.exec_module(s)
+class Empty:
+ def execute(self,sql): return []
+with patch.dict(os.environ,HOME=os.environ['TMPDIR']):
+ target=Path.home()/'.claude/prompt-log.md'
+ print('legacy Markdown accepted by safe_output:',s.safe_output(Empty(),Path.home()/'history.sqlite3',target)==target.resolve())
+row={'timestamp':'2026-09-29T12:00:00Z','session_id':'same-source-session','prompt':'same source prompt','agent':'codex','repo':'fixture','checkout':'/fixture/repo','machine':'fixture-mac','branch':'main'}
+a=s.normalize(row,'fixture-owner','captured'); b=s.normalize(dict(row,branch='feature'),'fixture-owner','captured')
+print('same source event after branch change gets different IDs:',a['record_id']!=b['record_id'])
+print('first ID:',a['record_id']);print('retry ID:',b['record_id'])
+PYPROBE
+```
+
+Decisive output:
+```
+legacy Markdown accepted by safe_output: True
+same source event after branch change gets different IDs: True
+first ID: clio1-0160ac821bbfd9060bd8587d534287a0f16203b08458f445332228a56c1e1077
+retry ID: clio1-8dd9304d3e974fbaa323ebfda02c016554ec2a51fc25dc748243a4714c5efdf2
+```
+
+- [Pass] Migration accounting uses one transaction for events, quarantine and cursor (:291–338), checks source inode/prefix (:294–307) and verifies expected payloads against stored events (:366–380). Unknown extras survive normalization (:175–183); foreign snapshot rows retain ownership and export uses `origin_id == owner` (:526, :547–550). These are source-level findings, not freshly executed acceptance results.
+- [Pass] Rolling projection implements inclusive UTC 168h membership and descending timestamp/ID (:483–484), with full chronological compatibility output (:513–514). Read-only query uses URI `mode=ro` and `query_only` (:86–98), bound parameters and deterministic order (:426–450). No separate ledger/vector/publisher subsystem is introduced; README explicitly says “Fleet publishing and Rebalance's provenance upgrade are separate dependent work.” Keep that delivery boundary.
+- [Unverified — needs clone run] Final qualifying four shell suites plus Python suite have deliberately not run this turn. `sqlite-focused.log` records 11 passing cases but includes connection ResourceWarnings; `sqlite-benchmark.json` reports 10,000 rows, equal nonempty results and a disclosed warm-local measurement. These are retained producer evidence, not independent execution at final approved HEAD. Run the authorized qualifying gate after final Approved on unchanged implementation, and record failures/skips honestly.
+
+Handing off to author — disposition R1/R2, make the bounded fixes and return for round 2; go to the author window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1,0 +1,53 @@
+{
+  "source_commit": "fd48d1cfdf2a2c2dadfcb970a99ec2298c4c1ec0",
+  "installed_sha256": {
+    "clio-capture.sh": "a6230aa4f7d47884d545a80894d187fe8306e6bee8a6651ffe750bcf44919a30",
+    "clio-store.py": "bde4d993ea79581d52ff5bdb7de21a22da5748f18917b3896e1bbea63d6d90d8",
+    "prompt-log-to-md.sh": "66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f",
+    "clio-codex-tail.sh": "01a5930b76f155dcaffede1816fcfcbbdcec071b949e4ccdc644b1c09e0f91b5",
+    "clio-agy-tail.sh": "cd3268770008cf47ba885cdbc750a8262ff3fa92cb4a30d8940416d782a0e778"
+  },
+  "plists_unchanged": true,
+  "sqlite_activated": false,
+  "rolling_note_published": false,
+  "private_backup_verified": true,
+  "note_bytes_unchanged": true,
+  "jobs": [
+    {
+      "label": "com.claude.clio-codex-tail",
+      "loaded": true,
+      "interval": 60,
+      "plist_sha256": "6ecafb416cbb8cd07aec2e9a220d263b7419e5df4af5f35a95cf1df2465358ab"
+    },
+    {
+      "label": "com.claude.clio-agy-tail",
+      "loaded": true,
+      "interval": 60,
+      "plist_sha256": "1059eaf72f1f158d9978da3a99a1c7570ad6bb6e61a87410c533d30a3fd6db79"
+    },
+    {
+      "label": "com.claude.prompt-log-to-md",
+      "loaded": true,
+      "interval": 300,
+      "plist_sha256": "1690bce45e1b9c51704a732ab0d03fa908f86e5b8b13d4b9bc155c781ebd3c0d"
+    }
+  ],
+  "live_tailers_last_exit_zero": true,
+  "legacy_exporter_last_exit": 1,
+  "legacy_exporter_failure_preexisted": true,
+  "preflight": {
+    "local_source_rows": 2738,
+    "local_source_parity": true,
+    "quarantined": 0,
+    "standalone_note_markers": 10,
+    "distinct_note_ids_absent_local": 2468,
+    "single_shared_publisher_verified": false
+  },
+  "limitations": [
+    "Runtime installed, SQLite/rolling cutover not activated.",
+    "Private sources/backups/DB remain outside repository.",
+    "No complete fleet coverage or deployed four-agent SQLite pilot claimed.",
+    "Legacy exporter exited1 before and after deployment; source/note reconciliation required.",
+    "Rebalance fleet publication remains gated on #282."
+  ]
+}

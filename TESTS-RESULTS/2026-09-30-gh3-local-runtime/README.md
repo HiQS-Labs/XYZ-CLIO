@@ -1,0 +1,7 @@
+# Local runtime deployment — 2026-09-30
+
+PR4 merged as fd48d1cfdf2a2c2dadfcb970a99ec2298c4c1ec0 after Agy round2 attested approval and final four shell suites plus16 SQLite cases passing. Primary checkout fast-forwarded cleanly. Five canonical runtime files installed atomically in the existing hooks directory; existing Claude/ZCode registrations retained. Local tailer/exporter jobs were briefly paused and resumed from the exact original plists. Exporter interval300 remains unchanged. Both live tailers have exit0 after installation.
+
+Private verified backups include original note/JSONL, runtime scripts, registrations, actual tailer cursor files and job plists. Original note bytes remain unchanged. Private preflight imported/accounted all2738 local records with no quarantine. It refused the current note's10 standalone CLIO markers;2468 distinct note IDs are absent from local JSONL. Other-device sources and single publisher ownership remain unverified. No note content, source history, snapshot or private DB is committed.
+
+**SQLite activation and seven-day publication are NOT complete.** No config was created; legacy capture continues. Existing exporter exit1 predated deployment and remains observed; this is not a successful rolling pilot. Source coverage and ambiguous-note reconciliation must precede same-path cutover. Issue3 stays open for these prerequisites and Rebalance consumer/fleet integration (#282 gate). Task clone remains useful for unfinished cutover; do not discard unique verification/coordination evidence.

@@ -13,7 +13,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 | Most recently completed phase | What's next |
 |---|---|
-| Phase 1 reviewed, verified, PR #4 ready | Await merge; Phase 2 blocked on merge and #282; Phase 3 awaits deployment |
+| Phase 1 merged as fd48d1c; Agy QA and final gate passed; local runtime installed | Phase 2 consumer work is eligible; fleet blocked on #282; rolling pilot blocked on missing history, note reconciliation and one publisher |
 
 ## Table of contents
 - [Phase 1: Local history and export contract](#phase-1-local-history-and-export-contract)
@@ -78,7 +78,7 @@ Round1 returned non-approval (driver exit5, reviewer FAIL); no implementation st
 ## Phase 2: Existing Rebalance consumers and fleet publication
 **Goal:** the existing query/Daily/semantic path returns device/agent/session/checkout and explicit ledger links across Macs.
 
-Dependent work, **blocked until Phase 1 PR merges** per start-task; fleet publishing additionally blocked by https://github.com/HiQS-Labs/rebalanceOS/issues/282 (and config#281 as applicable). No stacked-PR or merge authorization inferred. Track here and in #3. Bounded prior-art check found adjacent #141/#202/#232/#233/#203 but no duplicate provenance-consumer ticket. When unblocked, create narrow Rebalance intake with native PDDA inbox/ROADMAP queue (not Forge SQL registration); do not modify a second repo prematurely.
+CLIO prerequisite **landed as fd48d1c on 2026-09-30**. Rebalance consumer work is eligible for native intake/recon; fleet publishing remains blocked by https://github.com/HiQS-Labs/rebalanceOS/issues/282 (and config#281 as applicable). No stacked-PR or merge authorization inferred. Track here and in #3. Bounded prior-art check found adjacent #141/#202/#232/#233/#203 but no duplicate provenance-consumer ticket. When unblocked, create narrow Rebalance intake with native PDDA inbox/ROADMAP queue (not Forge SQL registration); do not modify a second repo prematurely.
 
 - [ ] Extend current CLIO table/collector to preserve incoming stableID+provenance and typed links; keep legacy import fallback.
 - [ ] Surface fields in existing Daily and SemanticDoc metadata; reuse existing readonly XYZ ledger integration (#233/PR235: daily_work_synthesis.collect_issue_statuses → releases_cycle.read_work_status → trusted load_work_evidence; canonical repo+issue join), native status remains ledger-owned. Distinguish mentioned issue from accepted task context.
@@ -117,3 +117,5 @@ Handoff: retained full clone `/Users/noelsaw/task-clones/clio-gh3-sqlite`, branc
 Same-path revision completed: existing Obsidian path/filename and plist remain unchanged; migration verifies coverage/backup, preserves header and routes existing scheduled invocation. Revised16-case storage + four shell suites passed after final approval. See gh3-same-path-plan.md for current behavior; older separate-path approval/results are historical.
 
 Review takeover and ordered merge/deployment continuation: [gh3-handoff.md](gh3-handoff.md). PR review follow-up Approved by independent Codex round1 (attested exit0); four shell suites plus 16 SQLite cases passed afterward on unchanged implementation. See TESTS-RESULTS/2026-09-30-gh3-review-followup/.
+
+2026-09-30 deployed-source update: Agy round2 Approved (attested exit0), final five-suite gate passed, PR4 merged; five runtime files installed with existing plists and note bytes preserved. SQLite/rolling activation is held on actual coverage and ambiguous-note guards. See TESTS-RESULTS/2026-09-30-gh3-local-runtime/. Earlier “not authorized”/await-merge handoff language records prior scope; the latest user explicitly authorized merge and local deployment.

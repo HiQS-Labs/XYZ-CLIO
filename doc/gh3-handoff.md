@@ -1,5 +1,7 @@
 # GH3 merge and deployment handoff
 
+**2026-09-30 update:** user subsequently authorized Agy QA → merge → local deployment. PR4 is merged as fd48d1c; reviewed runtime files are installed. Original note and existing300-second exporter plist remain byte-identical. SQLite activation/rolling publication is held:10 standalone note markers,2468 distinct note IDs absent from the2738-row local source, other sources and single publisher unverified. Private backups/preflight retained; see TESTS-RESULTS/2026-09-30-gh3-local-runtime/. The earlier scope statements below are historical.
+
 PR #4 targets CLIO main; issue #3 stays open through downstream integrations and the deployed pilot. This handoff authorizes neither merge nor installed migration. The existing Obsidian path, filename and exporter schedule are mandatory. No separate final recent note.
 
 ## Review follow-up

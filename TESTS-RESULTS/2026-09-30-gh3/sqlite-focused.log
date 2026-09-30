@@ -1,0 +1,31 @@
+test_activation_four_agent_routes_and_rollback_export (__main__.History.test_activation_four_agent_routes_and_rollback_export) ... ok
+test_activation_import_gate_and_source_preservation (__main__.History.test_activation_import_gate_and_source_preservation) ... ok
+test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History.test_device_roundtrip_preserves_owner_extras_and_no_echo) ... ok
+test_identity_replay_collision_and_busy_receipt (__main__.History.test_identity_replay_collision_and_busy_receipt) ... ok
+test_import_accounting_resume_and_negative_controls (__main__.History.test_import_accounting_resume_and_negative_controls) ... ok
+test_readonly_queries_refs_pagination_and_large_prompt (__main__.History.test_readonly_queries_refs_pagination_and_large_prompt) ... ok
+test_rolling_window_atomicity_idle_expiry_and_compatibility (__main__.History.test_rolling_window_atomicity_idle_expiry_and_compatibility) ... ok
+test_simultaneous_capture_read_export (__main__.History.test_simultaneous_capture_read_export) ... /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py:323: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x105fc3a60>
+  def __init__(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py:323: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x105fc3f10>
+  def __init__(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py:323: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x105fc3e20>
+  def __init__(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py:323: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x105fc3c40>
+  def __init__(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py:323: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x1061e8130>
+  def __init__(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_source_change_and_transaction_interruption (__main__.History.test_source_change_and_transaction_interruption) ... ok
+test_waiting_legacy_writer_rechecks_activation (__main__.History.test_waiting_legacy_writer_rechecks_activation) ... ok
+test_write_failures_never_acknowledge_without_receipt (__main__.History.test_write_failures_never_acknowledge_without_receipt) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 2.635s
+
+OK

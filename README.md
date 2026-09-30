@@ -1,11 +1,18 @@
+> **SQLite pilot:** opt-in full-history SQLite capture, read-only lookup, a rolling
+> 168-hour Markdown view and per-device export are documented in
+> [INSTALL.md](utils/CLIO/INSTALL.md#sqlite-history-and-seven-day-view-opt-in-pilot).
+> Existing installations stay on JSONL until explicit migration/activation. Fleet
+> publishing and Rebalance's provenance upgrade are separate dependent work; no live
+> database synchronization or task-status writes are introduced.
+
 # CLIO
 
-One append-only log of every prompt you type into an AI coding agent — across
-every repo, every agent, one machine.
+A local history of captured prompts across repos and coding agents, with device
+and session provenance. Capture filters exclude short and automated turns by default.
 
 CLIO installs a shared capture writer plus per-agent registrations. Each
-registered agent appends every submitted prompt to a single centralized JSONL
-file: `~/.claude/prompt-log.jsonl`. (The `~/.claude` path is historical; it is
+registered agent sends eligible prompts to one writer. Legacy mode appends JSONL
+to: `~/.claude/prompt-log.jsonl`. (The `~/.claude` path is historical; it is
 the cross-agent log, not a Claude-only one.)
 
 Supported agents:
@@ -27,8 +34,8 @@ typed.
 ```
 
 Rows written before the `agent` field existed render as `claude-code` — display
-only; stored rows are never rewritten. The dedup ID is `session_id:timestamp`
-for every agent.
+only; stored rows are never rewritten. Legacy dedup uses `session_id:timestamp`. SQLite uses a versioned content hash
+including origin, agent, prompt and metadata, preserving different same-second prompts.
 
 An optional exporter renders the JSONL as human-readable Markdown — newest
 entry first — at any location you choose, such as a note in an Obsidian vault.
@@ -61,7 +68,7 @@ one file you can grep, sync to notes, or keep as an audit trail.
 
 - macOS or Linux
 - [`jq`](https://jqlang.org/) — `brew install jq` / `apt install jq`
-- `python3` — only for the Codex and Agy tailers
+- Python 3.8+ — for the Codex/Agy tailers and SQLite mode (standard-library SQLite)
 
 ## Install
 
@@ -83,12 +90,14 @@ utils/CLIO/
                         # the Claude + ZCode shims (embedded as heredocs)
   clio-codex-tail.sh    # Codex rollout tailer
   clio-agy-tail.sh      # Agy transcript tailer
-  prompt-log-to-md.sh   # JSONL -> Markdown exporter
+  prompt-log-to-md.sh   # legacy exporter or SQLite drain + projection
+  clio-store.py         # SQLite history, query, migration and device exports
 test/
   clio-capture.sh       # capture writer + Claude shim, against a throwaway $HOME
   clio-exporter.sh      # exporter behavior, state file, idempotency
   clio-codex-tail.sh    # Codex tailer against a fixture rollout
   clio-agy-tail.sh      # Agy tailer against a fixture transcript
+  clio-store.py         # SQLite acceptance and failure cases
   fixtures/clio/        # fixture rollout + transcript
 FRONTDOOR.md            # onboarding health board, refreshed by re-running its checks
 SHAKEDOWN/              # dated script-path audits of the clio skill
@@ -113,14 +122,14 @@ bash test/clio-capture.sh
 bash test/clio-exporter.sh
 bash test/clio-codex-tail.sh
 bash test/clio-agy-tail.sh
+python3 test/clio-store.py
 ```
 
 ## Safety
 
 CLIO runs on your machine with a hook that shells out and edits your agent's
-`settings.json`. It logs everything you type into a registered agent, including
-anything sensitive you paste into a prompt, to a plaintext file in your home
-directory. Read the scripts before running them.
+`settings.json`. Captured prompts may include sensitive pasted text. JSONL, SQLite, pending
+receipts and exports are unencrypted local data. Read the scripts before running them.
 
 ## License
 

@@ -21,6 +21,14 @@
 
 set -euo pipefail
 
+# Explicit SQLite mode uses a separate rolling view and preserves legacy receipts.
+if [ "${1:-}" = "--sqlite" ]; then
+  shift
+  helper="$(dirname "$0")/clio-store.py"
+  python3 "$helper" drain
+  exec python3 "$helper" project "$@"
+fi
+
 JSONL="$HOME/.claude/prompt-log.jsonl"
 MODE=export
 APPLY=0

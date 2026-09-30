@@ -11,7 +11,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 | Most recently completed phase | What's next |
 |---|---|
-| Intake and four-lane recon | Codex plan relay; implementation requires Approved |
+| Phase 1 implemented after Approved plan relay | Final Codex review, then qualifying gate and ready PR |
 
 ## Table of contents
 - [Phase 1: Local history and export contract](#phase-1-local-history-and-export-contract)
@@ -64,11 +64,11 @@ Source-of-truth change is operator-approved, not a reason to ask again. Crash be
 Blast: existing hooks/tailers/readers plus new SQLite/spool/import metadata/config and exports. Shield is opt-in local pilot plus separate output paths/source backups. Tripwire any missing accounted source row, latency>2s, failed atomic output or unresolved spool backlog at pilot review → stop rollout, retain artifacts, restore preserved writer after exporting SQLite-era arrivals. Rollback must not discard post-cutover events; original tailer cursors preserved. Restore backup only to new path, verify integrity/counts before switching config. Uninstall preserves DB/history/backups.
 
 ### Plan review disposition
-Round1 returned non-approval (driver exit5, reviewer FAIL); no implementation started. R1 accepted: persisted origin/ingestion separation and exact owner export predicate. R2 accepted: namespaced extras with immutable source identity and round-trip verification. R3 accepted: concrete pre-existing Agy read-only violation, fixed only at the existing connection seam. R4 accepted: explicit MD descending tie-break order and named simultaneous/full-write/spool-failure checks. No new subsystem or synchronization service added. Round2 must approve these changes before production code.
+Round1 returned non-approval (driver exit5, reviewer FAIL); no implementation started. R1 accepted: persisted origin/ingestion separation and exact owner export predicate. R2 accepted: namespaced extras with immutable source identity and round-trip verification. R3 accepted: concrete pre-existing Agy read-only violation, fixed only at the existing connection seam. R4 accepted: explicit MD descending tie-break order and named simultaneous/full-write/spool-failure checks. No new subsystem or synchronization service added. Round2 Approved with driver exit0 and attestation at reviewed bfc4dbc2ff9f; implementation started afterward.
 
 ### Phase 1 — QA checklist
 - [x] Four-lane recon and explicit authority classification completed; unknowns recorded.
-- [ ] Rating persisted/read back; plan relay Approved.
+- [x] Rating persisted/read back; plan relay Approved.
 - [ ] All requirements have nonempty correctness/failure evidence and measured latency.
 - [ ] Final relay Approved; full qualifying suites run at approved revision.
 - [ ] Ready PR opened, source data/deployment unchanged; status refreshed.

@@ -1,0 +1,11 @@
+# Phase 1 implementation evidence
+
+All inputs are synthetic, all runtime files use temporary HOME. Live capture and private history were not changed. Plan review Approved in round2 (receipt alongside); final review and qualifying gate still pending.
+
+Focused SQLite suite: 11 cases pass (`sqlite-focused.log`). Existing capture, exporter and Agy focused suites pass; duplicate /bin/bash invocation explicitly skipped because it is the same interpreter. Initial SQLite suite exposed source-ID `/var` versus resolved `/private/var` mismatch; verify-import now first checks the explicit ID, then resolves a source path. The previously failing case passes.
+
+Failure controls exercised: deleting an imported event rejects parity; corrupt ID and snapshot digest reject import; changed source prefix rejects resume; exception during import rolls transaction back; real SQLite page-capacity failure leaves durable pending receipt; real non-directory spool path raises without success; held SQLite write transaction queues within 2s; failed replacement retains prior Markdown bytes; activation deadline failure leaves config absent and releases only its own lock; queued legacy writer rechecks activation. Large Unicode prompt preserved, read-only connection rejects writes, missing DB stays absent, Agy companion metadata DB stays byte-identical. A/B exports do not echo foreign rows; unknown metadata and identities survive compatibility round trip.
+
+`measure-sqlite.py` replays the frozen 10,000-row / 12,526,701-byte corpus from `generate-corpus.py`. `sqlite-benchmark.json` records equivalent nonempty query results, exact corpus digest and actual SQLite query plan. Median query 0.84ms vs 48.82ms JSONL scan; local warm synthetic measurement excluding query CLI startup. Full JSONL + 168h MD projection median211ms, 3,361 recent rows and all10,000 retained. Thirty actual shared-writer calls: p50 118ms, p95 151ms, max196ms. No extra FTS/vector subsystem justified by this fixture. Fleet transport not measured or enabled.
+
+FRONTDOOR read-only checks retain the pre-existing FD05 troubleshooting and FD06 Agy scheduling prose findings; no failed baseline. `.gitignore` resolves FD07. No claim those unrelated gaps were fixed.

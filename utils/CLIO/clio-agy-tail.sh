@@ -111,7 +111,7 @@ if "brain" in parts:
     import sqlite3, re, urllib.parse
     db_path = "/".join(parts[:brain_idx]) + "/conversations/" + session_id + ".db"
     try:
-        with sqlite3.connect(db_path) as conn:
+        with sqlite3.connect("file:" + urllib.parse.quote(db_path, safe="/") + "?mode=ro", uri=True) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT data FROM trajectory_metadata_blob")
             row = cursor.fetchone()

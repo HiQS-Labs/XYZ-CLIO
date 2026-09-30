@@ -1,0 +1,15 @@
+test_migration_matches_actual_legacy_renderer (__main__.History.test_migration_matches_actual_legacy_renderer) ... FAIL
+
+======================================================================
+FAIL: test_migration_matches_actual_legacy_renderer (__main__.History.test_migration_matches_actual_legacy_renderer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/test/clio-store.py", line 184, in test_migration_matches_actual_legacy_renderer
+    with self.assertRaisesRegex(ValueError, 'timestamp display'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.709s
+
+FAILED (failures=1)

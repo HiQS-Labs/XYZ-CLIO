@@ -1,0 +1,16 @@
+test_existing_schedule_reuses_obsidian_path (acceptance.History.test_existing_schedule_reuses_obsidian_path) ... FAIL
+
+======================================================================
+FAIL: test_existing_schedule_reuses_obsidian_path (acceptance.History.test_existing_schedule_reuses_obsidian_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/test/clio-store.py", line 131, in test_existing_schedule_reuses_obsidian_path
+    self.assertNotIn('Obsolete history outside window', note.read_text())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Obsolete history outside window' unexpectedly found in '---\ntags: [work]\n---\n# My prompt history\nKeep [[My Project]] and café.\n<!-- CLIO:ENTRIES -->\n\n<!-- clio:id:s1:2026-09-30T15:57:40Z -->\n## REBALANCEOS\n2026-09-30T15:57:40Z  \nfixture-mbp14 · main · codex\n\n> "Current local prompt"\n\n<!-- clio:id:s3:2026-09-30T15:57:40Z -->\n## REBALANCEOS\n2026-09-30T15:57:40Z  \nfixture-mini · main · codex\n\n> "Current foreign prompt"\n\n<!-- clio:id:s2:2000-01-01T00:00:00Z -->\n## REBALANCEOS\n2000-01-01T00:00:00Z  \nfixture-mbp14 · main · codex\n\n> "Obsolete history outside window"\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.177s
+
+FAILED (failures=1)
+EXPECTED RED: unchanged scheduled command with previous exporter retained expired history; source tree unchanged.

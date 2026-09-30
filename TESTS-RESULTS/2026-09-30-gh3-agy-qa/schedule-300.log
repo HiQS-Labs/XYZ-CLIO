@@ -1,0 +1,7 @@
+test_existing_schedule_reuses_obsidian_path (tests.History.test_existing_schedule_reuses_obsidian_path) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.276s
+
+OK
+Existing same-path case with StartInterval300 passes, including byte-identical job preservation.

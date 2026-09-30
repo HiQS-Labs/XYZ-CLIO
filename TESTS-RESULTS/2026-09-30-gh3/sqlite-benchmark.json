@@ -1,0 +1,64 @@
+{
+  "corpus_rows": 10000,
+  "corpus_bytes": 12526701,
+  "corpus_sha256": "0f2ba3976a500dd69e895507f767cb096ec6860966617370cbca2aa650169f5e",
+  "equal_nonempty_results": true,
+  "returned": 20,
+  "jsonl_scan": {
+    "runs_ms": [
+      54.17962499996065,
+      49.23162500017497,
+      48.12775000027614,
+      48.81550000027346,
+      48.54983299992455,
+      48.96004100010032,
+      48.22120900007576
+    ],
+    "median_ms": 48.81550000027346,
+    "max_ms": 54.17962499996065
+  },
+  "sqlite_query": {
+    "runs_ms": [
+      1.4312500006781192,
+      0.7590830000481219,
+      0.9428749999642605,
+      0.8418750003329478,
+      0.8263750005426118,
+      0.8822080008030753,
+      0.6382499996107072
+    ],
+    "median_ms": 0.8418750003329478,
+    "max_ms": 1.4312500006781192
+  },
+  "query_plan": [
+    [
+      8,
+      0,
+      49,
+      "SEARCH events USING INDEX event_machine (machine=? AND timestamp>? AND timestamp<?)"
+    ]
+  ],
+  "projection": {
+    "markdown": "temporary recent.md",
+    "rows": 3361,
+    "bytes": 5031621,
+    "cutoff": "2026-09-30T00:00:00.000000Z",
+    "history_rows": 10000
+  },
+  "projection_timing": {
+    "runs_ms": [
+      209.04733400038822,
+      211.31099999911385,
+      212.26158300032694
+    ],
+    "median_ms": 211.31099999911385,
+    "max_ms": 212.26158300032694
+  },
+  "capture_shared_writer": {
+    "samples": 30,
+    "p50_ms": 117.76774950021718,
+    "p95_ms": 150.66258299975743,
+    "max_ms": 196.13024999944173
+  },
+  "limitations": "Synthetic warm local run, excludes CLI startup for query and disk/network fleet transport. Shared-writer timings include shell/Python startup. No FTS/vector speed claim."
+}

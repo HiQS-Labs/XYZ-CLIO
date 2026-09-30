@@ -8,9 +8,9 @@ checks block from the repo root and flip any finding whose check has gone silent
 
 | | |
 | --- | --- |
-| **Last audited** | 2026-09-08 — GH-199 canonical first-prompt fix copied from RebalanceOS; deterministic checks and four harnesses rerun |
+| **Last audited** | 2026-09-30 — GH-3 opt-in SQLite; same-path revision: plan/final reviews approved; revised five-suite gate passed |
 | **Method** | `/frontdoor` walk (7 dimensions) + `/shakedown` static audit and live harness |
-| **Verdict** | ⚠️ **Bumpy** — a newcomer with an AI agent reaches a captured prompt in ~10 minutes with no account, key, or payment required; three low-severity gaps remain, none blocking |
+| **Verdict** | ⚠️ **Bumpy** — a newcomer with an AI agent reaches a captured prompt in ~10 minutes with no account, key, or payment required; two low-severity gaps remain, none blocking |
 | **Remediation plan** | [`SHAKEDOWN/2026-09-01/clio-1652.md`](SHAKEDOWN/2026-09-01/clio-1652.md) — the path-resolution audit and its patch |
 
 ## Health at a glance
@@ -35,7 +35,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 | FD-04 | First success | 🔴 | ✅ FIXED | `clio-agy-tail.sh` printed its summary to stderr while its Codex twin used stdout, so `test/clio-agy-tail.sh` failed on its first assertion and the rest of its cases never ran. Aligned to stdout. |
 | FD-05 | First success | 🟡 | ⬜ OPEN | No troubleshooting section. When the smoke test prints nothing, the newcomer has no documented next move (check `~/.claude/prompt-log-errors.log`, confirm the `settings.json` registration, confirm the prompt cleared `CLIO_MIN_PROMPT_CHARS`). Add `## Troubleshooting` to `INSTALL.md`. |
 | FD-06 | Install path | 🟡 | ⬜ OPEN | The Agy scheduling step is prose only — "schedule it like the Codex tailer" — where every other step is copy-pasteable. Give Agy its own plist block. |
-| FD-07 | Repo hygiene | 🟡 | ⬜ OPEN | No `.gitignore`. `git add -A` currently sweeps in anything a contributor's tooling drops at the root. |
+| FD-07 | Repo hygiene | 🟡 | ✅ FIXED | `.gitignore` excludes local databases, pending receipts, bytecode and scratch output. |
 
 ## Verified baselines (keep green)
 
@@ -44,10 +44,12 @@ checks block from the repo root and flip any finding whose check has gone silent
 | BL-01 | No live-looking secret in the tree | CLIO logs prompt text; a credential landing here would be a stop-everything finding. |
 | BL-02 | The writer and Claude shim heredoc markers are intact in `INSTALL.md` | The test harnesses extract them by marker. If a marker moves, the tests stop exercising the shipped code — and they fail loudly rather than silently passing. |
 | BL-03 | Both tailers reach the writer by absolute path | `$HOME/.claude/hooks/clio-capture.sh`, not a relative path — this is what makes them CWD-robust wherever `launchd` starts them. |
-| BL-04 | Four test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
+| BL-04 | Five test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
 
-**Recorded suite state (updated by hand, never auto-derived):** as of 2026-09-08, all
-**4** harnesses pass — `clio-capture`, `clio-exporter`, `clio-codex-tail`, `clio-agy-tail`.
+**Recorded suite state (updated by hand, never auto-derived):** 2026-09-30 final
+gate passed after relay approval: four shell suites and 16 SQLite cases. Evidence:
+`TESTS-RESULTS/2026-09-30-gh3-same-path/final-gate.json`. Python fixture ResourceWarnings and
+same-interpreter duplicate skips remain in logs; no failed assertions.
 Re-run them yourself after changes; this board does not execute them.
 
 ## Deterministic checks — re-run to refresh
@@ -96,13 +98,15 @@ for t in clio-capture clio-exporter clio-codex-tail clio-agy-tail; do
   test -f "test/$t.sh" || echo "BL-04 FAILED: test/$t.sh is missing"
   grep -q "bash test/$t.sh" README.md || echo "BL-04 FAILED: README does not list test/$t.sh"
 done
+test -f test/clio-store.py || echo "BL-04 FAILED: test/clio-store.py is missing"
+grep -q "python3 test/clio-store.py" README.md || echo "BL-04 FAILED: README does not list SQLite suite"
 ```
 
 ## The hoops
 
 None. CLIO needs no account, no API key, no OAuth consent, no paid tier, and no admin
 grant — it reads local files and writes to your home directory. The only prerequisites
-are `jq` and, for the two tailers, `python3`.
+are `jq` and, for the two tailers and SQLite mode, `python3`.
 
 The one environment caveat is not CLIO's: an AI agent running in a sandbox may be unable
 to reach the OS keychain or run `launchctl`, so the scheduling steps and any `git push`

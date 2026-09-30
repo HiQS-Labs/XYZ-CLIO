@@ -1,0 +1,31 @@
+{
+  "purpose": "JSONL pre-implementation baseline only; SQLite timing not yet measured",
+  "corpus": "synthetic 10000 rows, 3 devices, 4 agents, UTC range 20.8 days",
+  "path_external": "/tmp/clio-gh3-benchmark.jsonl",
+  "rows": 10000,
+  "bytes": 12526701,
+  "sha256": "0f2ba3976a500dd69e895507f767cb096ec6860966617370cbca2aa650169f5e",
+  "query": {
+    "repo": "rebalanceOS",
+    "machine": "fixture-mbp14",
+    "from": "2026-09-23T00:00:00Z",
+    "to": "2026-09-30T00:00:00Z",
+    "limit": 20,
+    "sort": "timestamp descending, session_id descending"
+  },
+  "matched_before_limit": 1121,
+  "returned": 20,
+  "result_sha256": "d2919045a3da92d69a94743114166a73a28d5017e31cf70aee9af5b8f26d20cd",
+  "runs_ms": [
+    43.41958299983162,
+    42.88683300001139,
+    43.4022500003266,
+    43.22245899993504,
+    43.163917000129004,
+    43.48591699999815,
+    42.98349999999118
+  ],
+  "median_ms": 43.22245899993504,
+  "max_ms": 43.48591699999815,
+  "limitation": "Synthetic corpus; concurrent harness suite was running. Repeat comparison on same corpus and quiet host after implementation."
+}

@@ -1,0 +1,16 @@
+test_tailer_retry_freezes_first_observed_context (acceptance.History.test_tailer_retry_freezes_first_observed_context) ... FAIL
+
+======================================================================
+FAIL: test_tailer_retry_freezes_first_observed_context (acceptance.History.test_tailer_retry_freezes_first_observed_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/test/clio-store.py", line 334, in test_tailer_retry_freezes_first_observed_context
+    self.assertEqual(len(self.rows()), 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 2
+
+----------------------------------------------------------------------
+Ran 1 test in 1.061s
+
+FAILED (failures=1)
+EXPECTED RED: reverted identity behavior produced 3 rows instead of 2; source tree unchanged.

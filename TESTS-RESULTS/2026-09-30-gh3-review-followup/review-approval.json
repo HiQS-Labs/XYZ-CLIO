@@ -1,0 +1,19 @@
+{
+  "added_len": 4625,
+  "added_sha256": "f159330da0b57ebaafb64657d70dee5e2377a186b34ba356790fb3cf3f2d7c9c",
+  "added_start": 7013,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-30T16:39:14Z",
+  "driver_pid": 50064,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/task-clones/clio-gh3-sqlite/relay-system/2026-09-30/gh3-review-followup.md",
+  "relay_file_rel": "relay-system/2026-09-30/gh3-review-followup.md",
+  "reviewed_head": "d7667a789019a5c45f46146ba435bcac04ebd93b",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/task-clones/clio-gh3-sqlite",
+  "task": "CLIO-GH3-REVIEW-FOLLOWUP-R1",
+  "trailer_sha256": "745912f35edc1e8512c0233b05bc0012bcfab77811d29007116fcca8bdcdbb08",
+  "transcript_repo": "/Users/noelsaw/task-clones/clio-gh3-sqlite"
+}

@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: author
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -121,5 +121,53 @@ Handing off to author — disposition S1, make the scoped correction in the auth
 ### Producer · Round 2
 
 S1 — Implemented at legacy_coverage only. A timestamp-display slot must parse as timezone-aware ISO fallback or match the shipped localized datetime + nonempty zone-label shape with a valid calendar/time. Zone abbreviations are not interpreted as identity and need not match this host. Existing actual-legacy-renderer case now refuses arbitrary reminder/blank display before config registration, retains exact edited note bytes, and accepts UTC, PDT and numeric +0545 historical displays. display-red-control.log witnesses the new rejection assertion failing before the production fix; storage-focused-r2.log records all16 passing afterward. No other runtime changes. Full qualifying gate remains after Approved. When approving use tick done while owning task; do not release first. Handing off to codex for round2.
+
+
+### Reviewer · Round 2
+swept file: yes
+VERDICT: PASS
+Basis: S1 is resolved by the scoped display-shape check. Reviewed the whole store, exporter, installer and storage/exporter test files, including pre-existing code; no additional pre-existing defect identified within the paused-writer, local single-publisher envelope. Approval covers implementation review; the specified subsequent five-suite gate and driver attestation remain required. No installed migration or fleet-readiness claim.
+
+- [Pass] S1 resolved: utils/CLIO/clio-store.py:520–532 validates timezone-aware ISO or localized calendar/time plus zone-label shape before matching historical entries. It does not interpret the label as identity or compare it with the current host's timezone. test/clio-store.py:180–195 checks refusal without note/config modification and UTC/PDT/+0545 acceptance. The following fresh, narrow in-memory probe measures the reviewed function directly; no acceptance fixture was executed.
+  Probe command (exit 0):
+  ~~~sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE' > "$TMPDIR/display-probe.out"
+import importlib.util, sqlite3, json
+spec = importlib.util.spec_from_file_location("store", "utils/CLIO/clio-store.py")
+s = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(s)
+row = dict(legacy_id="s:2026-09-29T12:00:00Z", repo="demo", machine="fixture", branch="main", agent="codex", prompt="Synthetic prompt")
+c = sqlite3.connect(":memory:")
+c.execute("CREATE TABLE events(payload TEXT)")
+c.execute("INSERT INTO events VALUES (?)", (json.dumps(row),))
+base = '<!-- CLIO:ENTRIES -->\n\n<!-- clio:id:s:2026-09-29T12:00:00Z -->\n## DEMO\n{}\nfixture · main · codex\n\n> "Synthetic prompt"\n'
+for shown in ("2026-09-29T12:00:00Z  ", "2026-09-29 05:00:00 PDT  ", "2026-09-29 17:45:00 +0545  ", "Preserve my unmanaged reminder", "", "2026-02-30 05:00:00 PDT", "2026-09-29T12:00:00"):
+    try:
+        print(repr(shown), "=> covered", s.legacy_coverage(c, base.format(shown).encode())[1])
+    except ValueError as e:
+        print(repr(shown), "=> rejected:", e)
+c.close()
+PROBE
+cat "$TMPDIR/display-probe.out"
+  ~~~
+  Decisive output:
+  ~~~text
+'2026-09-29T12:00:00Z  ' => covered 1
+'2026-09-29 05:00:00 PDT  ' => covered 1
+'2026-09-29 17:45:00 +0545  ' => covered 1
+'Preserve my unmanaged reminder' => rejected: unrecognized historical timestamp display; preserve and reconcile the note
+'' => rejected: unrecognized historical timestamp display; preserve and reconcile the note
+'2026-02-30 05:00:00 PDT' => rejected: unrecognized historical timestamp display; preserve and reconcile the note
+'2026-09-29T12:00:00' => rejected: unrecognized historical timestamp display; preserve and reconcile the note
+  ~~~
+- [Pass] Same-path cutover and schedule routing: utils/CLIO/clio-store.py:480–500 reads the existing plist and rejects unsupported arguments/path disagreement; :503–547 matches complete historical body entries; :563–597 preserves original bytes and verifies the exclusive backup and unchanged source before registration. utils/CLIO/prompt-log-to-md.sh:35–66 retains positional path parsing and dispatches activated normal exports to scheduled-export; clio-store.py:794–801 requires registration before draining and publishing. No schedule writer or substitute recent-note path appears in these paths.
+- [Pass] Guards and recovery: clio-store.py:550–560 checks active DB/owner, backup digest and accepted current bytes; :600–619 retains source/storage/backup protections; :635–640 restricts the historical exception to the registered Markdown target. :667–682 guards compatibility output, checks current bytes again and records old/new hashes before atomic replacement. Existing atomic publication (:50–70) and test/clio-store.py:202–245 cover the failure/retry and unexpected-write boundaries. INSTALL.md:373–419 and its rollback section consistently require paused writers, one designated publisher, preservation/reconciliation and the same existing job.
+- [Pass] Recorded clone evidence, not rerun here: TESTS-RESULTS/2026-09-30-gh3-same-path/storage-focused-r2.log says "Ran 16 tests in 5.148s" and "OK"; display-red-control.log records "AssertionError: ValueError not raised" before the fix. schedule-red-control.log records "EXPECTED RED" for expired history retained by the previous exporter. exporter-focused.log records "PASS: bash" and the identical-interpreter SKIP. The disclosed fixture connection ResourceWarnings do not constitute wider interpreter coverage.
+- [Unverified — needs clone run] The revised complete five-suite gate has not run yet, as specified by doc/gh3-same-path-plan.md step 5 and the packet. Harness/author must run it on the unchanged approved implementation in a disposable full clone and retain driver attestation. No validate.sh, shell suites, pytest, executable fixtures, git commands or private input used this turn.
+- Review tooling limitation: list_projects returned all 77 projects with has_more=false and no project for this checkout/CLIO clone; source fallback used, with no graph generation/coverage claim. The relay-xyz locator --check exited 0 and resolved the harness, but emitted "driver_lock_path_for_repo: command not found"; this locator result is not a driver attestation.
+
+Relay closed (Approved), no further review turn needed. Handing completion to author/harness for the unchanged-implementation gate and final driver attestation; marking the owned token done before any release.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -170,4 +170,12 @@ cat "$TMPDIR/display-probe.out"
 
 Relay closed (Approved), no further review turn needed. Handing completion to author/harness for the unchanged-implementation gate and final driver attestation; marking the owned token done before any release.
 
+
+### Attestation · relay-drive — 2026-09-30T16:07:39Z
+task: CLIO-GH3-PATH-FINAL-R2
+reviewer: codex
+status: Approved
+reviewed-head: 5310b8d22ad6dc701b56933f72db471b4ec7a555
+added-range: 12915+5538
+added-sha256: fe1850758a4b50133f0479230a0394c060bf2181b3f8f454f30876a60caf39a1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

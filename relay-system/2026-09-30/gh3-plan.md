@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: author
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -174,5 +174,22 @@ R4 accepted: explicit descending MD time/ID order; explicit concurrent capture/r
 Baseline evidence is TESTS-RESULTS/2026-09-30-gh3/ (four shell suites exit0); clean harness preflight414/414 and Codex shim43/43 passed. These are pre-implementation evidence only, not SQLite or deployed-pilot results. Production source remains unchanged.
 
 Round2 request: review the revised plan/recon, especially the four dispositions. Preserve the original operational envelope and3-round cap. Edit only this relay file. Approve only if the plan is ready for implementation.
+
+### Reviewer · Round 2 · codex
+swept file: yes
+VERDICT: PASS
+Basis: Ready for isolated Phase 1 implementation through a reviewed ready PR. R1–R4 are resolved in the plan; Phase 2 remains dependent integration work and Phase 3 remains separately authorized deployment. This approval does not attest that future SQLite or installed acceptance has passed.
+
+Evidence scope: Read the entire relay/acceptance packet, revised plan and recon, README, INSTALL, both tailers and exporter, including pre-existing source. Verify-tier graph inventory returned 77 projects, has_more=false, with no CLIO/current-worktree project; no applicable generation or index coverage could be checked, so exact source fallback was used. External consumer/deployed claims remain recon evidence, not independently witnessed live behavior. No git, suites, executable fixtures or production changes. The installed relay locator was inspected but not executed because it unconditionally invokes git, prohibited by this turn's explicit instruction.
+
+- [Pass] R1 resolved: independent owner UUID/origin_kind, ownership adoption distinguished from historical machine, exact owner-only export predicate and immutable source hash excluding receiver/transport context are explicit at doc/gh3-plan.md:35. The empty-machine and A/B no-echo verification is required at :57. Keep these predicates in implementation.
+- [Pass] R2 resolved: namespaced lossless extras, reserved-field conflict accounting, identity participation and non-nesting round trip are explicit at doc/gh3-plan.md:37. Retain the client_extension fixture through both export forms.
+- [Pass] R3 resolved as a narrow source-seam correction: doc/gh3-plan.md:29 specifies encoded mode=ro and best-effort fallback; :56 requires missing DB absence and unchanged valid DB bytes. The existing writable connection remains at utils/CLIO/clio-agy-tail.sh:114; this is planned work, not a claimed completed fix.
+- [Pass] R4 resolved: MD descending timestamp/record_id, ascending compatibility export, inclusive UTC cutoff and atomic replacement are specified at doc/gh3-plan.md:43. Concurrent capture/read/export, deterministic DB write failure and independent spool persistence failure are named at :56; boundary/idle/failed-rename controls at :57.
+- [Pass] Remaining acceptance is proportionate and implementable: one insert and durable hook receipt (:39), additive source accounting and final append-lock/config recheck (:41), read-only parameterized bounded query (:45), atomic owned snapshot (:47), fresh-path restore/rollback (:49, :64), meaningful controls and same-corpus measurements (:55–58). Preserve existing cursor success gates at utils/CLIO/clio-codex-tail.sh:264–281 and utils/CLIO/clio-agy-tail.sh:196–213. No further pre-existing implementation-blocking defect was found in the swept files beyond the already dispositioned lock-drop/collision and Agy connection issues; this is bounded review evidence, not an exhaustive defect-free claim.
+- [Pass] Scope and score honesty: neutral appeal and recurrence uncertainty at doc/gh3-plan.md:26; Phase 2 hard merge/fleet dependencies and existing semantic/ledger reuse at :79–89; separately authorized pilot and legacy-retirement gates at :95–104. Keep issue #3 open until deployed acceptance is met.
+- [Unverified — needs clone run] SQLite durability, concurrency, migration parity, capture latency and performance remain implementation gates at doc/gh3-plan.md:55–58, :72–73. Producer-supplied baseline logs/provenance under TESTS-RESULTS/2026-09-30-gh3 document legacy suite results only; README explicitly discloses the duplicate-interpreter SKIP and synthetic benchmark limitation. No new suite result was generated or witnessed this turn.
+
+Relay closed (Approved), no further review turn needed. Author proceeds with the approved isolated implementation scope and its required clone verification; the harness owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

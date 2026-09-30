@@ -11,7 +11,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 | Most recently completed phase | What's next |
 |---|---|
-| Phase 1 final review Approved; all five qualifying suites passed | Publish ready PR #4; downstream phases blocked on merge/ownership work |
+| Phase 1 reviewed, verified, PR #4 ready | Await merge; Phase 2 blocked on merge and #282; Phase 3 awaits deployment |
 
 ## Table of contents
 - [Phase 1: Local history and export contract](#phase-1-local-history-and-export-contract)
@@ -71,7 +71,7 @@ Round1 returned non-approval (driver exit5, reviewer FAIL); no implementation st
 - [x] Rating persisted/read back; plan relay Approved.
 - [x] Phase 1 requirements have nonempty correctness/failure evidence and measured latency; final review findings tracked below.
 - [x] Final relay Approved (round3, ba0f97de3afd); full qualifying suites passed once afterward on unchanged implementation. See final-gate.json.
-- [ ] Ready PR opened, source data/deployment unchanged; status refreshed.
+- [x] [PR #4](https://github.com/HiQS-Labs/XYZ-CLIO/pull/4) marked ready; source history/deployment unchanged. Issue3 carries remaining dependencies.
 
 ## Phase 2: Existing Rebalance consumers and fleet publication
 **Goal:** the existing query/Daily/semantic path returns device/agent/session/checkout and explicit ledger links across Macs.
@@ -109,3 +109,5 @@ Round1 non-approval (exit5): R1 accepted, all replacing output paths now share h
 Round2 non-approval (exit5): R3 accepted, shared guard recognizes standalone historical marker lines, allowing repeated JSONL exports with marker text inside prompts. Witnessed new fixture fail before fix; round3 reviews the one-predicate correction and extended existing case.
 
 Final round3 Approved and attested (exit0); five qualifying suites exit0 at bc444c619fd9. Final benchmark and warnings/skips are recorded under TESTS-RESULTS/2026-09-30-gh3/. PR#4 is the handoff; issue3 stays open for dependent consumer/fleet/pilot work. No installed deployment.
+
+Handoff: retained full clone `/Users/noelsaw/task-clones/clio-gh3-sqlite`, branch `feat/gh3-sqlite-history`, ready PR#4 against main. Retain until landing and reconcile/retire via `/merge-cleanup`. Relay validation clones retain coordination/provenance evidence until handoff completes. No other task PR or parked experimental branch in this group.

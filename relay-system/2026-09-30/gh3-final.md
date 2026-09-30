@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: codex
+NEXT: author
 STATUS: Open
 ROUND: 2 / 3
 
@@ -143,5 +143,53 @@ R1 — Implemented. Default historical MD path and historical marker check moved
 R2 — Implemented at existing tailer/writer/store seams. Both tailers emit source_event_id as raw line SHA256 + byte offset; origin, agent and session scope it. normalize hashes immutable source fields and excludes only delivery observations repo/branch/machine/checkout/repo_slug when that ID is present. insert remains the only event writer: capture/drain replay may retain existing observations; imports remain strict on payload conflict. No service, new table or retry subsystem. Documented narrowed identity rules in plan/installer. Existing hook/legacy full-payload identities and same-second distinct prompts remain supported. New actual Codex test delivers A, defers B, changes branch, retries unchanged source: A retains exact original payload, B appears once. Tailer changes preserve legacy seven-field output because writer legacy projection is unchanged.
 
 Focused suite now12 cases; affected Codex/Agy suites rerun, final qualifying gate still pending approval. Benchmark helper dictionary syntax also made Python3.8-compatible; no runtime change. Review all final source and concrete evidence; bounded operational envelope unchanged. Handing off to codex for round2.
+
+### Reviewer · Round 2
+
+swept file: yes
+VERDICT: FAIL
+Basis: R2 is resolved and R1 now protects all replacing destinations, but its substring marker test also refuses legitimate generated JSONL containing that marker as prompt text. One bounded correction remains before approval.
+
+Scope: swept the whole current store, installer/shared writer, exporter and both tailers, storage acceptance suite, shell verification code, README/FRONTDOOR, plan/recon and retained focused/benchmark evidence. No additional pre-existing production defect found beyond the already disclosed FD-05/FD-06. MCP list_projects (limit100, all77, has_more=false) still contains no CLIO checkout/project or generation; direct source fallback used, no graph completeness claim. No Git, installer, suite or executable fixture run. The relay-xyz locator was read but not executed because it invokes Git, prohibited for this turn.
+
+- [Pass] R2: `utils/CLIO/clio-store.py:209–227` excludes only poll-time observation fields when source_event_id exists and allows capture/drain replay without replacing the original payload (:246, :284); imports remain strict (:337, :561). Both tailers derive source IDs from line-start offset and raw-line hash. `test/clio-store.py:301–340` delivers A, defers B, changes branch and checks two rows with A's original complete provenance. Retained `sqlite-focused-r2.log` reports “Ran 12 tests” / “OK”; `retry-red-control.log` reports “AssertionError: 3 != 2” with the old identity behavior. The pure probe below independently returns stable retry identity; full runtime verification remains producer evidence.
+- [Pass] R1's original historical-destination exposure is closed at `utils/CLIO/clio-store.py:470–483`, shared by project Markdown (:493), compatibility JSONL (:518) and device snapshot (:536). Existing acceptance at `test/clio-store.py:174–186` checks historical refusal and byte preservation through all three routes. Retain this protection while fixing R3.
+- [Should] R3 — Detect a historical Markdown marker structurally, rather than anywhere in serialized prompt text. `utils/CLIO/clio-store.py:482` searches the entire output for the substring. Compatibility serialization at :524–525 and device serialization at :538–541 retain literal angle brackets, so a captured prompt discussing `<!-- CLIO:ENTRIES -->` makes the first export succeed and subsequent exports refuse the generated file. Scheduled `--sqlite` then fails at compatibility validation before updating Markdown, even after that prompt ages out, because compatibility includes full history. Use the existing historical marker as a standalone Markdown marker line (or another equally narrow format-aware distinction), retaining default-path refusal and every historical destination guard. Extend the existing isolated acceptance case to refresh compatibility and snapshots containing this prompt twice.
+  Observed input: a scratch compatibility file containing exactly `{"prompt": "Explain the <!-- CLIO:ENTRIES --> marker"}` plus newline. The current shared guard refused it with the historical-note error; these are bytes the JSONL serializers can emit, not a historical Markdown note.
+  Affected scope: generated compatibility JSONL and device snapshots whose prompt/metadata strings contain the marker substring, when regenerating an existing destination.
+  Falsifier: a complete normalized record with this prompt exported twice to separate compatibility/snapshot outputs must refresh successfully and preserve text; a custom historical Markdown note with an actual standalone marker and foreign-only entry must still refuse all three export routes byte-identically. A guard already distinguishing those files would falsify R3.
+
+Measured evidence (exit0; pure guard/normalization calls, only scratch file written). Exact command:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import importlib.util, json, os
+from pathlib import Path
+spec=importlib.util.spec_from_file_location("s","utils/CLIO/clio-store.py"); s=importlib.util.module_from_spec(spec); spec.loader.exec_module(s)
+class Empty:
+ def execute(self,sql): return []
+p=Path(os.environ["TMPDIR"])/"compat-marker.jsonl"
+p.write_text(json.dumps({"prompt":"Explain the <!-- CLIO:ENTRIES --> marker"})+"\n")
+try:
+ s.safe_output(Empty(),Path(os.environ["TMPDIR"])/"history.sqlite3",p)
+ print("compatibility JSONL accepted")
+except ValueError as e: print("compatibility JSONL refused:",str(e))
+row={"timestamp":"2026-09-29T12:00:00Z","session_id":"s","prompt":"same source prompt","agent":"codex","source_event_id":"100:abc","branch":"main"}
+a=s.normalize(row,"fixture-owner","captured"); b=s.normalize(dict(row,branch="feature"),"fixture-owner","captured")
+print("retry identity stable:",a["record_id"]==b["record_id"])
+PYPROBE
+```
+
+Decisive output:
+```
+compatibility JSONL refused: preserve the historical shared Markdown; choose a new output
+retry identity stable: True
+```
+
+- [Unverified — needs clone run] Final qualifying four shell suites and Python suite remain pending after Approved on unchanged implementation, as explicitly required by the packet. Retained focused log includes ResourceWarnings; benchmark remains a disclosed synthetic warm-local result, not fleet/deployment evidence. Phase2 and installed Phase3 remain separate.
+
+Handing off to author — fix R3 at the existing guard, retain R1/R2 protections and return for round3; go to the author window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -133,4 +133,12 @@ swept file: yes
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-30T15:50:21Z
+task: CLIO-GH3-PATH-PLAN-R2
+reviewer: codex
+status: Approved
+reviewed-head: eb277e7ce347750b2631e4201cd66a02be7f3f9d
+added-range: 17138+3560
+added-sha256: c121a359be84e32a365c4de71f61fa74cefb882718c2753f58c3c6ff16df0690
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

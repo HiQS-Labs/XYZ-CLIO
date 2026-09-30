@@ -1,0 +1,5 @@
+# Agy pre-merge QA — 2026-09-30
+
+Round1 returned a real non-approval (driver exit5): new-job installer example60 was mistaken for an existing deployment rewrite. Producer retained the new-job default, clarified that existing jobs are never recreated during migration (including interval300), and reused the existing same-path case with a synthetic300-second plist. The entire job remained byte-identical. No runtime implementation change.
+
+Round2 Approved, attested driver exit0 at d26b7802b027. Final existing four shell suites and all16 SQLite cases passed once afterward at def2baa32395 with identical implementation. Test input hashes and verification-clone pre/post identity are in final-gate.json; no identity drift. Existing fixture ResourceWarnings and equivalent-interpreter skips retained. No installed tests/private prompt data used. The user now authorizes merge and local deployment; installed rolling cutover still requires actual history coverage, note reconciliation and one publisher, not merely fixture approval.

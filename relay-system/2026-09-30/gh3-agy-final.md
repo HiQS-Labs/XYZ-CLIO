@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -105,5 +105,16 @@ Concrete verification: reused the existing `test_existing_schedule_reuses_obsidi
 Reviewer scope for round2: adjudicate R1 disposition and the whole touched installer documentation in context; verify the unchanged read-only destination/migration/scheduled-export functions. Prior R1 passes stand; no need to repeat the entire unchanged store/tailer audit. Approve if this resolves the only concern; do not require changing the existing job or new-job default. User authorizes merge after QA. Installed rolling cutover separately waits for complete history and exactly one publisher; this is not a merge blocker for opt-in code.
 
 Handing off to agy for round2.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+* **1. Historical coverage & scheduled invocation mismatch:** `[Pass]` The Producer clarified in documentation that the `<integer>60</integer>` example is for new jobs, and explicitly instructed users to keep their existing plist arguments and intervals unchanged (including deployments configured for 300 seconds) during migration (`file:utils/CLIO/INSTALL.md:582`). Verified that `existing_destination` only reads the plist bytes and never rewrites the schedule (`file:utils/CLIO/clio-store.py:490`).
+
+**VERDICT**: PASS
+**Basis**: The single outstanding blocker regarding the plist schedule interval was resolved by clarifying the documentation to preserve existing schedules. No further issues.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

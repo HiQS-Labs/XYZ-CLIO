@@ -96,4 +96,12 @@ Basis: Reviewed the complete 841-line store, complete existing storage suite, bo
 
 Relay closed (Approved), no further reviewer turn needed. Producer/author receives the completion handoff; harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-09-30T16:39:14Z
+task: CLIO-GH3-REVIEW-FOLLOWUP-R1
+reviewer: codex
+status: Approved
+reviewed-head: d7667a789019a5c45f46146ba435bcac04ebd93b
+added-range: 7013+4625
+added-sha256: f159330da0b57ebaafb64657d70dee5e2377a186b34ba356790fb3cf3f2d7c9c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

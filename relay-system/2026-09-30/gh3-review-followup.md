@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,22 @@ Report concrete file:line findings. Every behavior request needs Observed input,
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+Agent: codex
+swept file: yes
+VERDICT: PASS
+Basis: Reviewed the complete 841-line store, complete existing storage suite, both benchmark scripts, installer backup/restore section, same-path plan and handoff against all four embedded acceptance questions. No material unresolved finding or additional pre-existing defect found in this bounded sweep. Approval covers the branch artifact; merge and installed cutover remain separately authorized.
+
+- [Pass] Initialization preserves an existing target (utils/CLIO/clio-store.py:111–113), exclusively creates a new one (:114), closes the connection before caught-failure cleanup (:118–154), and removes only that newly created target. Existing-case additions measure failed-target removal and retry (test/clio-store.py:480–485). Exception recovery is accurately bounded, including SIGKILL/power-loss exclusion (doc/gh3-handoff.md:6).
+- [Pass] Self-owner manifest rejection precedes event insertion and import-receipt writing (utils/CLIO/clio-store.py:718–728). Same-device restored backup rejection and foreign-store/no-echo behavior are covered in the existing case (test/clio-store.py:398–411). Restore semantics explicitly retain owner and prohibit a second live device (utils/CLIO/INSTALL.md:503–506).
+- [Pass] Explicit UTF-8 appears in corpus generation (TESTS-RESULTS/2026-09-30-gh3/generate-corpus.py:8), measurement reads and writer extraction (measure-sqlite.py:25,61–63), and Unicode fixture note reads/writes (test/clio-store.py:96,129–135). Benchmark alternates order, asserts 20 rows and compares ordered session/timestamp/prompt identities every sample (measure-sqlite.py:29–31,46–57); this corpus has distinct timestamps, so the differing tie-break keys do not affect measured order. Limitations are explicit (:79).
+- [Pass] Same-path registration preserves exact header and exclusively backs up original bytes with digest checks (utils/CLIO/clio-store.py:580–601). Publication verifies registered DB/owner, backup and current note (:555–565), stores retry hashes before replacement (:680–687), and retains all history in SQLite/full compatibility output (:646–679). Existing destination discovery reads but never writes the job (:485–505); scheduled dispatch uses its same Markdown argument (:802–809). Corresponding cases check job bytes, header, foreign coverage, expiry, history retention and write guards (test/clio-store.py:106–242).
+- [Pass] Handoff explicitly withholds merge/deployment authorization and requires every source/device, pending/quarantined accounting, and exactly one shared-note publisher before cutover (doc/gh3-handoff.md:3,9,12–14). Rebalance #282/#281, existing Git Pulse publisher/shared lock, SemanticDoc/Daily ingestion and readonly XYZ ledger seams are named (:10–11); no additional service or writer requested.
+- [Pass] Read-only receipt probe: command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with stdlib hashlib/json/pathlib reading provenance.jsonl and its three named artifacts, comparing SHA256, then reading benchmark query_run_order/equal_nonempty_results/returned. Exit 0; decisive output: `red-controls.log sha256_match=True recorded_exit=1; focused.log sha256_match=True recorded_exit=0; benchmark.json sha256_match=True recorded_exit=0; orders=[['jsonl','sqlite'],['sqlite','jsonl'],['jsonl','sqlite'],['sqlite','jsonl'],['jsonl','sqlite'],['sqlite','jsonl'],['jsonl','sqlite']]; equal_nonempty_results=True returned=20`. Receipt contents show the two intended baseline failures and candidate success (TESTS-RESULTS/2026-09-30-gh3-review-followup/red-controls.log, focused.log, provenance.jsonl).
+- [Unverified — needs clone run] No executable fixtures or test suites were run in this reviewer worktree. Recorded focused receipts are evidence of the producer's isolated run, not an independently repeated gate. The authorized full five-suite harness gate must follow this approval; do not interpret PASS as its result.
+- Evidence limitation: graph list_projects returned all 77 projects (has_more=false) with no matching CLIO/worktree project; generation and coverage are unavailable here. Used complete direct-source reads rather than another checkout's graph. Locator --check exited 0 and located the central harness, while emitting a driver_lock_path_for_repo warning; coordination used the operator-pinned tick throughout.
+
+Relay closed (Approved), no further reviewer turn needed. Producer/author receives the completion handoff; harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

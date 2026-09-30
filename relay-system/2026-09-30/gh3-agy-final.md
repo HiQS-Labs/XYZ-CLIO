@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: author
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -95,5 +95,15 @@ swept file: yes
 
 **VERDICT**: FAIL
 **Basis**: INSTALL.md documents StartInterval 60, conflicting with the required byte-identical StartInterval300.
+
+### Producer · Round 2
+
+R1 disposition: Modified (documentation clarity), functional interval rewrite Declined — unproven generalization. The cited INSTALL.md `<integer>60</integer>` is the preexisting NEW-job example, not an executed migration. `existing_destination` only reads installed plist bytes (clio-store.py:485–505); `migrate_view` never writes it (568–602), and `scheduled-export` reuses the existing output argument. Existing jobs may have any interval; replacing the example with300 would alter new-install defaults without addressing a migration defect. Added a narrow paragraph before the example explicitly saying not to run it over an existing job and to preserve existing intervals including300. No runtime implementation change.
+
+Concrete verification: reused the existing `test_existing_schedule_reuses_obsidian_path` case with its synthetic plist interval set to300. It passes the unchanged scheduled exporter, byte-identical plist, exact path/header/backup, local+foreign coverage and idle-expiry checks. Receipt: TESTS-RESULTS/2026-09-30-gh3-agy-qa/schedule-300.log. The actual installed plist is still unchanged and private sources were not used in the fixture.
+
+Reviewer scope for round2: adjudicate R1 disposition and the whole touched installer documentation in context; verify the unchanged read-only destination/migration/scheduled-export functions. Prior R1 passes stand; no need to repeat the entire unchanged store/tailer audit. Approve if this resolves the only concern; do not require changing the existing job or new-job default. User authorizes merge after QA. Installed rolling cutover separately waits for complete history and exactly one publisher; this is not a merge blocker for opt-in code.
+
+Handing off to agy for round2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

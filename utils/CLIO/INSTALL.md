@@ -562,6 +562,11 @@ one designated publisher after the same-path migration above.
 
 ### Auto-sync every 1 minute (macOS launchd)
 
+This example creates a **new** one-minute job. During SQLite migration, do not
+run this block over an existing job: keep its plist bytes, arguments and interval
+unchanged, including a deployment configured for 300 seconds. Migration reads
+the existing destination; it does not install or rewrite the schedule.
+
 Replace `OUT_PATH` with your chosen output file:
 
 ```bash

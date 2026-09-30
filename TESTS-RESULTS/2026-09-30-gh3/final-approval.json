@@ -1,0 +1,15 @@
+{
+  "added_len": 6135,
+  "added_sha256": "a5b28c80963093a1269158ccfc382a5d042d8f3a5b899b005d6d7a4c067d0a61",
+  "added_start": 23563,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-30T07:19:06Z",
+  "isolated": true,
+  "relay_file_rel": "relay-system/2026-09-30/gh3-final.md",
+  "reviewed_head": "ba0f97de3afdd927e3b55e06873baa5b4ea30a9b",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "task": "CLIO-GH3-FINAL-R3",
+  "trailer_sha256": "cb95e87fa0ab7fa82732b03c25246b52b5135a1b4b90c3f145c10afbfa3ce55c"
+}

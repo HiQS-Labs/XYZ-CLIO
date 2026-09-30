@@ -9,6 +9,8 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 # CLIO SQLite and work provenance — build plan
 
+**2026-09-30 correction:** same-path Obsidian migration is now required. [Revision plan](gh3-same-path-plan.md) supersedes the separate-final-note clauses below. PR4 is draft while this revision is built/reviewed. Prior results remain historical. 
+
 | Most recently completed phase | What's next |
 |---|---|
 | Phase 1 reviewed, verified, PR #4 ready | Await merge; Phase 2 blocked on merge and #282; Phase 3 awaits deployment |

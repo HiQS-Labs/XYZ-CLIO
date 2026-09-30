@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -120,7 +120,7 @@ Use expand → backfill with ongoing capture → verify convergence → switch r
 - [ ] Every legacy record is imported or explicitly accounted for, repeated migration adds no duplicates, and originals remain recoverable.
 - [ ] The Markdown file contains exactly the chosen latest-seven-day snapshot, expires old entries without new capture, and publishes atomically; older history remains in SQLite.
 - [ ] Agents can retrieve specific evidence quickly through indexed read-only queries, with documented examples and measured same-corpus results.
-- [ ] Downstream consumers and installed copies are reconciled, a one-device pilot and rollback are verified, and private prompts/DB files are not published to GitHub.
+- [ ] Downstream consumers and installed copies are reconciled, a one-device pilot and rollback are verified, and private prompts/DB files are not published to GitHub.  [Unverified — no citation]
 
 Related: [Rebalance #232](https://github.com/HiQS-Labs/rebalanceOS/issues/232) storyline trial and [#210](https://github.com/HiQS-Labs/rebalanceOS/issues/210) evidence-bound synthesis. This storage work is separate and must not silently block or replace the frozen Luna trial.
 ```
@@ -135,5 +135,35 @@ Related: [Rebalance #232](https://github.com/HiQS-Labs/rebalanceOS/issues/232) s
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+swept file: yes
+VERDICT: FAIL
+Basis: The local implementation/ready-PR scope is appropriate, but origin/metadata persistence and one existing source-read defect need explicit dispositions before implementation. This is plan QA, not installed-pilot acceptance.
+
+Evidence scope: Read the complete embedded acceptance packet, doc/gh3-plan.md, doc/recon-gh3.md, README.md, INSTALL.md and both tailers and exporter, including pre-existing code. Graph list_projects returned 77 projects with has_more=false and no CLIO/current worktree project; no current generation or coverage can be asserted, so direct source fallback was used. Downstream external-source claims are recon evidence, not independently verified deployed behavior. No git, suites or executable fixtures run.
+
+- [Should] R1 — Specify persisted origin independently of display machine and freeze its identity treatment (plan gap). `doc/gh3-plan.md:33` lists machine but no origin-device/local-import membership; `:43` requires imported records never be exported as local. A receiving DB must implement that predicate without guessing from historical machine names. Fix: define the minimal stored origin/ingestion provenance and export selection rule, how unknown legacy origin is assigned for ownership without manufacturing captured device metadata, and whether transport/ingestion fields participate in record_id. State that receiving-device context cannot change an imported ID. No synchronization service needed.
+  Observed input: the event schema at `doc/gh3-plan.md:33` plus the rule "imported records must not be re-exported as local" at `:43`; legacy row `{timestamp:"2026-09-29T12:00:00Z",session_id:"s",prompt:"fixture",machine:""}` has no origin-device identifier (illustrative contract input, not an executed implementation failure).
+  Affected scope: local legacy ingestion, local capture and device-snapshot import/export, including unknown or renamed machine labels.
+  Falsifier: A captures one event and imports B's snapshot, B imports A's snapshot; repeated exports contain only each owner's events with unchanged IDs, while a legacy empty-machine row remains unknown in query results. If existing schema text already determines all those outcomes, cite the exact fields/predicate instead of adding machinery.
+
+- [Should] R2 — Preserve unknown metadata explicitly (plan gap against the engineering contract). `doc/gh3-plan.md:33` specifies a closed event-field list and `:39` seven legacy fields plus additive provenance, but gives no retention rule for unrecognized input keys. Retaining originals is necessary but does not specify how SQLite/query/round-trip export preserves unknown metadata. Fix: state a small raw/extras JSON preservation rule, collision/identity treatment and round-trip expectations; keep normalization of recognized fields separate from preservation.
+  Observed input: `doc/gh3-plan.md:33,39`; an otherwise valid legacy row with an additional `client_extension:{version:2}` key is not covered by the listed schema/export fields (contract counterexample, not a measured implementation failure).
+  Affected scope: imported legacy/device rows carrying additional metadata; no requirement to guess absent values.
+  Falsifier: import, query, compatibility/device export and reimport of that synthetic row retain the extension and stable ID; unknown metadata cannot silently overwrite recognized identity fields. A cited existing raw-payload contract satisfying this would resolve the finding.
+
+- [Should] R3 — Add the existing Agy source-DB write to the narrow implementation scope (observed source defect). `utils/CLIO/clio-agy-tail.sh:112-124` uses `sqlite3.connect(db_path)` for a best-effort metadata read; when the conversations directory exists but the DB does not, this creates an empty file in agent-owned source history before catching the missing-table error. This contradicts the tailer's read-only promise at `:3-4`; recon acknowledges the metadata read at `doc/recon-gh3.md:17` but does not disposition the mutation. Fix: use a properly encoded SQLite mode=ro URI and retain the current best-effort empty-repo fallback; document it as a small existing seam correction, not a new reader subsystem.
+  Observed input: nonexistent `<agy-root>/conversations/<session>.db` with its parent directory present, at `utils/CLIO/clio-agy-tail.sh:112-116`.
+  Affected scope: Agy companion metadata reads only; missing/unreadable DB must not stop prompt delivery or create source files.
+  Falsifier: missing DB remains absent and prompt delivery still succeeds; valid DB supplies the same repo metadata without byte changes. Verify through the existing Agy suite in a disposable clone.
+  Narrow stdlib probe command (after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`): `python3 -` with `with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as d: p=pathlib.Path(d)/"missing-source.db"; print("before:",p.exists());` then `with sqlite3.connect(str(p)) as c:` execute `SELECT data FROM trajectory_metadata_blob`, catch OperationalError, and print `p.exists()` afterward. Exit 0; decisive output: `before: False`, `caught: no such table: trajectory_metadata_blob`, `after: True`. Only scratch files were created; no tailer fixture was executed.
+
+- [Nit] R4 — Make newest-first rolling order explicit at `doc/gh3-plan.md:39,53`: use timestamp descending with a stable record-ID tie-breaker. The acceptance packet requires newest first; chronological compatibility JSONL at `:39` must remain ascending. Add explicit clone verification for simultaneous capture/read/export and full-disk/spool-persistence failure, rather than relying solely on the broad "all requirements" checkbox at `:65`.
+- [Pass] The minimal authority and delivery structure is proportionate: `doc/gh3-plan.md:29,35,37` retains one shared insertion boundary, stdlib SQLite, bounded capture, durable hook receipts and final legacy-lock/config recheck. Existing nonzero cursor retry is supported by `utils/CLIO/clio-codex-tail.sh:264-281` and `utils/CLIO/clio-agy-tail.sh:196-213`. Keep those contracts.
+- [Pass] Shared historical Markdown and permanent receipts remain separate from rolling membership (`doc/gh3-plan.md:39,53`; existing shared-note behavior `utils/CLIO/INSTALL.md:290-321`). Phase 2 has hard merge/fleet dependencies (`doc/gh3-plan.md:72`), and installed pilot requires separate authorization (`:88-92`). Ratings and recurrence uncertainty are stated without treating potential history loss as observed loss (`:25`).
+- [Unverified — needs clone run] SQLite correctness/performance, all four capture routes, contention/crash recovery and full acceptance controls remain future implementation evidence (`doc/gh3-plan.md:51-54,65-66`). Recon's baseline statement at `doc/recon-gh3.md:40` supplies no result artifact here; do not promote it to a reviewer-witnessed suite pass. Existing lock-drop and same-second suppression are already dispositioned by the plan (`INSTALL.md:182-201`; plan `:33-37`); the additional pre-existing source defect found in this sweep is R3.
+
+Handing off to author — disposition R1–R4, revise the plan/source-scope contracts, then open Round 2 for review. No artifact or source file was edited by Reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

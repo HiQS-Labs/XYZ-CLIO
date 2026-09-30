@@ -1,0 +1,94 @@
+{
+  "corpus_rows": 10000,
+  "corpus_bytes": 12526701,
+  "corpus_sha256": "0f2ba3976a500dd69e895507f767cb096ec6860966617370cbca2aa650169f5e",
+  "query_run_order": [
+    [
+      "jsonl",
+      "sqlite"
+    ],
+    [
+      "sqlite",
+      "jsonl"
+    ],
+    [
+      "jsonl",
+      "sqlite"
+    ],
+    [
+      "sqlite",
+      "jsonl"
+    ],
+    [
+      "jsonl",
+      "sqlite"
+    ],
+    [
+      "sqlite",
+      "jsonl"
+    ],
+    [
+      "jsonl",
+      "sqlite"
+    ]
+  ],
+  "equal_nonempty_results": true,
+  "returned": 20,
+  "jsonl_scan": {
+    "runs_ms": [
+      53.22475000139093,
+      50.57500000111759,
+      51.23199999798089,
+      49.24991699954262,
+      49.4815829952131,
+      49.66929100191919,
+      50.61016599938739
+    ],
+    "median_ms": 50.57500000111759,
+    "max_ms": 53.22475000139093
+  },
+  "sqlite_query": {
+    "runs_ms": [
+      1.2042079979437403,
+      0.9951250031008385,
+      1.0310420038877055,
+      0.7578329968964681,
+      1.0670829942682758,
+      0.6778330061933957,
+      1.2536249996628612
+    ],
+    "median_ms": 1.0310420038877055,
+    "max_ms": 1.2536249996628612
+  },
+  "query_plan": [
+    [
+      8,
+      0,
+      49,
+      "SEARCH events USING INDEX event_machine (machine=? AND timestamp>? AND timestamp<?)"
+    ]
+  ],
+  "projection": {
+    "markdown": "temporary recent.md",
+    "rows": 3361,
+    "bytes": 5031621,
+    "cutoff": "2026-09-30T00:00:00.000000Z",
+    "history_rows": 10000
+  },
+  "projection_timing": {
+    "runs_ms": [
+      224.26825000002282,
+      253.61095799598843,
+      251.6516249961569
+    ],
+    "median_ms": 251.6516249961569,
+    "max_ms": 253.61095799598843
+  },
+  "capture_shared_writer": {
+    "samples": 30,
+    "p50_ms": 119.88797950107255,
+    "p95_ms": 132.06499999796506,
+    "max_ms": 205.07616599934408
+  },
+  "limitations": "Synthetic warm local run, excludes CLI startup for query and disk/network fleet transport. Shared-writer timings include shell/Python startup. No FTS/vector speed claim."
+}

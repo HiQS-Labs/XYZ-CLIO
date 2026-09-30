@@ -113,40 +113,45 @@ def initialize(path):
             return conn.execute('SELECT owner FROM metadata').fetchone()[0]
     fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     os.close(fd)
-    owner = str(uuid.uuid4())
-    with contextlib.closing(sqlite3.connect(path, timeout=0.5)) as conn:
-        conn.executescript('''
-            PRAGMA journal_mode=WAL;
-            BEGIN IMMEDIATE;
-            CREATE TABLE metadata(owner TEXT NOT NULL);
-            CREATE TABLE events(
-                record_id TEXT PRIMARY KEY, timestamp TEXT NOT NULL,
-                repo TEXT, machine TEXT, agent TEXT, session_id TEXT,
-                repo_slug TEXT, origin_id TEXT NOT NULL, payload TEXT NOT NULL);
-            CREATE INDEX event_time ON events(timestamp,record_id);
-            CREATE INDEX event_repo ON events(repo,timestamp,record_id);
-            CREATE INDEX event_machine ON events(machine,timestamp,record_id);
-            CREATE INDEX event_agent ON events(agent,timestamp,record_id);
-            CREATE INDEX event_session ON events(session_id,timestamp,record_id);
-            CREATE INDEX event_slug ON events(repo_slug,timestamp,record_id);
-            CREATE INDEX event_origin ON events(origin_id,timestamp,record_id);
-            CREATE TABLE device_imports(
-                owner TEXT NOT NULL, digest TEXT NOT NULL, generated_at TEXT NOT NULL,
-                source TEXT NOT NULL, rows INTEGER NOT NULL, received_at TEXT NOT NULL,
-                PRIMARY KEY(owner,digest));
-            CREATE TABLE sources(
-                source TEXT PRIMARY KEY, path TEXT NOT NULL, inode TEXT NOT NULL,
-                origin_id TEXT NOT NULL, offset INTEGER NOT NULL DEFAULT 0,
-                lines INTEGER NOT NULL DEFAULT 0, prefix_hash TEXT NOT NULL);
-            CREATE TABLE source_lines(
-                source TEXT NOT NULL, line INTEGER NOT NULL, raw_hash TEXT NOT NULL,
-                record_id TEXT, reason TEXT, quarantine BLOB,
-                PRIMARY KEY(source,line));
-        ''')
-        conn.execute('INSERT INTO metadata VALUES (?)', (owner,))
-        conn.execute('PRAGMA application_id=' + str(APP_ID))
-        conn.execute('PRAGMA user_version=' + str(VERSION))
-        conn.commit()
+    try:
+        owner = str(uuid.uuid4())
+        with contextlib.closing(sqlite3.connect(path, timeout=0.5)) as conn:
+            conn.executescript('''
+                PRAGMA journal_mode=WAL;
+                BEGIN IMMEDIATE;
+                CREATE TABLE metadata(owner TEXT NOT NULL);
+                CREATE TABLE events(
+                    record_id TEXT PRIMARY KEY, timestamp TEXT NOT NULL,
+                    repo TEXT, machine TEXT, agent TEXT, session_id TEXT,
+                    repo_slug TEXT, origin_id TEXT NOT NULL, payload TEXT NOT NULL);
+                CREATE INDEX event_time ON events(timestamp,record_id);
+                CREATE INDEX event_repo ON events(repo,timestamp,record_id);
+                CREATE INDEX event_machine ON events(machine,timestamp,record_id);
+                CREATE INDEX event_agent ON events(agent,timestamp,record_id);
+                CREATE INDEX event_session ON events(session_id,timestamp,record_id);
+                CREATE INDEX event_slug ON events(repo_slug,timestamp,record_id);
+                CREATE INDEX event_origin ON events(origin_id,timestamp,record_id);
+                CREATE TABLE device_imports(
+                    owner TEXT NOT NULL, digest TEXT NOT NULL, generated_at TEXT NOT NULL,
+                    source TEXT NOT NULL, rows INTEGER NOT NULL, received_at TEXT NOT NULL,
+                    PRIMARY KEY(owner,digest));
+                CREATE TABLE sources(
+                    source TEXT PRIMARY KEY, path TEXT NOT NULL, inode TEXT NOT NULL,
+                    origin_id TEXT NOT NULL, offset INTEGER NOT NULL DEFAULT 0,
+                    lines INTEGER NOT NULL DEFAULT 0, prefix_hash TEXT NOT NULL);
+                CREATE TABLE source_lines(
+                    source TEXT NOT NULL, line INTEGER NOT NULL, raw_hash TEXT NOT NULL,
+                    record_id TEXT, reason TEXT, quarantine BLOB,
+                    PRIMARY KEY(source,line));
+            ''')
+            conn.execute('INSERT INTO metadata VALUES (?)', (owner,))
+            conn.execute('PRAGMA application_id=' + str(APP_ID))
+            conn.execute('PRAGMA user_version=' + str(VERSION))
+            conn.commit()
+    except BaseException:
+        # Only this invocation created the exclusive target; allow a clean retry.
+        path.unlink()
+        raise
     return owner
 
 
@@ -710,6 +715,9 @@ def import_device(path, source):
     added = 0
     with contextlib.closing(database(path, True)) as conn, conn:
         conn.execute('BEGIN IMMEDIATE')
+        local_owner = conn.execute('SELECT owner FROM metadata').fetchone()[0]
+        if manifest.get('owner') == local_owner:
+            raise ValueError('snapshot claims this store as origin; refuse self-import')
         for raw in raw_rows:
             row = normalize(json.loads(raw))
             if row['origin_id'] != manifest['owner']:

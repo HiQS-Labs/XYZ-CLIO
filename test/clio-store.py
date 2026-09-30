@@ -46,11 +46,11 @@ class History(unittest.TestCase):
     def install(self):
         hooks = self.home / '.claude/hooks'
         hooks.mkdir(parents=True)
-        source = (ROOT / 'utils/CLIO/INSTALL.md').read_text()
+        source = (ROOT / 'utils/CLIO/INSTALL.md').read_text(encoding='utf-8')
         for name in ('clio-capture.sh', 'log-prompt.sh'):
             marker = 'cat > ~/.claude/hooks/' + name + " << 'EOF'\n"
             body = source.split(marker, 1)[1].split('\nEOF\n', 1)[0] + '\n'
-            (hooks / name).write_text(body)
+            (hooks / name).write_text(body, encoding='utf-8')
             (hooks / name).chmod(0o755)
         shutil.copyfile(ROOT / 'utils/CLIO/clio-store.py', hooks / 'clio-store.py')
         shutil.copyfile(ROOT / 'utils/CLIO/prompt-log-to-md.sh', hooks / 'prompt-log-to-md.sh')
@@ -93,7 +93,7 @@ class History(unittest.TestCase):
             body += ('\n<!-- clio:id:' + row['session_id'] + ':' + row['timestamp'].replace('.000000Z', 'Z')
                      + ' -->\n## ' + row['repo'].upper() + '\n' + row['timestamp'] + '  \n' + context
                      + '\n\n> "' + row['prompt'].replace('\n', '\n> ') + '"\n')
-        note.write_text(header + body)
+        note.write_text(header + body, encoding='utf-8')
         exporter = self.home / '.claude/hooks/prompt-log-to-md.sh'
         job = self.home / 'Library/LaunchAgents/com.claude.prompt-log-to-md.plist'
         job.parent.mkdir(parents=True, exist_ok=True)
@@ -126,18 +126,18 @@ class History(unittest.TestCase):
         command = plistlib.loads(job_bytes)['ProgramArguments']
         subprocess.run(command, check=True, capture_output=True)
         self.assertEqual(job.read_bytes(), job_bytes)
-        self.assertTrue(note.read_text().startswith(header))
-        self.assertIn('Current local prompt', note.read_text())
-        self.assertIn('Current foreign prompt', note.read_text())
-        self.assertNotIn('Obsolete history outside window', note.read_text())
+        self.assertTrue(note.read_text(encoding='utf-8').startswith(header))
+        self.assertIn('Current local prompt', note.read_text(encoding='utf-8'))
+        self.assertIn('Current foreign prompt', note.read_text(encoding='utf-8'))
+        self.assertNotIn('Obsolete history outside window', note.read_text(encoding='utf-8'))
         self.assertFalse((self.home / '.claude/prompt-log-recent.md').exists())
         self.assertEqual(len(self.rows()), 3)
-        self.assertEqual(len((self.home / '.claude/prompt-log-compat.jsonl').read_text().splitlines()), 3)
+        self.assertEqual(len((self.home / '.claude/prompt-log-compat.jsonl').read_text(encoding='utf-8').splitlines()), 3)
         self.assertTrue(store.migrate_view(self.db, publishers_paused=True)['already_registered'])
         later = store.utc(datetime.now(timezone.utc) + timedelta(days=8))
         store.project(self.db, cutoff=later)
-        self.assertIn('No prompts in this window.', note.read_text())
-        self.assertTrue(note.read_text().startswith(header))
+        self.assertIn('No prompts in this window.', note.read_text(encoding='utf-8'))
+        self.assertTrue(note.read_text(encoding='utf-8').startswith(header))
         self.assertEqual(len(self.rows()), 3)
         self.assertEqual(Path(result['backup']).read_bytes(), original)
 
@@ -159,7 +159,7 @@ class History(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unsupported'):
             store.migrate_view(self.db, note, True)
         note, _, _ = self.note_and_job([row])
-        note.write_text(note.read_text() + 'Unmanaged user note below entries\n')
+        note.write_text(note.read_text(encoding='utf-8') + 'Unmanaged user note below entries\n')
         with self.assertRaisesRegex(ValueError, 'absent or different'):
             store.migrate_view(self.db, publishers_paused=True)
         self.assertNotIn('view', store.config())
@@ -173,8 +173,8 @@ class History(unittest.TestCase):
         subprocess.run(plistlib.loads(job.read_bytes())['ProgramArguments'], check=True,
                        capture_output=True, env=dict(os.environ, PROMPT_LOG_EXCLUDE=''))
         original = note.read_bytes()
-        self.assertIn('## CAFé-APP', note.read_text())
-        self.assertIn('## UNKNOWN', note.read_text())
+        self.assertIn('## CAFé-APP', note.read_text(encoding='utf-8'))
+        self.assertIn('## UNKNOWN', note.read_text(encoding='utf-8'))
         store.import_jsonl(self.db, source)
         store.activate(self.db, source)
         for shown in ('Preserve my unmanaged reminder', ''):
@@ -197,7 +197,7 @@ class History(unittest.TestCase):
         self.assertEqual(note.read_bytes(), original)
         self.assertEqual(Path(result['backup']).read_bytes(), original)
         store.project(self.db)
-        self.assertTrue(note.read_text().startswith(header))
+        self.assertTrue(note.read_text(encoding='utf-8').startswith(header))
 
     def test_same_path_default_failure_recovery_and_write_guards(self):
         self.activate()
@@ -220,7 +220,7 @@ class History(unittest.TestCase):
                 store.project(self.db, cutoff='2026-09-30T00:00:00Z')
         self.assertEqual(note.read_bytes(), original)
         store.project(self.db, cutoff='2026-09-30T00:00:00Z')
-        self.assertTrue(note.read_text().startswith(header))
+        self.assertTrue(note.read_text(encoding='utf-8').startswith(header))
         subprocess.run(exporter + ['--sqlite'], check=True, capture_output=True)
         current = note.read_bytes()
         for option in ('--status', '--repair', '--backfill'):
@@ -335,16 +335,16 @@ class History(unittest.TestCase):
         self.assertEqual(result['bytes'], len(before))
         store.project(self.db, md, compat, '2026-09-30T00:00:00Z')
         self.assertEqual(before, md.read_bytes())
-        rows = [json.loads(line) for line in compat.read_text().splitlines()]
+        rows = [json.loads(line) for line in compat.read_text(encoding='utf-8').splitlines()]
         self.assertEqual(rows[0]['timestamp'], '2026-09-22T23:59:59Z')
         self.assertEqual([r['timestamp'] for r in rows], sorted(r['timestamp'] for r in rows))
-        self.assertIn('日本語', md.read_text())
+        self.assertIn('日本語', md.read_text(encoding='utf-8'))
         with patch.object(store.os, 'replace', side_effect=OSError('publication interrupted')):
             with self.assertRaises(OSError):
                 store.project(self.db, md, cutoff='2026-10-30T00:00:00Z')
         self.assertEqual(before, md.read_bytes())
         store.project(self.db, md, cutoff='2026-10-30T00:00:00Z')
-        self.assertIn('No prompts in this window.', md.read_text())
+        self.assertIn('No prompts in this window.', md.read_text(encoding='utf-8'))
         self.assertEqual(len(self.rows()), 5)
         legacy = self.home / 'shared.md'
         legacy.write_text('# Shared history\n<!-- CLIO:ENTRIES -->\n')
@@ -366,7 +366,7 @@ class History(unittest.TestCase):
             store.project(self.db, md, compat, '2026-09-30T00:00:00Z')
             store.export_device(self.db, snapshot)
         for output in (compat, snapshot):
-            exported = [json.loads(line) for line in output.read_text().splitlines()]
+            exported = [json.loads(line) for line in output.read_text(encoding='utf-8').splitlines()]
             self.assertTrue(any(r.get('prompt') == marker_prompt for r in exported))
 
     def test_readonly_queries_refs_pagination_and_large_prompt(self):
@@ -396,6 +396,13 @@ class History(unittest.TestCase):
         store.capture(other, other_owner, self.row(machine='fixture-mini'))
         a, b = self.home / 'a.jsonl', self.home / 'b.jsonl'
         store.export_device(self.db, a)
+        with self.assertRaisesRegex(ValueError, 'refuse self-import'):
+            store.import_device(self.db, a)
+        restored = self.home / 'restored.sqlite3'
+        store.backup(self.db, restored)
+        with self.assertRaisesRegex(ValueError, 'refuse self-import'):
+            store.import_device(restored, a)
+        self.assertEqual(len(self.rows()), 1)
         self.assertEqual(store.import_device(other, a)['added'], 1)
         self.assertEqual(store.import_device(other, a)['added'], 0)
         self.assertEqual(store.export_device(other, b)['rows'], 1)
@@ -469,7 +476,13 @@ class History(unittest.TestCase):
         self.assertTrue(any(row['repo'] == 'fixture-repo' for row in self.rows(agent='agy')))
         self.assertFalse((self.home / '.claude/prompt-log.jsonl').exists())
         store.project(self.db, self.home / 'recent.md', self.home / 'rollback.jsonl')
-        self.assertEqual(len((self.home / 'rollback.jsonl').read_text().splitlines()), len(self.rows()))
+        self.assertEqual(len((self.home / 'rollback.jsonl').read_text(encoding='utf-8').splitlines()), len(self.rows()))
+        failed = self.home / 'failed-init.sqlite3'
+        with patch.object(store.sqlite3, 'connect', side_effect=sqlite3.OperationalError('synthetic disk failure')):
+            with self.assertRaises(sqlite3.OperationalError):
+                store.initialize(failed)
+        self.assertFalse(failed.exists())
+        self.assertTrue(store.initialize(failed))
         store.backup(self.db, self.home / 'backup.sqlite3')
         with store.database(self.home / 'backup.sqlite3') as conn:
             self.assertEqual(conn.execute('SELECT count(*) FROM events').fetchone()[0], len(self.rows()))
@@ -490,7 +503,7 @@ class History(unittest.TestCase):
         ]
         rollout.write_text(''.join(json.dumps(r) + '\n' for r in records))
         writer = self.home / '.claude/hooks/clio-capture.sh'
-        original = writer.read_text()
+        original = writer.read_text(encoding='utf-8')
         real = writer.with_name('real-capture.sh')
         real.write_text(original)
         real.chmod(0o755)

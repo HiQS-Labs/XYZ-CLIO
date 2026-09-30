@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 cutoff = datetime(2026, 9, 30, tzinfo=timezone.utc)
-with Path(sys.argv[1]).open('x') as output:
+with Path(sys.argv[1]).open('x', encoding='utf-8') as output:
     for i in range(10000):
         row = {
             'timestamp': (cutoff - timedelta(seconds=(9999-i)*180)).strftime('%Y-%m-%dT%H:%M:%SZ'),

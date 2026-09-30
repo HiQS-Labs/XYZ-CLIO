@@ -1,0 +1,25 @@
+test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History.test_device_roundtrip_preserves_owner_extras_and_no_echo) ... FAIL
+test_activation_four_agent_routes_and_rollback_export (__main__.History.test_activation_four_agent_routes_and_rollback_export) ... FAIL
+
+======================================================================
+FAIL: test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History.test_device_roundtrip_preserves_owner_extras_and_no_echo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/temp/gh3-review-verification/test/clio-store.py", line 399, in test_device_roundtrip_preserves_owner_extras_and_no_echo
+    with self.assertRaisesRegex(ValueError, 'refuse self-import'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_activation_four_agent_routes_and_rollback_export (__main__.History.test_activation_four_agent_routes_and_rollback_export)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/temp/gh3-review-verification/test/clio-store.py", line 484, in test_activation_four_agent_routes_and_rollback_export
+    self.assertFalse(failed.exists())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 2 tests in 1.760s
+
+FAILED (failures=2)

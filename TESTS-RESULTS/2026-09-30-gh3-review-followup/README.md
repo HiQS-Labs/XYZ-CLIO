@@ -1,0 +1,5 @@
+# PR4 review follow-up — 2026-09-30
+
+Synthetic data in a separate full verification clone, temporary HOME; installed capture/history/jobs/notes untouched. Extended existing cases fail against 2a64aa8 for accepted self-owner import and failed-init residue (red-controls.log); both pass on the fixes (focused.log). Benchmark uses the unchanged 10,000-row/12,526,701-byte SHA256-verified corpus, alternating order and nonempty equality each sample. New measurements supersede historical benchmark methodology, not historical receipts. UTF-8 fixed in reviewed fixture/measurement/corpus paths. Existing ResourceWarnings and equivalent-interpreter skips remain disclosed. Independent review and final five-suite gate pending at this commit.
+
+Caught initialization failures permit retry; SIGKILL/power failure is not covered by exception cleanup. Preserve/inspect unrecognized preexisting DB files rather than deleting them automatically. Restored backups retain owner and cannot serve a second live device.

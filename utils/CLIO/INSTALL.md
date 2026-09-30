@@ -500,7 +500,10 @@ receipts for a complete cutover recovery point. Preserve the private config and 
 pending receipts too. Restore to a **new** local DB path, inspect it with `--db ... query`
 and `PRAGMA integrity_check`, reconcile any later arrivals, then update the private
 configuration atomically while writers are quiesced. Never replace a live database
-with a raw copy of its main file while WAL is active.
+with a raw copy of its main file while WAL is active. A restored backup retains its owner UUID:
+use it only as recovery for the same logical device, never as a second live device.
+Initialize a fresh store for another device and import the original device snapshot;
+self-owned snapshots are rejected to prevent history from being echoed as local.
 
 For rollback, first pause submissions and all scheduled tailers/shared exporters.
 Preserve the view receipt and its verified original-note backup. After reconciling

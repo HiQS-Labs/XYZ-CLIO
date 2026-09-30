@@ -1,7 +1,9 @@
 > **SQLite pilot:** opt-in full-history SQLite capture, read-only lookup, a rolling
 > 168-hour Markdown view and per-device export are documented in
 > [INSTALL.md](utils/CLIO/INSTALL.md#sqlite-history-and-seven-day-view-opt-in-pilot).
-> Existing installations stay on JSONL until explicit migration/activation. Fleet
+> Migration keeps the existing Obsidian path and exporter schedule, with a verified
+> backup and complete old-note coverage before switching. Existing installations
+> stay on JSONL until explicit migration/activation. Fleet
 > publishing and Rebalance's provenance upgrade are separate dependent work; no live
 > database synchronization or task-status writes are introduced.
 

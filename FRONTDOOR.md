@@ -8,7 +8,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 
 | | |
 | --- | --- |
-| **Last audited** | 2026-09-30 — GH-3 opt-in SQLite; plan/final reviews approved; final five-suite gate passed |
+| **Last audited** | 2026-09-30 — GH-3 opt-in SQLite; same-path revision: plan approved, focused16-case storage/exporter checks passed; revised final review/gate pending |
 | **Method** | `/frontdoor` walk (7 dimensions) + `/shakedown` static audit and live harness |
 | **Verdict** | ⚠️ **Bumpy** — a newcomer with an AI agent reaches a captured prompt in ~10 minutes with no account, key, or payment required; two low-severity gaps remain, none blocking |
 | **Remediation plan** | [`SHAKEDOWN/2026-09-01/clio-1652.md`](SHAKEDOWN/2026-09-01/clio-1652.md) — the path-resolution audit and its patch |

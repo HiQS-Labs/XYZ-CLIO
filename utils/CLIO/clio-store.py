@@ -8,6 +8,8 @@ import html
 import json
 import os
 from pathlib import Path
+import plistlib
+import re
 import sqlite3
 import sys
 import tempfile
@@ -467,31 +469,162 @@ def query(path, args):
     return result
 
 
-def safe_output(conn, path, output):
+def active_config(conn, path):
+    cfg = config()
+    if (not cfg or Path(cfg['db']).expanduser().resolve() != Path(path).expanduser().resolve()
+            or cfg['owner'] != conn.execute('SELECT owner FROM metadata').fetchone()[0]):
+        raise ValueError('operation requires the activated database and owner')
+    return cfg
+
+
+def existing_destination(explicit=None):
+    """Read the installed job, never evaluate shell text or rewrite its schedule."""
+    plist = Path.home() / 'Library/LaunchAgents/com.claude.prompt-log-to-md.plist'
+    detected = None
+    if plist.exists():
+        job = plistlib.loads(plist.read_bytes())
+        args = job.get('ProgramArguments', [])
+        if args and args[0] in ('/bin/bash', '/bin/sh'):
+            args = args[1:]
+        if (not 1 <= len(args) <= 2 or not isinstance(args[0], str)
+                or Path(args[0]).name != 'prompt-log-to-md.sh'
+                or len(args) == 2 and (not isinstance(args[1], str) or args[1].startswith('-'))):
+            raise ValueError('unsupported exporter job arguments; inspect the existing job before migration')
+        detected = Path(args[1]).expanduser() if len(args) == 2 else Path.home() / '.claude/prompt-log.md'
+        if not detected.is_absolute():
+            raise ValueError('exporter job destination must be absolute')
+    target = Path(explicit).expanduser().resolve() if explicit else detected
+    target = (target or Path.home() / '.claude/prompt-log.md').resolve()
+    if detected and target != detected.resolve():
+        raise ValueError('explicit destination differs from the existing exporter job')
+    return target
+
+
+def legacy_coverage(conn, raw):
+    """Match the shipped legacy renderer, refusing unaccounted body edits/history."""
+    text = raw.decode('utf-8')
+    markers = list(re.finditer(r'(?m)^[ \t]*<!-- CLIO:ENTRIES -->[ \t]*\r?\n', text))
+    if len(markers) != 1:
+        raise ValueError('expected one standalone historical marker; preserve and inspect the note')
+    header, body = text[:markers[0].end()], text[markers[0].end():]
+    entries = list(re.finditer(r'(?m)^<!-- clio:id:([^\r\n]+) -->\r?\n', body))
+    if (body[:entries[0].start()] if entries else body).strip():
+        raise ValueError('unrecognized content below the historical marker')
+    candidates = {}
+    for item in conn.execute('SELECT payload FROM events'):
+        row = json.loads(item[0])
+        candidates.setdefault(row['legacy_id'], []).append(row)
+    for i, entry in enumerate(entries):
+        block = body[entry.end():entries[i + 1].start() if i + 1 < len(entries) else len(body)]
+        lines = block.split('\n')
+        matched = False
+        for row in candidates.get(entry[1], []):
+            context = row['machine'] + (' · ' + row['branch'] if row['branch'] else '')
+            context += ' · ' + (row['agent'] or 'claude-code')
+            prompt = '> "' + row['prompt'].replace('\n', '\n> ') + '"'
+            heading = row['repo'].translate(str.maketrans('abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+            headings = {'## ' + heading} if row['repo'] else {'## ', '## UNKNOWN'}
+            if (len(lines) >= 5 and lines[0] in headings
+                    and lines[2] == context and lines[3] == ''
+                    and '\n'.join(lines[4:]).rstrip('\n') == prompt):
+                matched = True
+                break
+        if not matched:
+            raise ValueError('historical entry absent or different in SQLite; import every device source first')
+    return header, len(entries)
+
+
+def checked_view(conn, path, target):
+    cfg = active_config(conn, path)
+    view = cfg.get('view')
+    if not view or Path(view['path']) != target:
+        raise ValueError('run migrate-view for the existing destination before exporting')
+    if digest(Path(view['backup']).read_bytes()) != view['backup_sha256']:
+        raise ValueError('historical backup changed; publication refused')
+    current = digest(target.read_bytes())
+    if current not in view['accepted_hashes']:
+        raise ValueError('note changed outside this publisher; preserve and reconcile edits before exporting')
+    return cfg, current
+
+
+def migrate_view(path, markdown=None, publishers_paused=False):
+    if not publishers_paused:
+        raise ValueError('pause all shared-note publishers and designate one owner before --publishers-paused')
+    target = existing_destination(markdown)
+    with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
+        with contextlib.closing(database(path)) as conn:
+            conn.execute('BEGIN')
+            cfg = active_config(conn, path)
+            if cfg.get('view'):
+                checked_view(conn, path, target)
+                return {'registered': True, 'already_registered': True, 'markdown': str(target)}
+            safe_output(conn, path, target, historical=True)
+            original = target.read_bytes()
+            header, count = legacy_coverage(conn, original)
+            folder = Path(path).expanduser().resolve().parent / (Path(path).name + '.view-backups')
+            folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+            backup_path = folder / (str(uuid.uuid4()) + '.md')
+            fd = os.open(backup_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            with os.fdopen(fd, 'wb') as backup_file:
+                backup_file.write(original)
+                backup_file.flush()
+                os.fsync(backup_file.fileno())
+            directory = os.open(folder, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+            fingerprint = digest(original)
+            if digest(backup_path.read_bytes()) != fingerprint or digest(target.read_bytes()) != fingerprint:
+                raise ValueError('backup or note changed during migration; no view registered')
+            cfg['view'] = {'path': str(target), 'header': header, 'backup': str(backup_path),
+                           'backup_sha256': fingerprint, 'accepted_hashes': [fingerprint],
+                           'legacy_entries': count}
+            atomic(CONFIG, (encode(cfg) + '\n').encode())
+    return {'registered': True, 'markdown': str(target), 'backup': str(backup_path), 'covered_entries': count}
+
+
+def safe_output(conn, path, output, historical=False):
     target = Path(output).expanduser().resolve()
     forbidden = {Path(path).expanduser().resolve(), CONFIG.resolve()}
     forbidden.update(Path(row[0]).resolve() for row in conn.execute('SELECT path FROM sources'))
     forbidden.update(Path(row[0]).resolve() for row in conn.execute('SELECT source FROM device_imports'))
     forbidden.add((Path.home() / '.claude/prompt-log.jsonl').resolve())
     base = Path(path).expanduser().resolve()
+    cfg = config()
+    view = cfg.get('view', {})
+    if view.get('backup'):
+        forbidden.add(Path(view['backup']).resolve())
     forbidden.update(Path(str(base) + suffix) for suffix in ('-wal', '-shm', '.project.lock'))
     if target in forbidden or target == pending_dir(path).resolve() or pending_dir(path).resolve() in target.parents:
         raise ValueError('output would overwrite storage, configuration or source history')
-    if target == (Path.home() / '.claude/prompt-log.md').resolve():
+    if not historical and target == (Path.home() / '.claude/prompt-log.md').resolve():
         raise ValueError('preserve the historical shared Markdown; choose a new output')
-    if target.exists() and any(line.strip() == '<!-- CLIO:ENTRIES -->'
+    if not historical and target.exists() and any(line.strip() == '<!-- CLIO:ENTRIES -->'
                                for line in target.read_text().splitlines()):
         raise ValueError('preserve the historical shared Markdown; choose a new output')
     return target
 
 
-def project(path, markdown, jsonl=None, cutoff=None):
+def project(path, markdown=None, jsonl=None, cutoff=None):
     cutoff_dt = instant(cutoff) if cutoff else datetime.now(timezone.utc)
     cutoff_text, since = utc(cutoff_dt), utc(cutoff_dt - timedelta(hours=168))
     with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
         with contextlib.closing(database(path)) as conn:
             conn.execute('BEGIN')
-            target = safe_output(conn, path, markdown)
+            cfg = config()
+            view = cfg.get('view', {})
+            if markdown is None:
+                markdown = view.get('path')
+                if not markdown:
+                    raise ValueError('run migrate-view first, or provide --markdown for an explicit preview')
+            target = Path(markdown).expanduser().resolve()
+            registered = target == Path(view['path']) if view else False
+            current = None
+            if registered:
+                cfg, current = checked_view(conn, path, target)
+                view = cfg['view']
+            target = safe_output(conn, path, target, historical=registered)
             all_rows = [json.loads(row[0]) for row in conn.execute('SELECT payload FROM events ORDER BY timestamp,record_id')]
             recent = [row for row in reversed(all_rows) if since <= row['timestamp'] <= cutoff_text]
             lines = ['# CLIO — recent 168 hours', '', 'UTC cutoff: ' + cutoff_text,
@@ -516,6 +649,8 @@ def project(path, markdown, jsonl=None, cutoff=None):
                     lines.extend(['', 'References: ' + html.escape(encode(row['references']), quote=False)])
                 lines.append('')
             data = ('\n'.join(lines) + '\n').encode()
+            if registered:
+                data = view['header'].encode() + b'\n' + data
             compat = safe_output(conn, path, jsonl) if jsonl else None
             if compat == target:
                 raise ValueError('Markdown and JSONL outputs must differ')
@@ -524,6 +659,13 @@ def project(path, markdown, jsonl=None, cutoff=None):
                 # spelling where exact seconds were originally captured.
                 compatibility = [dict(row, timestamp=row['timestamp'].replace('.000000Z', 'Z')) for row in all_rows]
                 atomic(compat, ''.join(encode(row) + '\n' for row in compatibility).encode())
+            if registered:
+                # Record both crash outcomes before replacing the note. A retry may
+                # see either file, but never treats an unexpected edit as disposable.
+                if digest(target.read_bytes()) != current:
+                    raise ValueError('note changed during projection; publication refused')
+                cfg['view']['accepted_hashes'] = list(dict.fromkeys([current, digest(data)]))
+                atomic(CONFIG, (encode(cfg) + '\n').encode())
             atomic(target, data)
     return {'markdown': str(target), 'rows': len(recent), 'bytes': len(data),
             'cutoff': cutoff_text, 'history_rows': len(all_rows)}
@@ -592,6 +734,12 @@ def main():
     activation = commands.add_parser('activate')
     activation.add_argument('--source', default=str(Path.home() / '.claude/prompt-log.jsonl'))
     activation.add_argument('--fresh', action='store_true')
+    migration = commands.add_parser('migrate-view')
+    migration.add_argument('--markdown')
+    migration.add_argument('--publishers-paused', action='store_true')
+    scheduled = commands.add_parser('scheduled-export')
+    scheduled.add_argument('markdown')
+    scheduled.add_argument('--mode', default='export')
     commands.add_parser('capture')
     recovery = commands.add_parser('drain')
     recovery.add_argument('--limit', type=int, default=100)
@@ -602,7 +750,7 @@ def main():
     reader.add_argument('--offset', type=int, default=0)
     reader.add_argument('--explain', action='store_true')
     projection = commands.add_parser('project')
-    projection.add_argument('--markdown', default=str(Path.home() / '.claude/prompt-log-recent.md'))
+    projection.add_argument('--markdown')
     projection.add_argument('--jsonl')
     projection.add_argument('--cutoff')
     exporter = commands.add_parser('export-device')
@@ -628,6 +776,16 @@ def main():
             result = verify_import(path, args.source)
         elif args.command == 'activate':
             result = activate(path, args.source, args.fresh)
+        elif args.command == 'migrate-view':
+            result = migrate_view(path, args.markdown, args.publishers_paused)
+        elif args.command == 'scheduled-export':
+            if args.mode != 'export':
+                raise ValueError('legacy maintenance is unavailable in SQLite mode; use query, drain and project')
+            with contextlib.closing(database(path)) as conn:
+                checked_view(conn, path, Path(args.markdown).expanduser().resolve())
+            recovery = drain(path)
+            result = project(path, args.markdown, Path.home() / '.claude/prompt-log-compat.jsonl')
+            result['pending'] = recovery['pending']
         elif args.command == 'capture':
             if not cfg or Path(cfg['db']).resolve() != Path(path).expanduser().resolve():
                 raise ValueError('capture requires the activated database')

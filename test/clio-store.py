@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import plistlib
 import shutil
 import sqlite3
 import subprocess
@@ -14,6 +15,7 @@ import sys
 import tempfile
 import time
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +52,8 @@ class History(unittest.TestCase):
             (hooks / name).write_text(body)
             (hooks / name).chmod(0o755)
         shutil.copyfile(ROOT / 'utils/CLIO/clio-store.py', hooks / 'clio-store.py')
+        shutil.copyfile(ROOT / 'utils/CLIO/prompt-log-to-md.sh', hooks / 'prompt-log-to-md.sh')
+        (hooks / 'prompt-log-to-md.sh').chmod(0o755)
 
     def activate(self):
         store.activate(self.db, self.home / '.claude/prompt-log.jsonl', fresh=True)
@@ -76,6 +80,150 @@ class History(unittest.TestCase):
         path = self.home / name
         path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
         return path
+
+    def note_and_job(self, rows, default=False):
+        note = self.home / ('.claude/prompt-log.md' if default else 'vault/0. Claude Prompts.md')
+        note.parent.mkdir(parents=True, exist_ok=True)
+        header = '---\ntags: [work]\n---\n# My prompt history\nKeep [[My Project]] and café.\n<!-- CLIO:ENTRIES -->\n'
+        body = ''
+        for row in rows:
+            context = row['machine'] + (' · ' + row['branch'] if row['branch'] else '')
+            context += ' · ' + (row['agent'] or 'claude-code')
+            body += ('\n<!-- clio:id:' + row['session_id'] + ':' + row['timestamp'].replace('.000000Z', 'Z')
+                     + ' -->\n## ' + row['repo'].upper() + '\n' + row['timestamp'] + '  \n' + context
+                     + '\n\n> "' + row['prompt'].replace('\n', '\n> ') + '"\n')
+        note.write_text(header + body)
+        exporter = self.home / '.claude/hooks/prompt-log-to-md.sh'
+        job = self.home / 'Library/LaunchAgents/com.claude.prompt-log-to-md.plist'
+        job.parent.mkdir(parents=True, exist_ok=True)
+        args = [str(exporter)] + ([] if default else [str(note)])
+        job.write_bytes(plistlib.dumps({'Label': 'com.claude.prompt-log-to-md',
+                                      'ProgramArguments': args, 'StartInterval': 60,
+                                      'RunAtLoad': True, 'StandardErrorPath': '/fixture/error.log'}))
+        return note, job, header
+
+    def test_existing_schedule_reuses_obsidian_path(self):
+        self.activate()
+        now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        local = self.row(timestamp=now, prompt='Current local prompt')
+        old = self.row(timestamp='2000-01-01T00:00:00Z', prompt='Obsolete history outside window')
+        foreign = self.row(timestamp=now, machine='fixture-mini', prompt='Current foreign prompt')
+        self.add(local)
+        self.add(old)
+        other = self.home / 'other.sqlite3'
+        owner = store.initialize(other)
+        store.capture(other, owner, foreign)
+        snapshot = self.home / 'other.jsonl'
+        store.export_device(other, snapshot)
+        store.import_device(self.db, snapshot)
+        note, job, header = self.note_and_job([local, foreign, old])
+        original, job_bytes = note.read_bytes(), job.read_bytes()
+        result = store.migrate_view(self.db, publishers_paused=True)
+        self.assertEqual(result['covered_entries'], 3)
+        self.assertEqual(note.read_bytes(), original)
+        self.assertEqual(Path(result['backup']).read_bytes(), original)
+        command = plistlib.loads(job_bytes)['ProgramArguments']
+        subprocess.run(command, check=True, capture_output=True)
+        self.assertEqual(job.read_bytes(), job_bytes)
+        self.assertTrue(note.read_text().startswith(header))
+        self.assertIn('Current local prompt', note.read_text())
+        self.assertIn('Current foreign prompt', note.read_text())
+        self.assertNotIn('Obsolete history outside window', note.read_text())
+        self.assertFalse((self.home / '.claude/prompt-log-recent.md').exists())
+        self.assertEqual(len(self.rows()), 3)
+        self.assertEqual(len((self.home / '.claude/prompt-log-compat.jsonl').read_text().splitlines()), 3)
+        self.assertTrue(store.migrate_view(self.db, publishers_paused=True)['already_registered'])
+        later = store.utc(datetime.now(timezone.utc) + timedelta(days=8))
+        store.project(self.db, cutoff=later)
+        self.assertIn('No prompts in this window.', note.read_text())
+        self.assertTrue(note.read_text().startswith(header))
+        self.assertEqual(len(self.rows()), 3)
+        self.assertEqual(Path(result['backup']).read_bytes(), original)
+
+    def test_same_path_migration_refuses_incomplete_or_ambiguous_inputs(self):
+        self.activate()
+        row = self.row(agent='')  # Legacy renderer's display fallback is not stored metadata.
+        self.add(row)
+        note, job, _ = self.note_and_job([dict(row, machine='missing-foreign-device')])
+        original = note.read_bytes()
+        with self.assertRaisesRegex(ValueError, 'pause all'):
+            store.migrate_view(self.db)
+        with self.assertRaisesRegex(ValueError, 'absent or different'):
+            store.migrate_view(self.db, publishers_paused=True)
+        self.assertNotIn('view', store.config())
+        self.assertEqual(note.read_bytes(), original)
+        with self.assertRaisesRegex(ValueError, 'differs'):
+            store.migrate_view(self.db, self.home / 'different.md', True)
+        job.write_bytes(plistlib.dumps({'ProgramArguments': ['sh', '-c', 'arbitrary command']}))
+        with self.assertRaisesRegex(ValueError, 'unsupported'):
+            store.migrate_view(self.db, note, True)
+        note, _, _ = self.note_and_job([row])
+        note.write_text(note.read_text() + 'Unmanaged user note below entries\n')
+        with self.assertRaisesRegex(ValueError, 'absent or different'):
+            store.migrate_view(self.db, publishers_paused=True)
+        self.assertNotIn('view', store.config())
+
+    def test_migration_matches_actual_legacy_renderer(self):
+        rows = [self.row(repo='café-app', agent='', prompt='Unicode 日本語\nA "quoted" prompt'),
+                self.row(repo=None, machine='', branch='', agent='')]
+        source = self.home / '.claude/prompt-log.jsonl'
+        source.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+        note, job, header = self.note_and_job([])
+        subprocess.run(plistlib.loads(job.read_bytes())['ProgramArguments'], check=True,
+                       capture_output=True, env=dict(os.environ, PROMPT_LOG_EXCLUDE=''))
+        original = note.read_bytes()
+        self.assertIn('## CAFé-APP', note.read_text())
+        self.assertIn('## UNKNOWN', note.read_text())
+        store.import_jsonl(self.db, source)
+        store.activate(self.db, source)
+        result = store.migrate_view(self.db, publishers_paused=True)
+        self.assertEqual(result['covered_entries'], 2)
+        self.assertEqual(note.read_bytes(), original)
+        self.assertEqual(Path(result['backup']).read_bytes(), original)
+        store.project(self.db)
+        self.assertTrue(note.read_text().startswith(header))
+
+    def test_same_path_default_failure_recovery_and_write_guards(self):
+        self.activate()
+        row = self.row(agent='')
+        self.add(row)
+        note, job, header = self.note_and_job([row], default=True)
+        original = note.read_bytes()
+        exporter = plistlib.loads(job.read_bytes())['ProgramArguments']
+        rejected = subprocess.run(exporter, capture_output=True)
+        self.assertNotEqual(rejected.returncode, 0)  # Activation alone is not view migration.
+        self.assertEqual(note.read_bytes(), original)
+        result = store.migrate_view(self.db, publishers_paused=True)
+        atomic = store.atomic
+        def fail_note(path, data):
+            if Path(path).resolve() == note.resolve():
+                raise OSError('simulated note publication failure')
+            return atomic(path, data)
+        with patch.object(store, 'atomic', side_effect=fail_note):
+            with self.assertRaises(OSError):
+                store.project(self.db, cutoff='2026-09-30T00:00:00Z')
+        self.assertEqual(note.read_bytes(), original)
+        store.project(self.db, cutoff='2026-09-30T00:00:00Z')
+        self.assertTrue(note.read_text().startswith(header))
+        subprocess.run(exporter + ['--sqlite'], check=True, capture_output=True)
+        current = note.read_bytes()
+        for option in ('--status', '--repair', '--backfill'):
+            refused = subprocess.run(exporter + [option], capture_output=True)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertEqual(note.read_bytes(), current)
+        for target in (note, Path(result['backup'])):
+            with self.assertRaises(ValueError):
+                store.export_device(self.db, target)
+            with self.assertRaises(ValueError):
+                store.project(self.db, self.home / 'preview.md', target)
+        note.write_bytes(current + b'Unexpected foreign arrival\n')
+        with self.assertRaisesRegex(ValueError, 'outside this publisher'):
+            store.project(self.db)
+        self.assertTrue(note.read_bytes().endswith(b'Unexpected foreign arrival\n'))
+        note.write_bytes(current)
+        Path(result['backup']).write_bytes(original + b'altered backup')
+        with self.assertRaisesRegex(ValueError, 'backup changed'):
+            store.project(self.db)
 
     def test_import_accounting_resume_and_negative_controls(self):
         first = self.row(machine='', agent='', client_extension={'version': 2})

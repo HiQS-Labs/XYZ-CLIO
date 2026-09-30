@@ -1,5 +1,6 @@
 # Recon Map — CLIO history and fleet provenance
 Commit: a0674039407e53baee18ca30d9c33413732c232b · 2026-09-30 UTC
+Historical baseline: separate-output conclusions below are superseded by the bounded same-path delta in doc/gh3-same-path-plan.md.
 Mode: graph inventory + source fallback. CLIO absent from 77 indexed projects.
 Rebalance graph generation 2026-09-02T03:54:57Z is stale; coverage reports changed metadata for pulse/semantic modules and excludes scripts. Exact source was read instead.
 Lanes: A entry points (parent), B state, C external contracts, D operations (three read-only explorers).

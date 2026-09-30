@@ -65,10 +65,10 @@ Blast: existing hooks/tailers/readers plus new SQLite/spool/import metadata/conf
 ## Phase 2: Existing Rebalance consumers and fleet publication
 **Goal:** the existing query/Daily/semantic path returns device/agent/session/checkout and explicit ledger links across Macs.
 
-Dependent work, **blocked until Phase 1 PR merges** per start-task; fleet publishing additionally blocked by https://github.com/HiQS-Labs/rebalanceOS/issues/282 (and config#281 as applicable). No stacked-PR or merge authorization inferred. Track here and in#3; create/reuse narrow Rebalance intake after prior-art recon, rather than modify a second repo prematurely.
+Dependent work, **blocked until Phase 1 PR merges** per start-task; fleet publishing additionally blocked by https://github.com/HiQS-Labs/rebalanceOS/issues/282 (and config#281 as applicable). No stacked-PR or merge authorization inferred. Track here and in #3. Bounded prior-art check found adjacent #141/#202/#232/#233/#203 but no duplicate provenance-consumer ticket. When unblocked, create narrow Rebalance intake with native PDDA inbox/ROADMAP queue (not Forge SQL registration); do not modify a second repo prematurely.
 
 - [ ] Extend current CLIO table/collector to preserve incoming stableID+provenance and typed links; keep legacy import fallback.
-- [ ] Surface fields in existing Daily and SemanticDoc metadata; reuse existing readonly XYZ ledger integration (#233/PR235), native status remains ledger-owned. Distinguish mentioned issue from accepted task context.
+- [ ] Surface fields in existing Daily and SemanticDoc metadata; reuse existing readonly XYZ ledger integration (#233/PR235: daily_work_synthesis.collect_issue_statuses → releases_cycle.read_work_status → trusted load_work_evidence; canonical repo+issue join), native status remains ledger-owned. Distinguish mentioned issue from accepted task context.
 - [ ] Integrate exact device-owned export paths into existing Pulse publisher/shared lock, no second push loop; consume all available device snapshots into local query projection, show expected/missing device and last sync coverage.
 - [ ] Use existing semantic index for paraphrase lookup followed by exact record/provenance retrieval. No second vectors DB, no model choice work.
 

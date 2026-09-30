@@ -27,6 +27,8 @@ Paths in this section are relative to HiQS-Labs/rebalanceOS.
 - utils/daily_work_synthesis.py:97 reads last 512KB, reverses and stops at first old timestamp. Compatibility JSONL MUST be chronological.
 - src/rebalance/ingest/clio_journey.py:113 parses legacy Markdown marker/heading/blockquote; :195 dedups source provenance. Keep historical note untouched during pilot.
 - src/rebalance/ingest/pulse.py:807 publisher holds git_publish_lock. experimental/git-pulse/collect.sh:597 stages a device-owned PDDA registry; reuse publisher seam, never add a CLIO push loop.
+- utils/daily_work_synthesis.py:203 collect_issue_statuses → utils/py/releases_cycle.py:39 read_work_status → trusted releases_app.py load_work_evidence: readonly bounded ledger evidence, canonical repo+issue joins; reuse this seam rather than add a CLIO ledger reader.
+- Bounded downstream prior-art search: #141 is original semantic ingestion; #202 session producer status; #232 journey trial; #233 delivered status display; #203/#282 fleet ownership. No specific CLIO provenance-consumer ticket found. Open PRs #298/#294 do not cover it; predecessor repo had no open PRs. New follow-up intake must use Rebalance PDDA inbox + ROADMAP queue, not Forge SQL registration (native policy differs).
 - Live Rebalance #282 remains open, one owner per device path and one pusher per Mac. #281 config ownership remains open. PR235 is merged (9fd0d494); #233 planned wording is stale. Reuse existing readonly ledger integration in downstream work.
 
 ## State and failure audit
@@ -44,7 +46,6 @@ Relay locator foreign-CWD advisory branch calls undefined driver_lock_path_for_r
 | Installed versions across all Macs | Mixed writers cannot safely share one live log | Pilot deployment receipts and writer checksum inventory before cutover |
 | Historical exact duplicate occurrence vs retry | Old seven-field rows lack source-event ID | Preserve source occurrence/accounting and disclose deterministic dedup rule; cannot reconstruct lost events |
 | Full fleet coverage | Local DB is not proof every Mac synchronized | Device manifests with last publication and expected-device list in downstream reader |
-| XYZ ledger exact consumer row contract | CLIO must not invent status mapping | Downstream recon existing #233 implementation before consumer edit |
 | Live embeddings freshness | Provider exists, deployment not verified | Readonly Rebalance pilot query after downstream merge |
 
 Current radius: four agent capture routes, their cursors, shared Markdown, Rebalance ingest/Daily/replay/semantic provider, device publisher; no live runtime changes authorized by start-task.

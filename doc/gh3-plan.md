@@ -116,4 +116,4 @@ Handoff: retained full clone `/Users/noelsaw/task-clones/clio-gh3-sqlite`, branc
 
 Same-path revision completed: existing Obsidian path/filename and plist remain unchanged; migration verifies coverage/backup, preserves header and routes existing scheduled invocation. Revised16-case storage + four shell suites passed after final approval. See gh3-same-path-plan.md for current behavior; older separate-path approval/results are historical.
 
-Review takeover and ordered merge/deployment continuation: [gh3-handoff.md](gh3-handoff.md). PR review follow-up remains subject to a new independent receipt and qualifying gate before publication.
+Review takeover and ordered merge/deployment continuation: [gh3-handoff.md](gh3-handoff.md). PR review follow-up Approved by independent Codex round1 (attested exit0); four shell suites plus 16 SQLite cases passed afterward on unchanged implementation. See TESTS-RESULTS/2026-09-30-gh3-review-followup/.

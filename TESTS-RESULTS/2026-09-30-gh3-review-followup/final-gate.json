@@ -1,0 +1,62 @@
+{
+  "tested_head": "b5e6d00d8a5b2934724f9930aa0d9eb1c071e2b0",
+  "results": {
+    "clio-capture": {
+      "exit_code": 0,
+      "seconds": 14.85,
+      "sha256": "b3b337eb47f7ab914b268f1846e354129f094d8f8983e70feb51132bec4f2f29"
+    },
+    "clio-exporter": {
+      "exit_code": 0,
+      "seconds": 4.75,
+      "sha256": "f37e1714bacb9420f76ef05c84ba115e5210b57cf44e3cf25b18beff98b115ce"
+    },
+    "clio-codex-tail": {
+      "exit_code": 0,
+      "seconds": 20.11,
+      "sha256": "3ec02a7d08c718bafb715ef2b5cca30e219689b9c4f09c4cd801e44bdcf45a37"
+    },
+    "clio-agy-tail": {
+      "exit_code": 0,
+      "seconds": 13.17,
+      "sha256": "53222ef99db4dbffb5622ecccfc16de0504fb3dec2c3cd793352fc229cb99686"
+    },
+    "clio-store": {
+      "exit_code": 0,
+      "seconds": 5.3,
+      "sha256": "73dd1aa13733d7dcb3bc94290358605a57488c4bcb7f348fb09508c01d053a61"
+    }
+  },
+  "identity_before": {
+    "head": "2a64aa84586c27c8329ae7f63fe885978bebcafd",
+    "origin": "/Users/noelsaw/task-clones/clio-gh3-sqlite/.",
+    "bare": "false",
+    "email": ""
+  },
+  "identity_after": {
+    "head": "2a64aa84586c27c8329ae7f63fe885978bebcafd",
+    "origin": "/Users/noelsaw/task-clones/clio-gh3-sqlite/.",
+    "bare": "false",
+    "email": ""
+  },
+  "identity_intact": true,
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 17.0.0 (clang-1700.6.4.2)]",
+  "candidate_input_sha256": {
+    "utils/CLIO/clio-agy-tail.sh": "cd3268770008cf47ba885cdbc750a8262ff3fa92cb4a30d8940416d782a0e778",
+    "utils/CLIO/clio-store.py": "bde4d993ea79581d52ff5bdb7de21a22da5748f18917b3896e1bbea63d6d90d8",
+    "utils/CLIO/INSTALL.md": "19e1979e64bfe6fc23a4a118e8d91703ef12e2e7344fec9e5ea8d6a422b11362",
+    "utils/CLIO/clio-codex-tail.sh": "01a5930b76f155dcaffede1816fcfcbbdcec071b949e4ccdc644b1c09e0f91b5",
+    "utils/CLIO/prompt-log-to-md.sh": "66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f",
+    "test/clio-agy-tail.sh": "d8f3d3f149fbc3e8e1ee97ac843da87db06b0afef0230b1430cd80e655c5a18e",
+    "test/clio-store.py": "3138b5272b534199f2a411ad3a2dbc6ef8e960e6235d280cf3a2fcfe499d01e3",
+    "test/clio-capture.sh": "46ef3a89ad40ecaa40949f46f684b303f9873b3b793d845f99981b9d45459401",
+    "test/clio-codex-tail.sh": "29751d1caae6d2f39697d5bfc76a52ddf582704badbdb1bd67e501e4bc4ea565",
+    "test/clio-exporter.sh": "8dc095a8edd5a96ec50d0c05bdd35c692e0452d48b0898e59aa2f5d4bd51bf42",
+    "test/fixtures/clio/codex-rollout.jsonl": "117614da8141bd213b3f16bf2746c14e9ed7cf54b9472fb63c253fa0e58d5399",
+    "test/fixtures/clio/agy-transcript.jsonl": "fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984"
+  },
+  "candidate_bytes_match": true,
+  "reviewed_head": "d7667a789019a5c45f46146ba435bcac04ebd93b",
+  "implementation_commit": "6540aa2"
+}

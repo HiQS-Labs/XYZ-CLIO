@@ -37,8 +37,11 @@ Existing hook lock exhaustion returns0 and drops (INSTALL.md:182); tailers can r
 Existing shared MD cannot be atomically regenerated from only local records without losing foreign view entries. Initial rolling output must be separate. Old receipts and cursor must not be reused for expiry.
 
 ## Build and rollback
-Four shell suites use throwaway HOME; capture baseline passed this session. No package/build/CI or PDDA/RELEASES infrastructure exists in this small repo. Keep source history and installed runtime unchanged during isolated build. Pilot is a separate deployment step. Rollback after pilot requires exporting SQLite-era rows into a chronological compatibility log before re-enabling legacy writer; preserve source backups and tailer state.
+Four shell suites use throwaway HOME; capture baseline passed this session. All four baseline logs and provenance are retained at TESTS-RESULTS/2026-09-30-gh3/. No package/build/CI or PDDA/RELEASES infrastructure exists in this small repo. Keep source history and installed runtime unchanged during isolated build. Pilot is a separate deployment step. Rollback after pilot requires exporting SQLite-era rows into a chronological compatibility log before re-enabling legacy writer; preserve source backups and tailer state.
 Relay locator foreign-CWD advisory branch calls undefined driver_lock_path_for_repo; running locator from an isolated full harness clone succeeds. Real driver --target-root can review CLIO with thread inside CLIO; no vendoring or unrelated source fix needed.
+
+## Review-confirmed source defect
+Agy companion metadata uses writable sqlite3.connect at clio-agy-tail.sh:112–124. A scratch stdlib probe in plan review created a previously absent DB before the missing-table error (exit0; before False → after True). Include the tiny mode=ro URI correction in phase1; preserve best-effort fallback. This is distinct from changing CLIO persistence.
 
 ## Unknowns
 | Unknown | Why it matters | How to settle |

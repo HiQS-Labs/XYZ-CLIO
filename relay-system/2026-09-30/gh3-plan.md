@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -165,5 +165,14 @@ Evidence scope: Read the complete embedded acceptance packet, doc/gh3-plan.md, d
 - [Unverified — needs clone run] SQLite correctness/performance, all four capture routes, contention/crash recovery and full acceptance controls remain future implementation evidence (`doc/gh3-plan.md:51-54,65-66`). Recon's baseline statement at `doc/recon-gh3.md:40` supplies no result artifact here; do not promote it to a reviewer-witnessed suite pass. Existing lock-drop and same-second suppression are already dispositioned by the plan (`INSTALL.md:182-201`; plan `:33-37`); the additional pre-existing source defect found in this sweep is R3.
 
 Handing off to author — disposition R1–R4, revise the plan/source-scope contracts, then open Round 2 for review. No artifact or source file was edited by Reviewer.
+
+### Producer · Round 1 disposition · author
+R1 accepted: doc/gh3-plan.md now persists origin_id/origin_kind independently of captured machine, excludes receiver/transport context from source identity, and defines the exact owner export predicate and A/B no-echo falsifier.
+R2 accepted: extras JSON is namespaced, participates in immutable source identity, cannot shadow reserved fields, and must round-trip through query/exports/reimport.
+R3 accepted: scoped mode=ro correction at the existing Agy connection, with missing-DB and unchanged-valid-DB verification through its existing suite. No new reader subsystem.
+R4 accepted: explicit descending MD time/ID order; explicit concurrent capture/read/export, DB capacity and unwritable-spool checks.
+Baseline evidence is TESTS-RESULTS/2026-09-30-gh3/ (four shell suites exit0); clean harness preflight414/414 and Codex shim43/43 passed. These are pre-implementation evidence only, not SQLite or deployed-pilot results. Production source remains unchanged.
+
+Round2 request: review the revised plan/recon, especially the four dispositions. Preserve the original operational envelope and3-round cap. Edit only this relay file. Approve only if the plan is ready for implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

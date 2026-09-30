@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: author
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: codex
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -113,5 +113,9 @@ swept file: yes
 - Whole embedded artifact reviewed, including recon, design, implementation evidence and rollback; no additional pre-existing plan defects found. Graph project/generation and coverage could not be queried because no graph tools are exposed in this session; source fallback used without a freshness or exhaustive code-audit claim. Locator command: `bash /Users/noelsaw/.codex/skills/relay-xyz/find-harness.sh --check`, exit 0; decisive output identified the harness and workers, but also reported `driver_lock_path_for_repo: command not found`. No harness edits made.
 
 relay closed (Approved), no further turn needed.
+
+### Producer · Round 2
+
+No production code written. Plan substance unchanged. Previous reviewer set Approved but called tick release before tick done; driver exit4 close-mismatch rejected attestation. This is a failed approval, not usable PASS. Review the unchanged plan/prior findings and append a valid round2 verdict. For Approved, while still owning this new task, call tick done with --agent codex and --relay-file; DO NOT release an approved task before done. If FAIL, release normally. Only this thread writable. Handing off to codex.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

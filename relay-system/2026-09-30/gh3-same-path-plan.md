@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: author
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,20 @@ relay closed (Approved), no further turn needed.
 ### Producer · Round 2
 
 No production code written. Plan substance unchanged. Previous reviewer set Approved but called tick release before tick done; driver exit4 close-mismatch rejected attestation. This is a failed approval, not usable PASS. Review the unchanged plan/prior findings and append a valid round2 verdict. For Approved, while still owning this new task, call tick done with --agent codex and --relay-file; DO NOT release an approved task before done. If FAIL, release normally. Only this thread writable. Handing off to codex.
+
+### Reviewer · Round 2
+VERDICT: PASS
+Basis: Fresh review of the entire unchanged embedded plan supports same destination, filename and schedule with an explicit coverage-gated migration. Approval covers the plan only; implementation and installed cutover remain separate gates.
+swept file: yes
+
+- [Pass] Same-path scheduling is explicit: “Never write the plist” and “using the SAME OUT argument.” The documented job supplies the script and positional output with StartInterval 60 (utils/CLIO/INSTALL.md:532–538); the exporter parses that path and defaults it at utils/CLIO/prompt-log-to-md.sh:35–60. The planned adapter addresses the existing normal-export route, rather than relying solely on the current early --sqlite branch (:24–29).
+- [Pass] Historical preservation has a bounded exception: “match each entry against DB legacy_id plus full prompt/repo/device/branch/agent display metadata,” “Refuse unknown body content,” and “JSONL/device exports still cannot replace that note or its backup.” Current legacy rendering is at utils/CLIO/prompt-log-to-md.sh:510; current all-export destination guards are at utils/CLIO/clio-store.py:470–485. “Register updated accepted old/new hashes atomically BEFORE replacing note” and “No hash update on an unrelated preview” provide a proportionate local retry design around existing locked atomic publication (:488–530).
+- [Pass] Rollback and fleet limits are stated: “preserve SQLite-era arrivals via full JSONL export and DB backup” and “complete live fleet coverage is not inferable from a local DB.” The plan requires paused publishers and rejects later foreign edits, without introducing distributed coordination or another ledger writer. These are design requirements, not measured runtime guarantees.
+- [Nit] Carry the Round 1 documentation follow-through into implementation: replace the new-path/changed-ProgramArguments pilot instructions at utils/CLIO/INSTALL.md:369–375 with pause/import/migrate-view/resume guidance preserving the installed plist and shared capture heredocs. Correct the recon activation citation to utils/CLIO/clio-store.py:396–430. No artifact edits made in this reviewer turn.
+- [Unverified — needs clone run] No suites, executable fixtures or runtime behavior probes were run here. Coverage parsing and display defaults, same-path scheduled dispatch, backup tampering refusal, 168-hour expiry, and injected publication failure/retry remain acceptance criteria for the disposable full-clone gate.
+- Whole embedded artifact swept, including pre-existing recon, scope, evidence steps and rollback; no additional pre-existing plan defects found. Source checks were bounded contract reads, not an exhaustive code audit. Graph inventory query `list_projects(limit=100)` returned all 77 projects with `has_more=false`; neither CLIO nor this worktree is indexed, so no applicable generation or coverage metadata exists. Used exact source fallback; no graph freshness claim. The artifact's older “Transport closed” observation is historical, not this turn's result.
+- Locator evidence: `bash /Users/noelsaw/.codex/skills/relay-xyz/find-harness.sh --check`, exit 0; decisive output: `HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge`, workers available, centralized-harness advisory, and `driver_lock_path_for_repo: command not found`. No harness changes or forbidden gate runs made. Approval closes with tick done while the token is owned; no premature release and no git command.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

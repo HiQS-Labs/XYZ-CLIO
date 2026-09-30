@@ -82,7 +82,7 @@ state_update() { # $1 = path, $2 = inode, $3 = offset, $4 = session_id, $5 = cwd
 # preceding session_meta before the offset.
 extract_rows() {
   python3 - "$1" "$2" "${3:-}" "${4:-}" "$5" <<'PYEOF'
-import json, sys
+import hashlib, json, sys
 from datetime import datetime, timezone
 
 def parse_ts(ts):
@@ -171,6 +171,7 @@ if cut != -1 and cut >= (offset - scan_start):
             "session_id": session_id,
             "prompt": text,
             "cwd": cwd,
+            "source_event_id": str(line_start) + ":" + hashlib.sha256(line).hexdigest(),
         }, ensure_ascii=False))
 else:
     consumed = 0

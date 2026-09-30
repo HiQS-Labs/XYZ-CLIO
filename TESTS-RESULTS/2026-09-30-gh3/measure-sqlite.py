@@ -61,7 +61,7 @@ with tempfile.TemporaryDirectory(prefix='clio-measure-') as folder:
     assert store.query(db,args)['pending']==0
     print(json.dumps({'corpus_rows':10000,'corpus_bytes':len(raw),'corpus_sha256':hashlib.sha256(raw).hexdigest(),
         'equal_nonempty_results':True,'returned':20,'jsonl_scan':scan,'sqlite_query':indexed,
-        'query_plan':found['query_plan'],'projection':projection | {'markdown':'temporary recent.md'},
+        'query_plan':found['query_plan'],'projection':dict(projection, markdown='temporary recent.md'),
         'projection_timing':export,'capture_shared_writer':{'samples':30,'p50_ms':statistics.median(durations),
         'p95_ms':sorted(durations)[28],'max_ms':max(durations)},
         'limitations':'Synthetic warm local run, excludes CLI startup for query and disk/network fleet transport. Shared-writer timings include shell/Python startup. No FTS/vector speed claim.'},indent=2))

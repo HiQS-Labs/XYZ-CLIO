@@ -19,7 +19,7 @@ import uuid
 APP_ID = 0x434C494F
 VERSION = 1
 FIELDS = ('timestamp', 'repo', 'branch', 'machine', 'agent', 'session_id',
-          'prompt', 'checkout', 'repo_slug')
+          'prompt', 'checkout', 'repo_slug', 'source_event_id')
 RESERVED = set(FIELDS) | {'record_id', 'legacy_id', 'origin_id', 'origin_kind',
                           'references', 'extras', 'clio_version'}
 CONFIG = Path(os.environ.get('CLIO_CONFIG', str(Path.home() / '.claude/clio-storage.json')))
@@ -198,7 +198,7 @@ def normalize(row, owner=None, kind='legacy-adopted'):
         else:
             raise ValueError('invalid reference type')
     result.update(extras=extras, references=references, clio_version=VERSION)
-    record_id = 'clio1-' + digest(encode(result).encode())
+    record_id = 'clio1-' + digest(encode(identity_payload(result)).encode())
     if versioned and row.get('record_id') != record_id:
         raise ValueError('record identity does not match payload')
     result['record_id'] = record_id
@@ -206,12 +206,23 @@ def normalize(row, owner=None, kind='legacy-adopted'):
     return result
 
 
-def insert(conn, row):
+def identity_payload(row):
+    # Tailer event identity is immutable; checkout/device labels are observations
+    # made at delivery time. Retain the first committed observation on replay.
+    payload = dict(row)
+    if payload.get('source_event_id'):
+        for key in ('repo', 'branch', 'machine', 'checkout', 'repo_slug'):
+            payload.pop(key, None)
+    return payload
+
+
+def insert(conn, row, replay=False):
     """The only event writer, shared by import, capture and recovery."""
     payload = encode(row)
     prior = conn.execute('SELECT payload FROM events WHERE record_id=?', (row['record_id'],)).fetchone()
     if prior:
-        if prior[0] != payload:
+        if prior[0] != payload and not (replay and row.get('source_event_id')
+                and identity_payload(json.loads(prior[0])) == identity_payload(row)):
             raise ValueError('identity payload conflict')
         return False
     conn.execute('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?)',
@@ -232,7 +243,7 @@ def capture(path, owner, value):
     try:
         with contextlib.closing(database(path, True)) as conn, conn:
             conn.execute('BEGIN IMMEDIATE')
-            insert(conn, row)
+            insert(conn, row, replay=True)
         pending.unlink(missing_ok=True)
         return {'record_id': row['record_id'], 'state': 'committed'}
     except (sqlite3.Error, OSError, ValueError):
@@ -270,7 +281,7 @@ def drain(path, limit=100):
             row = normalize(json.loads(source.read_text()))
             with contextlib.closing(database(path, True)) as conn, conn:
                 conn.execute('BEGIN IMMEDIATE')
-                insert(conn, row)
+                insert(conn, row, replay=True)
             source.unlink(missing_ok=True)
             count += 1
     return {'drained': count, 'pending': len(list(folder.glob('clio1-*.json')))}
@@ -466,6 +477,10 @@ def safe_output(conn, path, output):
     forbidden.update(Path(str(base) + suffix) for suffix in ('-wal', '-shm', '.project.lock'))
     if target in forbidden or target == pending_dir(path).resolve() or pending_dir(path).resolve() in target.parents:
         raise ValueError('output would overwrite storage, configuration or source history')
+    if target == (Path.home() / '.claude/prompt-log.md').resolve():
+        raise ValueError('preserve the historical shared Markdown; choose a new output')
+    if target.exists() and '<!-- CLIO:ENTRIES -->' in target.read_text():
+        raise ValueError('preserve the historical shared Markdown; choose a new output')
     return target
 
 
@@ -476,10 +491,6 @@ def project(path, markdown, jsonl=None, cutoff=None):
         with contextlib.closing(database(path)) as conn:
             conn.execute('BEGIN')
             target = safe_output(conn, path, markdown)
-            if target == (Path.home() / '.claude/prompt-log.md').resolve():
-                raise ValueError('use a separate recent view; preserve the legacy shared Markdown')
-            if target.exists() and '<!-- CLIO:ENTRIES -->' in target.read_text():
-                raise ValueError('preserve the historical shared Markdown; choose a new output')
             all_rows = [json.loads(row[0]) for row in conn.execute('SELECT payload FROM events ORDER BY timestamp,record_id')]
             recent = [row for row in reversed(all_rows) if since <= row['timestamp'] <= cutoff_text]
             lines = ['# CLIO — recent 168 hours', '', 'UTC cutoff: ' + cutoff_text,

@@ -35,7 +35,8 @@ typed.
 
 Rows written before the `agent` field existed render as `claude-code` — display
 only; stored rows are never rewritten. Legacy dedup uses `session_id:timestamp`. SQLite uses a versioned content hash
-including origin, agent, prompt and metadata, preserving different same-second prompts.
+including origin, agent and source content, preserving different same-second prompts.
+Tailer source IDs keep retries stable across branch or machine-label changes.
 
 An optional exporter renders the JSONL as human-readable Markdown — newest
 entry first — at any location you choose, such as a note in an Obsidian vault.

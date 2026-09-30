@@ -163,7 +163,7 @@ sqlite_capture() {
   sqlite_row=$(printf '%s' "$input" | jq -c --argjson base "$row" \
     --arg cwd "$project_dir" --argjson record "$RECORD" '
     $base + {checkout:(if $record == 1 then (.cwd // .checkout // "") else $cwd end),
-      repo_slug:(.repo_slug // ""), references:(.references // []), extras:(.extras // {})}')
+      source_event_id:(.source_event_id // ""), repo_slug:(.repo_slug // ""), references:(.references // []), extras:(.extras // {})}')
   if printf '%s' "$sqlite_row" | python3 "$helper" capture >/dev/null; then
     return 0
   else
@@ -411,7 +411,11 @@ Queries use SQLite `mode=ro` and `query_only`, never initialize a missing DB, an
 bound parameters. Text is a literal, case-sensitive substring. Results include
 prompt, time, device (`machine`), agent, session, branch, checkout, canonical repo
 when supplied, identity, references and extras. `--origin` filters the stable store
-owner rather than a mutable human device label. Pagination is timestamp/ID descending;
+owner rather than a mutable human device label. Tailers include `source_event_id`
+(raw source-line hash plus byte offset, scoped by origin/agent/session). Its retry
+identity excludes repo/branch/device/checkout labels resolved at poll time; the
+first committed labels remain stored even if those labels change before a retry.
+Imports reject conflicting payloads; they do not silently rewrite provenance. Pagination is timestamp/ID descending;
 concurrent new arrivals can shift offsets, so fix a time range for stable paging.
 
 References are **explicit producer metadata**, not inferred task status. A capture

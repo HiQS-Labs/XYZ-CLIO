@@ -76,7 +76,7 @@ state_update() {
 # the cursor only ever lands after a terminating newline.
 extract_rows() {
   python3 - "$1" "$2" <<'PYEOF'
-import json, sys
+import hashlib, json, sys
 from datetime import datetime, timezone
 
 def norm_ts(ts):
@@ -123,7 +123,9 @@ if "brain" in parts:
     except Exception:
         pass
 
+pos = offset
 for line in complete.split(b"\n"):
+    line_start, pos = pos, pos + len(line) + 1
     if not line.strip():
         continue
     try:
@@ -142,6 +144,7 @@ for line in complete.split(b"\n"):
         "machine": "",
         "session_id": session_id,
         "prompt": text,
+        "source_event_id": str(line_start) + ":" + hashlib.sha256(line).hexdigest(),
     }, ensure_ascii=False))
 print(f"CONSUMED {consumed}", file=sys.stderr)
 PYEOF

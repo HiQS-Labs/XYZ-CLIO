@@ -184,8 +184,16 @@ class History(unittest.TestCase):
         self.assertEqual(len(self.rows()), 5)
         legacy = self.home / 'shared.md'
         legacy.write_text('# Shared history\n<!-- CLIO:ENTRIES -->\n')
-        with self.assertRaisesRegex(ValueError, 'historical'):
-            store.project(self.db, legacy)
+        before = legacy.read_bytes()
+        for target in (legacy, self.home / '.claude/prompt-log.md'):
+            target.write_bytes(before)
+            with self.assertRaisesRegex(ValueError, 'historical'):
+                store.project(self.db, target)
+            with self.assertRaisesRegex(ValueError, 'historical'):
+                store.project(self.db, md, target)
+            with self.assertRaisesRegex(ValueError, 'historical'):
+                store.export_device(self.db, target)
+            self.assertEqual(target.read_bytes(), before)
 
     def test_readonly_queries_refs_pagination_and_large_prompt(self):
         reference = {'type': 'issue', 'url': 'https://github.com/HiQS-Labs/XYZ-CLIO/issues/3', 'relation': 'mentioned'}
@@ -291,6 +299,43 @@ class History(unittest.TestCase):
         store.backup(self.db, self.home / 'backup.sqlite3')
         with store.database(self.home / 'backup.sqlite3') as conn:
             self.assertEqual(conn.execute('SELECT count(*) FROM events').fetchone()[0], len(self.rows()))
+
+    def test_tailer_retry_freezes_first_observed_context(self):
+        self.activate()
+        repo = self.home / 'work'
+        repo.mkdir()
+        subprocess.run(['git', 'init', '-q', '-b', 'main', str(repo)], check=True)
+        subprocess.run(['git', '-C', str(repo), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', '-c', 'core.hooksPath=/dev/null', 'commit', '-q', '--allow-empty', '-m', 'fixture'], check=True)
+        sessions = self.home / '.codex/sessions'
+        sessions.mkdir(parents=True)
+        rollout = sessions / 'rollout-retry.jsonl'
+        records = [
+            {'type': 'session_meta', 'payload': {'id': 'retry-session', 'cwd': str(repo), 'source': 'cli'}},
+            {'type': 'event_msg', 'timestamp': '2026-09-29T12:00:00Z', 'payload': {'type': 'user_message', 'message': 'first source prompt'}},
+            {'type': 'event_msg', 'timestamp': '2026-09-29T12:00:00Z', 'payload': {'type': 'user_message', 'message': 'second source prompt'}},
+        ]
+        rollout.write_text(''.join(json.dumps(r) + '\n' for r in records))
+        writer = self.home / '.claude/hooks/clio-capture.sh'
+        original = writer.read_text()
+        real = writer.with_name('real-capture.sh')
+        real.write_text(original)
+        real.chmod(0o755)
+        writer.write_text('''#!/bin/bash\ninput=$(cat)\nif printf "%s" "$input" | jq -e 'contains({prompt:"second source prompt"})' >/dev/null; then exit 3; fi\nprintf "%s" "$input" | "$(dirname "$0")/real-capture.sh" "$@"\n''')
+        env = dict(os.environ, CODEX_HOME=str(self.home / '.codex'), CLIO_TAIL_BACKFILL='1')
+        command = ['bash', str(ROOT / 'utils/CLIO/clio-codex-tail.sh')]
+        subprocess.run(command, env=env, check=True, capture_output=True)
+        first = self.rows()
+        self.assertEqual(len(first), 1)
+        self.assertEqual(first[0]['branch'], 'main')
+        subprocess.run(['git', '-C', str(repo), 'branch', 'feature'], check=True)
+        subprocess.run(['git', '-C', str(repo), 'symbolic-ref', 'HEAD', 'refs/heads/feature'], check=True)
+        writer.write_text(original)
+        subprocess.run(command, env=env, check=True, capture_output=True)
+        self.assertEqual(len(self.rows()), 2)
+        self.assertEqual(self.rows(record_id=first[0]['record_id'])[0], first[0])
+        second = next(r for r in self.rows() if r['prompt'] == 'second source prompt')
+        self.assertEqual(second['branch'], 'feature')
+        self.assertNotEqual(second['source_event_id'], first[0]['source_event_id'])
 
     def test_waiting_legacy_writer_rechecks_activation(self):
         path = self.home / '.claude/prompt-log.jsonl'

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: author
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -70,7 +70,7 @@ Questions: Are migration/accounting/unknown metadata/identity and ownership safe
 
 Focused tests passed; per start-task the final full qualifying four shell suites + Python suite will run exactly once AFTER final Approved on unchanged implementation. Approval is code/plan evidence review, not a claim the final gate already ran. Review writes only this relay thread; no source changes, no push. Three rounds maximum. Use PASS/FAIL/PARKED and literal swept file line per protocol.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Phase 1 contracts and falsifiers in doc/gh3-plan.md; final packet questions; reviewed code plus focused evidence, with final qualifying gate scheduled after approval.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -135,5 +135,13 @@ retry ID: clio1-8dd9304d3e974fbaa323ebfda02c016554ec2a51fc25dc748243a4714c5efdf2
 - [Unverified — needs clone run] Final qualifying four shell suites plus Python suite have deliberately not run this turn. `sqlite-focused.log` records 11 passing cases but includes connection ResourceWarnings; `sqlite-benchmark.json` reports 10,000 rows, equal nonempty results and a disclosed warm-local measurement. These are retained producer evidence, not independent execution at final approved HEAD. Run the authorized qualifying gate after final Approved on unchanged implementation, and record failures/skips honestly.
 
 Handing off to author — disposition R1/R2, make the bounded fixes and return for round 2; go to the author window and say 'take your turn'.
+
+### Producer · Round 2
+
+R1 — Implemented. Default historical MD path and historical marker check moved into safe_output, now shared by both projection outputs and device snapshots. Existing suite checks byte-preserving refusal for all three routes and both default/custom historical paths, alongside normal regeneration.
+
+R2 — Implemented at existing tailer/writer/store seams. Both tailers emit source_event_id as raw line SHA256 + byte offset; origin, agent and session scope it. normalize hashes immutable source fields and excludes only delivery observations repo/branch/machine/checkout/repo_slug when that ID is present. insert remains the only event writer: capture/drain replay may retain existing observations; imports remain strict on payload conflict. No service, new table or retry subsystem. Documented narrowed identity rules in plan/installer. Existing hook/legacy full-payload identities and same-second distinct prompts remain supported. New actual Codex test delivers A, defers B, changes branch, retries unchanged source: A retains exact original payload, B appears once. Tailer changes preserve legacy seven-field output because writer legacy projection is unchanged.
+
+Focused suite now12 cases; affected Codex/Agy suites rerun, final qualifying gate still pending approval. Benchmark helper dictionary syntax also made Python3.8-compatible; no runtime change. Review all final source and concrete evidence; bounded operational envelope unchanged. Handing off to codex for round2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

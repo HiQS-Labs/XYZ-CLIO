@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: author
 STATUS: Open
 ROUND: 1 / 3
 
@@ -79,5 +79,21 @@ Review whole touched files; flag concrete material defects only with file:line, 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+* **1. Durable receipts & tailer semantics:** `[Pass]` Capture durably preserves receipts in the pending queue (`file:utils/CLIO/clio-store.py:249`). Tailer correctly uses `rc=3` lock checks and `rc=0` returns to advance the cursor (`file:utils/CLIO/clio-agy-tail.sh:202`).
+* **2. JSONL additive migration & guards:** `[Pass]` Incomplete input lines are safely skipped and ignored from prefix hash (`file:utils/CLIO/clio-store.py:335`). Extras conflicts raise ValueError (`file:utils/CLIO/clio-store.py:189`). Self-import and foreign origins are refused correctly (`file:utils/CLIO/clio-store.py:720`).
+* **3. Historical coverage & scheduled invocation mismatch:** `[Blocker]` The acceptance criteria requires the actual local documented plist interval to be 300 and remain byte-identical, but the codebase documents 60.
+  Observed input: `INSTALL.md` line 584 uses `<integer>60</integer>`.
+  Affected scope: macOS launchd plist interval in `INSTALL.md`.
+  Falsifier: If the expected deployed interval is 300 to match the user's requirement, update `INSTALL.md` to 300.
+* **4. Query & device snapshots:** `[Pass]` Queries enforce `PRAGMA query_only=ON` (`file:utils/CLIO/clio-store.py:101`). Export device excludes foreign origins via `WHERE origin_id=?` (`file:utils/CLIO/clio-store.py:698`). Legacy JSONL preserves full chronological history (`file:utils/CLIO/clio-store.py:678`).
+* **5. Migration correctly gated:** `[Pass]` `migrate-view` enforces `--publishers-paused` (`file:utils/CLIO/clio-store.py:570`) and verifies full matching legacy coverage before adopting (`file:utils/CLIO/clio-store.py:551`).
+
+**VERDICT**: FAIL
+**Basis**: INSTALL.md documents StartInterval 60, conflicting with the required byte-identical StartInterval300.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: author
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -195,5 +195,61 @@ Handing off to author — fix R3 at the existing guard, retain R1/R2 protections
 ### Producer · Round 3
 
 R3 — Implemented, one narrow predicate change: safe_output recognizes a standalone stripped historical marker line, not a substring inside a serialized JSON string. Default legacy path remains refused. Existing rolling-window acceptance now captures an inline marker plus newline/full-line marker inside prompt text; two consecutive compatibility and snapshot publications succeed and preserve the exact text. The original default/custom historical-note refusals through all three outputs still run in the same case. Before fixing production, the new assertion failed on second export with historical-note ValueError; retained marker-red-control.log. Focused SQLite12 cases pass after the fix. No other implementation changes in this round; no further scope requested. Final qualifying gate awaits approval. Handing off to codex for the final bounded round.
+
+### Reviewer · Round 3
+
+swept file: yes
+VERDICT: PASS
+Basis: R1/R2 remain resolved and R3's bounded correction distinguishes historical marker lines from serialized prompt text. Phase 1 code/plan evidence meets this review's DoD; the final qualifying gate remains pending and approval does not authorize deployment or claim Phase 2/3 shipped.
+
+Scope: read the whole final store, INSTALL.md/shared writer and migration/rollback procedure, exporter, both tailers, all five verification sources, README/FRONTDOOR, plan/recon, implementation evidence, focused logs, red controls and benchmark source/results. No additional pre-existing production defect found in this sweep; FD-05/FD-06 remain explicitly disclosed. MCP list_projects returned all 77 projects (limit100, has_more=false), with no CLIO checkout/project or generation. Direct source fallback was used; no graph completeness claim or coverage result is asserted. The relay-xyz skill and locator were read; locator execution was omitted because it invokes Git, expressly prohibited for this turn. No Git, installer, test suite or executable fixture was run.
+
+- [Pass] R3 resolved at `utils/CLIO/clio-store.py:482–484`: only a stripped standalone historical marker line triggers refusal. JSON serialization escapes embedded newlines; prompt marker text cannot become that standalone line. The existing acceptance case at `test/clio-store.py:198–206` publishes compatibility and snapshot outputs twice with both inline and newline marker text and checks exact prompt preservation. Retained `marker-red-control.log` records the pre-fix second-publication ValueError; `sqlite-focused-r3.log` records “Ran 12 tests in 3.884s” / “OK”. These are producer runtime evidence; the independent narrow guard probe below also accepts both serialized destinations. Retain this predicate.
+- [Pass] Historical protection remains shared by Markdown, compatibility and snapshot destinations (`utils/CLIO/clio-store.py:470–485`, :494, :519, :537); `test/clio-store.py:185–196` checks all three routes against default/custom historical notes without changing their bytes. The probe below also refuses a whitespace-surrounded standalone marker and the default historical path. Retain these guards.
+- [Pass] Stable tailer identity and original-observation replay remain at `utils/CLIO/clio-store.py:209–227`, :246, :284; imports stay strict at :337 and :562. The actual Codex retry case at `test/clio-store.py:310–348` retains A's full original payload while B arrives once after a branch change; `retry-red-control.log` records “AssertionError: 3 != 2” under reverted identity behavior. The independent normalization probe below returns stable identity. Keep the single insert boundary and scoped retry behavior.
+- [Pass] Migration transactions/accounting and retained source parity remain at `utils/CLIO/clio-store.py:296–385`; activation retains lock, bounded delta, parity, backup and config publication at :388–428. The shared writer rechecks config after acquiring the legacy lock (`utils/CLIO/INSTALL.md:220–225`). Rollback instructions explicitly require “first pause submissions and scheduled tailers/exporter” and “generate a full chronological rollback JSONL at a **new** path”, preserving SQLite-era arrivals and the SQLite recovery copy. No new ledger, publisher, vector store or scheduler appears. README states “Fleet publishing and Rebalance's provenance upgrade are separate dependent work”; retain that delivery boundary.
+- [Unverified — needs clone run] The final four shell suites plus Python suite must run after this Approved turn on unchanged implementation in a disposable full clone. Focused logs are retained evidence, not independent final-gate execution. ResourceWarnings in the Python log remain disclosed; the benchmark explicitly says “Synthetic warm local run, excludes CLI startup for query and disk/network fleet transport.” Record final failures/skips honestly before ready-PR qualification.
+
+Measured evidence: exit 0; pure guard/normalization calls; only synthetic scratch files written, no DB/source mutation. Exact command:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import importlib.util, os
+from pathlib import Path
+from unittest.mock import patch
+spec=importlib.util.spec_from_file_location("s","utils/CLIO/clio-store.py"); s=importlib.util.module_from_spec(spec); spec.loader.exec_module(s)
+class Empty:
+ def execute(self,sql): return []
+base=Path(os.environ["TMPDIR"])
+row={"timestamp":"2026-09-29T12:00:00Z","session_id":"s","prompt":"Explain the <!-- CLIO:ENTRIES --> marker\n<!-- CLIO:ENTRIES -->","agent":"codex","source_event_id":"100:abc","branch":"main"}
+a=s.normalize(row,"fixture-owner","captured")
+with patch.dict(os.environ,HOME=str(base)):
+ for name,content in [("compat-r3.jsonl",s.encode(a)+"\n"),("snapshot-r3.jsonl",s.encode({"clio_snapshot":1})+"\n"+s.encode(a)+"\n"),("historical-r3.md","# Shared\n  <!-- CLIO:ENTRIES -->  \nforeign-only entry\n")]:
+  p=base/name; p.write_text(content); before=p.read_bytes()
+  try:
+   s.safe_output(Empty(),base/"history.sqlite3",p); print(name+": accepted")
+  except ValueError as e: print(name+": refused: "+str(e))
+  print(name+": bytes unchanged:",p.read_bytes()==before)
+ try: s.safe_output(Empty(),base/"history.sqlite3",base/".claude/prompt-log.md")
+ except ValueError: print("default historical path: refused")
+print("retry identity stable:",a["record_id"]==s.normalize(dict(row,branch="feature"),"fixture-owner","captured")["record_id"])
+PYPROBE
+```
+
+Decisive output:
+```
+compat-r3.jsonl: accepted
+compat-r3.jsonl: bytes unchanged: True
+snapshot-r3.jsonl: accepted
+snapshot-r3.jsonl: bytes unchanged: True
+historical-r3.md: refused: preserve the historical shared Markdown; choose a new output
+historical-r3.md: bytes unchanged: True
+default historical path: refused
+retry identity stable: True
+```
+
+Relay closed (Approved), no further turn needed. Author/harness proceeds to the already scheduled qualifying gate on unchanged implementation; no deployment authorization.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

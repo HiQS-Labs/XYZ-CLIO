@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: author
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,13 +80,13 @@ The shell exporter parses existing CLI first. For normal export with activated S
 
 ## Ordered implementation and evidence
 1. Approve this revised plan in a fresh bounded Codex relay (max3). Retain older approvals as historical only.
-2. Implement destination discovery, legacy note coverage, exclusive verified backup and view receipt; test actual synthetic plist with spaces/custom path remains byte-identical, ambiguous path refused, foreign/missing entry and same-ID wrong-device/prompt refuse without modifying note/config, header preserved.
+2. Implement destination discovery, legacy note coverage, exclusive verified backup and view receipt; test actual synthetic plist with spaces/custom path remains byte-identical, ambiguous path refused, foreign/missing entry and same-ID wrong-device/prompt refuse without modifying note/config, header preserved.  [Unverified — no citation]
 3. Route unchanged installed exporter invocation into the registered rolling projection; test existing positional job and default job path, no new timer/path, 168h expiry with old data still in SQLite, old markers/user header retained, explicit --sqlite behavior, unknown edits/refusal, backup protection and unsupported maintenance verbs. Keep phase2 entry-format consumer work explicit.
 4. Witness red controls: new same-path scheduled test fails on old implementation; injected publication failure keeps original bytes and retry converges; altered backup/missing coverage blocks. Verify original note/backup and expected all-device recent entries, not just successful exit. Extend existing storage suite only; no framework/new suite.
 5. Focused checks during iteration; final Codex relay (max3), then one complete five-suite gate on revised approved implementation. Refresh FRONTDOOR and issue/PR body to final behavior and results. No automatic merge or installed migration.
 
 ## Risk / rollback
-Costly only at installed cutover. This branch work uses synthetic temporary HOME. Header/user content above marker is preserved; unrecognized edits below it block migration, not discarded. Stop writers before rollback; preserve SQLite-era arrivals via full JSONL export and DB backup, then restore verified original note path/config and reconcile full-history legacy export before resuming legacy writers. Restoring the old note alone is not a data rollback. Existing note backup alone is not evidence every fleet record is in SQLite; explicit coverage gate checks originals. Filename/path compatibility does not preserve expired entry anchors or promise old Markdown entry parsers understand new records; external parser migration remains tracked.
+Costly only at installed cutover. This branch work uses synthetic temporary HOME. Header/user content above marker is preserved; unrecognized edits below it block migration, not discarded. Stop writers before rollback; preserve SQLite-era arrivals via full JSONL export and DB backup, then restore verified original note path/config and reconcile full-history legacy export before resuming legacy writers. Restoring the old note alone is not a data rollback. Existing note backup alone is not evidence every fleet record is in SQLite; explicit coverage gate checks originals. Filename/path compatibility does not preserve expired entry anchors or promise old Markdown entry parsers understand new records; external parser migration remains tracked.  [Unverified — no citation]
 ```
 - Definition of Done: Review the bounded same-path plan against user requirement and cited sources; concrete failures/falsifiers only. Local single-publisher utility; no speculative distributed framework. Scope store/exporter/installer and existing tests. Only write this thread.
 
@@ -99,5 +99,19 @@ Costly only at installed cutover. This branch work uses synthetic temporary HOME
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: The bounded plan meets the same destination/filename/schedule requirement while retaining an explicit, coverage-gated cutover. Approval is for the plan, not implementation or installed migration.
+swept file: yes
+
+- [Pass] Same job and destination: the artifact says “Never write the plist” and “using the SAME OUT argument”; the existing contract is script plus positional destination and StartInterval 60 at utils/CLIO/INSTALL.md:532–538, parsed at utils/CLIO/prompt-log-to-md.sh:35–53. No schedule rewrite or substitute final note is required.
+- [Pass] Preservation is explicit: “match each entry against DB legacy_id plus full prompt/repo/device/branch/agent display metadata” and “Refuse unknown body content” cover the actual legacy rendering at utils/CLIO/prompt-log-to-md.sh:510. “Header-only note is allowed” is consistent with the standalone-marker historical guard at utils/CLIO/clio-store.py:482–484. The proposed exception remains Markdown-only; backup protection and current-byte checks are expressly required.
+- [Pass] Recovery and scope are proportionate: “Register updated accepted old/new hashes atomically BEFORE replacing note” addresses the two-file publication ordering; “No hash update on an unrelated preview” keeps preview separate. Existing publication uses a maintenance lock and atomic replacement at utils/CLIO/clio-store.py:491 and :527. The artifact explicitly limits the guarantee to a local single publisher and requires stopped writers, source coverage, and preservation of SQLite-era arrivals for rollback.
+- [Nit] Make the installer documentation refresh explicit in implementation step 5. utils/CLIO/INSTALL.md:369–375 currently instructs changing ProgramArguments and choosing a new Markdown path, which this revision supersedes. Replace that pilot guidance with pause/import/migrate-view/resume instructions that retain the existing plist; preserve the shared capture heredocs. Also correct the recon's activation citation from :388 to utils/CLIO/clio-store.py:396–430. These are documentation follow-through, not a change to the approved design.
+- [Unverified — needs clone run] No suites or executable fixtures were run in this reviewer worktree. Same-path dispatch, coverage parsing (including legacy display defaults), failure/retry convergence, expiry, and backup refusal are implementation acceptance criteria, not observed successes. Execute the named red controls and complete five-suite gate in an isolated full clone with synthetic HOME, as the artifact's steps 2–5 require.
+- Whole embedded artifact reviewed, including recon, design, implementation evidence and rollback; no additional pre-existing plan defects found. Graph project/generation and coverage could not be queried because no graph tools are exposed in this session; source fallback used without a freshness or exhaustive code-audit claim. Locator command: `bash /Users/noelsaw/.codex/skills/relay-xyz/find-harness.sh --check`, exit 0; decisive output identified the harness and workers, but also reported `driver_lock_path_for_repo: command not found`. No harness edits made.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

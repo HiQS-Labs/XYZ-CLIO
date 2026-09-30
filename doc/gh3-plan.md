@@ -105,3 +105,5 @@ Deployment is separate from start-task's ready-PR authority. Preserve originals;
 
 ### Final review disposition
 Round1 non-approval (exit5): R1 accepted, all replacing output paths now share historical default/marker protection. R2 accepted, existing tailers add source-line/offset identity and capture replay retains first committed observations despite branch/device changes. No new persistence table/service/retry layer. These are fixes to the reviewed stable-replay contract; final round2 reviews implementation and narrowed identity rules. Focused actual tailer fixture commits A, defers B, changes branch and retries: exactly A+B, A original provenance retained.
+
+Round2 non-approval (exit5): R3 accepted, shared guard recognizes standalone historical marker lines, allowing repeated JSONL exports with marker text inside prompts. Witnessed new fixture fail before fix; round3 reviews the one-predicate correction and extended existing case.

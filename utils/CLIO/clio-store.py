@@ -479,7 +479,8 @@ def safe_output(conn, path, output):
         raise ValueError('output would overwrite storage, configuration or source history')
     if target == (Path.home() / '.claude/prompt-log.md').resolve():
         raise ValueError('preserve the historical shared Markdown; choose a new output')
-    if target.exists() and '<!-- CLIO:ENTRIES -->' in target.read_text():
+    if target.exists() and any(line.strip() == '<!-- CLIO:ENTRIES -->'
+                               for line in target.read_text().splitlines()):
         raise ValueError('preserve the historical shared Markdown; choose a new output')
     return target
 

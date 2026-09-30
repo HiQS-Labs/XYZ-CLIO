@@ -195,6 +195,16 @@ class History(unittest.TestCase):
                 store.export_device(self.db, target)
             self.assertEqual(target.read_bytes(), before)
 
+        marker_prompt = 'Explain the <!-- CLIO:ENTRIES --> marker\n<!-- CLIO:ENTRIES -->'
+        self.add(self.row(prompt=marker_prompt))
+        snapshot = self.home / 'marker-snapshot.jsonl'
+        for _ in range(2):
+            store.project(self.db, md, compat, '2026-09-30T00:00:00Z')
+            store.export_device(self.db, snapshot)
+        for output in (compat, snapshot):
+            exported = [json.loads(line) for line in output.read_text().splitlines()]
+            self.assertTrue(any(r.get('prompt') == marker_prompt for r in exported))
+
     def test_readonly_queries_refs_pagination_and_large_prompt(self):
         reference = {'type': 'issue', 'url': 'https://github.com/HiQS-Labs/XYZ-CLIO/issues/3', 'relation': 'mentioned'}
         long = self.row(prompt='日本語\n' * 100000, references=[reference], checkout='/fixture/checkouts/rebalance')

@@ -1,0 +1,20 @@
+test_rolling_window_atomicity_idle_expiry_and_compatibility (__main__.History.test_rolling_window_atomicity_idle_expiry_and_compatibility) ... ERROR
+
+======================================================================
+ERROR: test_rolling_window_atomicity_idle_expiry_and_compatibility (__main__.History.test_rolling_window_atomicity_idle_expiry_and_compatibility)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/test/clio-store.py", line 202, in test_rolling_window_atomicity_idle_expiry_and_compatibility
+    store.project(self.db, md, compat, '2026-09-30T00:00:00Z')
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/utils/CLIO/clio-store.py", line 518, in project
+    compat = safe_output(conn, path, jsonl) if jsonl else None
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/utils/CLIO/clio-store.py", line 483, in safe_output
+    raise ValueError('preserve the historical shared Markdown; choose a new output')
+ValueError: preserve the historical shared Markdown; choose a new output
+
+----------------------------------------------------------------------
+Ran 1 test in 0.032s
+
+FAILED (errors=1)

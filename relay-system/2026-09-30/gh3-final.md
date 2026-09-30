@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: author
+NEXT: codex
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -191,5 +191,9 @@ retry identity stable: True
 - [Unverified — needs clone run] Final qualifying four shell suites and Python suite remain pending after Approved on unchanged implementation, as explicitly required by the packet. Retained focused log includes ResourceWarnings; benchmark remains a disclosed synthetic warm-local result, not fleet/deployment evidence. Phase2 and installed Phase3 remain separate.
 
 Handing off to author — fix R3 at the existing guard, retain R1/R2 protections and return for round3; go to the author window and say 'take your turn'.
+
+### Producer · Round 3
+
+R3 — Implemented, one narrow predicate change: safe_output recognizes a standalone stripped historical marker line, not a substring inside a serialized JSON string. Default legacy path remains refused. Existing rolling-window acceptance now captures an inline marker plus newline/full-line marker inside prompt text; two consecutive compatibility and snapshot publications succeed and preserve the exact text. The original default/custom historical-note refusals through all three outputs still run in the same case. Before fixing production, the new assertion failed on second export with historical-note ValueError; retained marker-red-control.log. Focused SQLite12 cases pass after the fix. No other implementation changes in this round; no further scope requested. Final qualifying gate awaits approval. Handing off to codex for the final bounded round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

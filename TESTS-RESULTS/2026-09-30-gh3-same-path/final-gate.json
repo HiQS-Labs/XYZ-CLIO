@@ -1,0 +1,40 @@
+{
+  "tested_head": "3512ba327a206d7a05128a86e100dfa9a0dc69a8",
+  "reviewed_implementation": "5310b8d22ad6dc701b56933f72db471b4ec7a555",
+  "revision_base": "e1edb8399dc071cb5f9f72de9dbb4787a8338d3c",
+  "origin": "https://github.com/HiQS-Labs/XYZ-CLIO.git",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 17.0.0 (clang-1700.6.4.2)]",
+  "sqlite": "3.53.4",
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "full_gate_runs_after_revised_approval": 1,
+  "isolation": "Full isolated task clone; synthetic temporary HOME only, no live installed files.",
+  "results": {
+    "clio-capture": {
+      "exit_code": 0,
+      "log_sha256": "b3b337eb47f7ab914b268f1846e354129f094d8f8983e70feb51132bec4f2f29"
+    },
+    "clio-exporter": {
+      "exit_code": 0,
+      "log_sha256": "f37e1714bacb9420f76ef05c84ba115e5210b57cf44e3cf25b18beff98b115ce"
+    },
+    "clio-codex-tail": {
+      "exit_code": 0,
+      "log_sha256": "3ec02a7d08c718bafb715ef2b5cca30e219689b9c4f09c4cd801e44bdcf45a37"
+    },
+    "clio-agy-tail": {
+      "exit_code": 0,
+      "log_sha256": "53222ef99db4dbffb5622ecccfc16de0504fb3dec2c3cd793352fc229cb99686"
+    },
+    "clio-store": {
+      "exit_code": 0,
+      "log_sha256": "bf796d6875cec29e38bdc473d2675a1b36909822b317412d1df766d1491fb75a"
+    }
+  },
+  "limitations": [
+    "Existing test fixture ResourceWarnings retained; no failed assertions.",
+    "Equivalent /bin/bash duplicate skipped.",
+    "FRONTDOOR FD05/FD06 remain open; no baseline failed.",
+    "No hosted test workflow; prior CodeRabbit advisory comments are distinct from revised Codex relay approval.",
+    "Single-publisher assertion is a deployment prerequisite, not remote fleet verification."
+  ]
+}

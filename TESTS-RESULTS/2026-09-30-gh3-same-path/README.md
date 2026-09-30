@@ -9,3 +9,5 @@ New cases exercise actual unchanged plist arguments, default/custom paths (space
 Plan round1 was not valid approval: close-mismatch driver exit4 after reviewer released before done. Round2 exit0 attested Approved (receipt here). Final code review and revised full gate are pending; original GH3 gate is historical only. No fleet deployment claim.
 
 Final round1 found timestamp-display slot accepted arbitrary/blank text. display-red-control.log witnesses the new refusal assertion fail on prior code; storage-focused-r2.log passes16 cases after shape validation. Valid UTC, historical PDT and numeric +0545 labels accepted without host-zone equality. Note/config unchanged on refusal.
+
+Final state: revised plan and final review Approved (attested driver exit0). The complete five-suite gate ran once afterward at3512ba327a20 with unchanged approved implementation5310b8d22ad6: four shell suites and all16 SQLite cases exit0. See final-approval.json/final-gate.json and raw final logs. Same-path requirement implemented on branch; no installed migration or fleet deployment performed.

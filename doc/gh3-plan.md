@@ -9,7 +9,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 # CLIO SQLite and work provenance — build plan
 
-**2026-09-30 correction:** same-path Obsidian migration is now required. [Revision plan](gh3-same-path-plan.md) supersedes the separate-final-note clauses below. PR4 is draft pending final review of the implemented revision. Prior results remain historical.
+**2026-09-30 correction:** same-path Obsidian migration is now required. [Revision plan](gh3-same-path-plan.md) supersedes the separate-final-note clauses below. The revision is implemented, plan/final reviews are Approved, and the revised five-suite gate passed; PR4 is the handoff. Prior results remain historical.
 
 | Most recently completed phase | What's next |
 |---|---|
@@ -113,3 +113,5 @@ Round2 non-approval (exit5): R3 accepted, shared guard recognizes standalone his
 Final round3 Approved and attested (exit0); five qualifying suites exit0 at bc444c619fd9. Final benchmark and warnings/skips are recorded under TESTS-RESULTS/2026-09-30-gh3/. PR#4 is the handoff; issue3 stays open for dependent consumer/fleet/pilot work. No installed deployment.
 
 Handoff: retained full clone `/Users/noelsaw/task-clones/clio-gh3-sqlite`, branch `feat/gh3-sqlite-history`, ready PR#4 against main. Retain until landing and reconcile/retire via `/merge-cleanup`. Relay validation clones retain coordination/provenance evidence until handoff completes. No other task PR or parked experimental branch in this group.
+
+Same-path revision completed: existing Obsidian path/filename and plist remain unchanged; migration verifies coverage/backup, preserves header and routes existing scheduled invocation. Revised16-case storage + four shell suites passed after final approval. See gh3-same-path-plan.md for current behavior; older separate-path approval/results are historical.

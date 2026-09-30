@@ -192,4 +192,12 @@ Evidence scope: Read the entire relay/acceptance packet, revised plan and recon,
 
 Relay closed (Approved), no further review turn needed. Author proceeds with the approved isolated implementation scope and its required clone verification; the harness owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-09-30T06:39:09Z
+task: CLIO-GH3-PLAN-R2
+reviewer: codex
+status: Approved
+reviewed-head: bfc4dbc2ff9f6932811fe98074eb03e912a66ba3
+added-range: 25981+3936
+added-sha256: c1dc6de7349ffaef4802f290bd4ae0ef456078c8c35a5e4dadefc7844a38da70
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

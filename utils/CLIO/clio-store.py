@@ -568,7 +568,7 @@ def checked_view(conn, path, target):
     return cfg, current
 
 
-def migrate_view(path, markdown=None, publishers_paused=False):
+def migrate_view(path, markdown=None, publishers_paused=False, archive_unreconciled_note=False):
     if not publishers_paused:
         raise ValueError('pause all shared-note publishers and designate one owner before --publishers-paused')
     target = existing_destination(markdown)
@@ -581,7 +581,17 @@ def migrate_view(path, markdown=None, publishers_paused=False):
                 return {'registered': True, 'already_registered': True, 'markdown': str(target)}
             safe_output(conn, path, target, historical=True)
             original = target.read_bytes()
-            header, count = legacy_coverage(conn, original)
+            if archive_unreconciled_note:
+                # Explicit operator acceptance: preserve all original bytes, but do
+                # not claim archived entries were reconciled into SQLite.
+                text = original.decode('utf-8')
+                marker = re.search(r'(?m)^[ \t]*<!-- CLIO:ENTRIES -->[ \t]*\r?\n', text)
+                if not marker:
+                    raise ValueError('historical header marker missing; preserve and inspect the note')
+                header, count = text[:marker.end()], None
+            else:
+                header, count = legacy_coverage(conn, original)
+            coverage = 'archived-not-reconciled' if archive_unreconciled_note else 'verified' 
             folder = Path(path).expanduser().resolve().parent / (Path(path).name + '.view-backups')
             folder.mkdir(mode=0o700, parents=True, exist_ok=True)
             backup_path = folder / (str(uuid.uuid4()) + '.md')
@@ -600,9 +610,9 @@ def migrate_view(path, markdown=None, publishers_paused=False):
                 raise ValueError('backup or note changed during migration; no view registered')
             cfg['view'] = {'path': str(target), 'header': header, 'backup': str(backup_path),
                            'backup_sha256': fingerprint, 'accepted_hashes': [fingerprint],
-                           'legacy_entries': count}
+                           'legacy_entries': count, 'coverage': coverage}
             atomic(CONFIG, (encode(cfg) + '\n').encode())
-    return {'registered': True, 'markdown': str(target), 'backup': str(backup_path), 'covered_entries': count}
+    return {'registered': True, 'markdown': str(target), 'backup': str(backup_path), 'covered_entries': count, 'coverage': coverage}
 
 
 def safe_output(conn, path, output, historical=False):
@@ -771,6 +781,8 @@ def main():
     migration = commands.add_parser('migrate-view')
     migration.add_argument('--markdown')
     migration.add_argument('--publishers-paused', action='store_true')
+    migration.add_argument('--archive-unreconciled-note', action='store_true',
+                           help='accept historical gaps/repeated sections; archive the whole note without claiming SQLite parity')
     scheduled = commands.add_parser('scheduled-export')
     scheduled.add_argument('markdown')
     scheduled.add_argument('--mode', default='export')
@@ -812,7 +824,7 @@ def main():
         elif args.command == 'activate':
             result = activate(path, args.source, args.fresh, args.capture_only)
         elif args.command == 'migrate-view':
-            result = migrate_view(path, args.markdown, args.publishers_paused)
+            result = migrate_view(path, args.markdown, args.publishers_paused, args.archive_unreconciled_note)
         elif args.command == 'scheduled-export':
             if args.mode != 'export':
                 raise ValueError('legacy maintenance is unavailable in SQLite mode; use query, drain and project')

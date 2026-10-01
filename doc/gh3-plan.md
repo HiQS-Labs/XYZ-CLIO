@@ -126,3 +126,20 @@ Review takeover and ordered merge/deployment continuation: [gh3-handoff.md](gh3-
 Reversibility: code Easy; installed activation Costly. Back up scripts, source, cursor, registrations and note privately; verify import accounting. Rollback must pause capture, drain receipts and export all SQLite-era events before restoring legacy capture. The original note alone is not a history rollback. Existing storage activation test covers all four shared-writer routes, scheduled JSONL-only publication, unchanged note/plist/source and rejection of unsafe outputs and incomplete migration. A false capture-only flag witnessed the scheduled-export failure; no new suite. Independent relay and final existing suites precede runtime installation.
 
 Local capture continuation deployed: SQLite active, existing five-minute job healthy with JSONL-only compatibility refresh, downstream configured, note preserved. Operator accepts unrecovered older history; no further collection. Other Macs remain per-install work. Rolling-note/fleet acceptance remains unclaimed.
+
+### 2026-10-01 authorized same-path cutover
+
+The operator confirms CLIO is turned off on all other devices and authorizes
+activating the same-note seven-day view. The current note has ten historical
+section markers; the accepted historical gap prevents strict parity. Extend the
+existing migration with explicit `--archive-unreconciled-note`: preserve the
+whole note with its verified exclusive backup, use the header through the first
+marker, and report archived-not-reconciled/null covered count. Default migration,
+publisher assertion, target identity, hashes, and foreign-write refusal stay
+strict. No recovery chase, metadata reconstruction, new service or note.
+
+Cutover is Costly: it replaces the live note body. Rollback must retain all
+SQLite-era arrivals and restore the verified original note/config while the
+local exporter is stopped. Check synthetic repeated-marker migration and
+post-publication foreign edits in the existing activation case, independently
+review, then run existing suites in a disposable full clone before deployment.

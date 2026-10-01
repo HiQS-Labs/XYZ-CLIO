@@ -591,6 +591,21 @@ class History(unittest.TestCase):
         self.assertEqual(backups[0].read_bytes(), before)
         with self.assertRaisesRegex(ValueError, 'one standalone'):
             store.migrate_view(self.db, publishers_paused=True)
+        result = store.migrate_view(self.db, publishers_paused=True, archive_unreconciled_note=True)
+        self.assertEqual(result['coverage'], 'archived-not-reconciled')
+        self.assertIsNone(result['covered_entries'])
+        self.assertEqual(Path(result['backup']).read_bytes(), note_bytes)
+        self.assertEqual(note.read_bytes(), note_bytes)
+        cfg = store.config()
+        self.assertEqual(cfg['view']['header'], note_bytes.decode().split('<!-- CLIO:ENTRIES -->', 1)[0] + '<!-- CLIO:ENTRIES -->\n')
+        result = json.loads(subprocess.run(command, check=True, capture_output=True, text=True).stdout)
+        self.assertEqual(result['rows'], 5)
+        self.assertTrue(note.read_bytes().startswith(cfg['view']['header'].encode()))
+        self.assertEqual(job.read_bytes(), job_bytes)
+        self.assertEqual(Path(cfg['view']['backup']).read_bytes(), note_bytes)
+        note.write_bytes(note.read_bytes() + b'foreign publisher edit')
+        with self.assertRaisesRegex(ValueError, 'outside this publisher'):
+            store.project(self.db)
 
 
 if __name__ == '__main__':

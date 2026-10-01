@@ -435,6 +435,16 @@ existing procedure to the observed device rather than adding another job or writ
    entry formats or missing device records stop migration for reconciliation. No
    entries are guessed or discarded. The note itself is unchanged until publication.
 
+   If the operator explicitly accepts unrecoverable historical gaps or repeated
+   sections, use `migrate-view --publishers-paused --archive-unreconciled-note`.
+   This preserves the entire original note in the same exclusive verified backup
+   and keeps the exact header through the first historical marker. Remaining
+   original content is archived, not claimed imported into SQLite: the receipt
+   reports `coverage: archived-not-reconciled` and `covered_entries: null`.
+   Default migration still requires full entry parity. This option retains the
+   single-publisher assertion, destination checks, backup verification, and
+   rejection of later foreign edits. It never guesses lost prompt metadata.
+
    `--publishers-paused` asserts that you paused all shared-note writers and selected
    this publisher; it does not discover or control other Macs. Verify fleet convergence
    and resolve the existing Pulse ownership dependency before shared deployment.

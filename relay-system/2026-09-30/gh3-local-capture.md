@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -85,5 +85,53 @@ Implemented explicit capture-only activation and JSONL-only projection in the ex
 VERDICT: PASS
 Basis: ready for independent QA, not a self-approval of landing.
 Handing off to Reviewer (codex) for independent QA.
+
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Reviewed the complete clio-store.py, INSTALL.md, exporter adapter and existing storage test, plus AGENTS.md and latest operator scope. Verify-tier source fallback: list_projects returned all 77 projects (has_more=false), with no matching CLIO/worktree project; no applicable generation or graph coverage is available. No indexing, private-home inspection, tests, executable fixtures or git commands run. The requested origin/main diff was not supplied as a seeded artifact and remains unverified under the no-git instruction.
+
+- [Pass] Q1/Q3, source inspection: explicit capture_only is stored only by activation's flag (utils/CLIO/clio-store.py:403, :438); scheduled-export checks active DB/owner, existing destination, drains receipts, uses JSONL-only and reports pending (:480, :812). Without that mode it requires checked_view (:820). JSONL-only returns before Markdown rendering, with "note_publication": "paused" (:660). Source locking/import verification/backup remain in activation (:415–435); exporter dispatch preserves its positional invocation (utils/CLIO/prompt-log-to-md.sh:53–62). No additional issue found in these paths.
+- [Should] R1 — Q2's backup-preservation requirement is incomplete in the existing guard reused by JSONL-only. Activation creates source.name + '.pre-sqlite-' + time_ns (utils/CLIO/clio-store.py:429), but safe_output protects the original source and registered view backup, not this source backup (:608–627). Its accepted result is passed straight to atomic replacement (:653–659). Thus explicit JSONL-only output can replace the preserved original backup; this pre-existing defect is in scope for the new guarded path. Fix narrowly at safe_output by rejecting activation backup siblings of known source paths (including retained partial backups); reuse the existing storage case for clone verification, without a new ledger/service.
+  Observed input: a known source at $TMPDIR/original.jsonl and an existing synthetic $TMPDIR/original.jsonl.pre-sqlite-123 containing a JSONL row; safe_output accepted the backup while rejecting the source. The probe only queried the guard; it did not publish or overwrite the backup.
+  Affected scope: output paths matching the activation backup naming convention for recorded source paths; normal new compatibility outputs remain allowed.
+  Falsifier: the existing activation case's actual .pre-sqlite-* backup supplied to project(..., jsonl=backup, jsonl_only=True) must raise before publication and preserve its bytes; an unrelated new compat.jsonl must still export successfully. If the current candidate already rejects the actual backup, this finding is unnecessary.
+  Probe command (exit 0; all scratch under .relay-scratch/tmp):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PROBE'
+  import importlib.util, os, sqlite3
+  from pathlib import Path
+  spec = importlib.util.spec_from_file_location('store', 'utils/CLIO/clio-store.py')
+  s = importlib.util.module_from_spec(spec); spec.loader.exec_module(s)
+  root = Path(os.environ['TMPDIR']).resolve()
+  s.CONFIG = root / 'absent-config.json'
+  source = root / 'original.jsonl'
+  backup = root / 'original.jsonl.pre-sqlite-123'
+  backup.write_text('{"timestamp":"2026-09-29T12:00:00Z","prompt":"synthetic preserved source"}\n')
+  before = backup.read_bytes()
+  conn = sqlite3.connect(':memory:')
+  conn.executescript('CREATE TABLE sources(path TEXT); CREATE TABLE device_imports(source TEXT);')
+  conn.execute('INSERT INTO sources VALUES (?)', (str(source),))
+  for name, target in [('source', source), ('activation-backup', backup)]:
+      try:
+          print(name + ': ACCEPTED ' + str(s.safe_output(conn, root / 'history.sqlite3', target)))
+      except ValueError as e:
+          print(name + ': REJECTED ' + str(e))
+  print('backup unchanged by read-only guard probe:', backup.read_bytes() == before)
+  PROBE
+  ```
+  Decisive output: "source: REJECTED output would overwrite storage, configuration or source history"; "activation-backup: ACCEPTED .../.relay-scratch/tmp/original.jsonl.pre-sqlite-123"; "backup unchanged by read-only guard probe: True".
+- [Pass] Q2 otherwise: JSONL-only shares full chronological payload serialization with normal projection, retaining extras and provenance (utils/CLIO/clio-store.py:652–659); registered rolling publication keeps checked_view and accepted-hash checks (:647–651, :686–695). migrate-view still requires publishers-paused and complete marker/body coverage (:511–555, :571–605).
+- [Pass] Q4 test design: the existing activation case asserts all four shared-writer agent routes, five exported rows, paused publication, zero pending and unchanged source/note/plist, plus source-output and multi-marker rejection (test/clio-store.py:552–590). Actual Codex/Agy tailer execution is separately covered by the existing four-agent case (:439–479). These are meaningful checks within the stated scope.
+- [Unverified — needs clone run] Producer's focused pass/red-control report and final 16 storage cases + four shell suites have not been independently executed here, as required by containment. Harness/author must run the existing full-clone gate after the revision.
+- [Pass] Q5 scope/rollback guidance: INSTALL.md:333–343 explicitly preserves the note and other Macs, switches downstream readers to full-history compat JSONL, and disclaims fleet completeness. Separate adoption origins and no recovered hardware identity are documented at :495–500; rollback pauses writers and retains SQLite-era events at :520–537. The latest doc/gh3-plan.md scope accepts the historical gap and keeps rolling publication separate. No additional material pre-existing defect found in the swept paths beyond R1.
+
+VERDICT: FAIL
+Basis: the core capture-only flow is proportionate and source-reviewed, but Q2's explicit backup guard contract fails for an activation-produced backup path. Address R1, then rerun the existing clone gate; no additional historical collection is requested.
+Handing off to Producer (author) — take your turn to disposition R1 and revise the existing guard.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

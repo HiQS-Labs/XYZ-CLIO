@@ -1,0 +1,37 @@
+{
+  "source_occurrences": 2746,
+  "quarantined": 0,
+  "backup_integrity": "ok",
+  "backup_events": 2746,
+  "coverage_refused": "expected one standalone historical marker; preserve and inspect the note",
+  "private_copy_repair_rc": 0,
+  "repair_applied_line": [
+    "repair: applied 2 entry(s)"
+  ],
+  "private_copy_status_rc": 0,
+  "private_copy_states": [
+    "state: delivered-present=2240",
+    "state: delivered-missing=0",
+    "state: never-delivered=0",
+    "state: legacy-unlabelled=0",
+    "state: excluded=506"
+  ],
+  "live_config_created": false,
+  "live_note_modified": false,
+  "initial_rehearsal_failure": "copyfile did not preserve executable mode; retry invoked /bin/bash explicitly",
+  "import_verified": true,
+  "missing_source_ids": {
+    "MacStudio": 1861,
+    "MBP14": 170,
+    "MBP16": 437
+  },
+  "standalone_note_markers": 10,
+  "capture_agents": [
+    "agy",
+    "zcode",
+    "claude-code",
+    "codex"
+  ],
+  "live_sqlite_activated": false,
+  "source_commit": "fd48d1cfdf2a2c2dadfcb970a99ec2298c4c1ec0"
+}

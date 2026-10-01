@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,9 +80,25 @@ QA doc/gh3-device-independent-plan.md in full, against doc/recon-gh3-device-inde
 
 ### Producer · Round 1
 
-The new plan and bounded current recon are committed. Three database/cadence/travel requirements are confirmed. The note transport choice is explicitly pending and exact-file exclusion is not assumed supported. Review the design and name blockers; no rollout claim.
+The new plan and bounded current recon are committed. Three database/cadence/travel requirements are confirmed. The note transport choice is explicitly pending and exact-file exclusion is not assumed supported. Review the design and name blockers; no rollout claim.  [Unverified — no citation]
 
 VERDICT: PASS
 Basis: Ready for independent plan QA, not implementation or rollout readiness.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+* [Pass] Q1: Plan eliminates the hub and retains arrivals. Citation: `doc/gh3-device-independent-plan.md:11` "A Mac can only know records already delivered or captured locally... Capture survives a powered-off peer".
+* [Pass] Q2: Reuses `export-device` protocol without binary merge. Citation: `doc/gh3-device-independent-plan.md:31` "Reuse `export-device` / `import-device`: one atomic versioned manifest plus canonical records... imported rows never echo through another origin."
+* [Pass] Q3: Exact paths, local locks, bounded retries grounded. Citation: `doc/gh3-device-independent-plan.md:37` "acquires the existing local Git publication lock, drains bounded local pending receipts", `doc/gh3-device-independent-plan.md:41` "Publish through the existing exact-path commit/push routine, at most its one race retry." Staggering is honest: `doc/gh3-device-independent-plan.md:43` "No correctness rule or delivery guarantee relies on staggering."
+* [Pass] Q4: Acknowledges unfenced Obsidian Sync and does not assume exclusion. Citation: `doc/gh3-device-independent-plan.md:55` "The current accepted-hash guard and Git checkout OS lock cannot fence another Mac's Obsidian Sync writes." `doc/gh3-device-independent-plan.md:59` "Verify installed product supports this exact exclusion... capability is not assumed."
+* [Pass] Q5: Tests are measurable. Citation: `doc/gh3-device-independent-plan.md:71` "Record manual real-Git fault cases in committed TESTS-RESULTS provenance... simultaneous push race, sleep/wake, lock busy, failed push, malformed owner/digest/count, rollback snapshot, identity conflict, duplicate replay".
+* [Pass] Q6: Concrete questions operator needs to answer. Citation: `doc/gh3-device-independent-plan.md:57` "Decision awaiting operator answer:", `doc/gh3-device-independent-plan.md:59` "A. Git Pulse transports this note...", `doc/gh3-device-independent-plan.md:61` "B. Keep Obsidian Sync and manually transfer the one publisher."
+
+VERDICT: PASS
+Basis: The plan successfully addresses all architectural and procedural requirements of the no-hub constraints, correctly identifies the open transport prerequisites without assuming them, and ensures data retention and separation.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

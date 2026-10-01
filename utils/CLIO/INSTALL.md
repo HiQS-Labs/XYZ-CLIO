@@ -342,6 +342,37 @@ or proof of complete fleet coverage. `migrate-view` still requires its explicit
 single-publisher and historical-coverage checks before the same note can be replaced.
 An explicit `project --jsonl PATH --jsonl-only` uses the same guarded export path.
 
+### Per-Mac installation and retry
+
+Use this existing procedure per device; do not assume another Mac's paths, jobs,
+available agents or history. Inspect the actual source, helper/writer versions,
+storage config, exporter plist and tailer cursor paths before replacing anything.
+Back them up privately, verify hashes, install the helper before enabling capture,
+and preserve existing job arguments and intervals. Install only the adapters that
+the device uses. A missing collector source is not permission to reset its cursor.
+
+If a valid CLIO config already exists, retain its database and owner, query/drain it
+and upgrade the runtime files; do not initialize or activate a second store. If a
+database exists without config, inspect its schema, owner and import receipts before
+resuming the interrupted install; never delete/reinitialize it just to make retry
+pass. Keep incomplete backups and pending receipts until accounted for. A busy lock,
+changed source or failed verification should leave the current capture mode intact.
+Use `--db` and `activate --source` for a device's inspected alternate paths; use
+`--fresh` only when the legacy source genuinely does not exist.
+
+Prefer `--capture-only` while shared-note ownership or historical reconciliation is
+unresolved. Verify the installed shared writer, receipt draining and full-history
+compatibility export before pointing downstream readers at the new source. Keep
+unavailable historical data in its verified original backups without claiming it is
+in SQLite. Imported laptop adoption stores are private history namespaces, not proof
+of installed device identities; inspect their retained mapping before a later device
+installation to avoid importing the same historical log under a second origin.
+
+After each install, verify the routes actually present on that Mac, inspect pending
+receipts and exporter status, and confirm source/note/plist preservation. On failure,
+retain diagnostics and SQLite-era arrivals, use the rollback below, and adapt the
+existing procedure to the observed device rather than adding another job or writer.
+
 1. Pause the Markdown exporter on **every device writing the shared note**, and
    designate one publisher. Install the updated shared writer/helper, exporter and
    tailers; verify all registrations use them. Preserve source JSONL, registrations

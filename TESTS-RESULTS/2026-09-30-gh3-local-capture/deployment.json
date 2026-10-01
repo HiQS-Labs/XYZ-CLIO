@@ -1,0 +1,35 @@
+{
+  "activated": true,
+  "capture_only": true,
+  "rows": 3899,
+  "origins": 3,
+  "integrity": "ok",
+  "pending": 0,
+  "note_unchanged_during_activation": true,
+  "plist_unchanged": true,
+  "exporter_interval": 300,
+  "helper_sha256": "1af14882aaae04e9f7291a31c1e297fa1bc8d0d1a6123546326fd061e2091767",
+  "compatibility_rows": 3899,
+  "at": "2026-10-01T04:19:07.722925+00:00",
+  "live_health": {
+    "live_shared_writer_four_agents_verified": true,
+    "labelled_synthetic_health_events": 4,
+    "duplicate_replays_added": 0,
+    "rows": 3903,
+    "integrity": "ok",
+    "compatibility_rows": 3903,
+    "pending": 0,
+    "legacy_source_unchanged": true,
+    "note_unchanged": true,
+    "note_publication": "paused",
+    "probe_corrections": [
+      "health tag must be inside extras; used existing explicit diagnostic prompt/session labels instead",
+      "prompt stored in JSON payload, not a standalone SQL column"
+    ],
+    "at": "2026-10-01T04:23:54.952779+00:00"
+  },
+  "downstream_source_configured": true,
+  "other_macs_changed": false,
+  "history_gap_accepted_by_operator": true,
+  "rolling_note_activated": false
+}

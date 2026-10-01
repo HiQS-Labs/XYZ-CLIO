@@ -13,7 +13,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 | Most recently completed phase | What's next |
 |---|---|
-| Phase 1 merged as fd48d1c; Agy QA and final gate passed; local runtime installed | Phase 2 consumer work is eligible; fleet blocked on #282; rolling pilot blocked on missing history, note reconciliation and one publisher |
+| Phase 1 merged as fd48d1c; Agy QA and final gate passed; local runtime installed | Local capture-only active; Phase 2 consumers eligible; rolling note not cut over; fleet blocked on #282 |
 
 ## Table of contents
 - [Phase 1: Local history and export contract](#phase-1-local-history-and-export-contract)
@@ -124,3 +124,5 @@ Review takeover and ordered merge/deployment continuation: [gh3-handoff.md](gh3-
 2026-09-30 local capture continuation (latest operator scope): the supplied eleven-file collection is final; the operator accepts unrecoverable older MacStudio history and requires no further recovery chase. Preserve the original note and all decoded sources privately. Implement explicit activate --capture-only: SQLite capture plus existing scheduled full-history compatibility JSONL, without any Markdown replacement. Extend the existing project function with guarded JSONL-only output; retain default fail-closed behavior for activation without this explicit mode and all migrate-view gates. No timer, collector, shared writer, new Markdown note, vector store, push loop or ledger writer. Imported legacy laptop histories receive separate local adoption-store origins; these are not claims about future installed device UUIDs. Skip the Mini’s copied Studio history after proving exact subset equivalence. Other Macs stay unchanged until individual installation. Same-path rolling publication remains separate from this capture-only stage; the known active laptop publishers make it inappropriate here.
 
 Reversibility: code Easy; installed activation Costly. Back up scripts, source, cursor, registrations and note privately; verify import accounting. Rollback must pause capture, drain receipts and export all SQLite-era events before restoring legacy capture. The original note alone is not a history rollback. Existing storage activation test covers all four shared-writer routes, scheduled JSONL-only publication, unchanged note/plist/source and rejection of unsafe outputs and incomplete migration. A false capture-only flag witnessed the scheduled-export failure; no new suite. Independent relay and final existing suites precede runtime installation.
+
+Local capture continuation deployed: SQLite active, existing five-minute job healthy with JSONL-only compatibility refresh, downstream configured, note preserved. Operator accepts unrecovered older history; no further collection. Other Macs remain per-install work. Rolling-note/fleet acceptance remains unclaimed.

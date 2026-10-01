@@ -330,6 +330,18 @@ The database defaults to `~/.claude/prompt-log.sqlite3`; pass `--db /private/pat
 **before** a subcommand to use another local path. Files are private. Never put a live
 SQLite database, its WAL, or its pending directory in a synchronized folder.
 
+For a local installation where historical gaps are accepted but other Macs still
+publish the shared note, use `activate --capture-only` after import/verification.
+New captures use SQLite. The unchanged scheduled exporter drains receipts and
+refreshes `~/.claude/prompt-log-compat.jsonl`, reporting `note_publication: paused`;
+it does not touch the Obsidian note or create another Markdown note. Existing
+sources/backups remain intact. Point existing downstream readers at this full-history
+compatibility file; the original JSONL stops growing after activation. Other Macs
+remain unchanged until individually installed. This is not a rolling-note cutover
+or proof of complete fleet coverage. `migrate-view` still requires its explicit
+single-publisher and historical-coverage checks before the same note can be replaced.
+An explicit `project --jsonl PATH --jsonl-only` uses the same guarded export path.
+
 1. Pause the Markdown exporter on **every device writing the shared note**, and
    designate one publisher. Install the updated shared writer/helper, exporter and
    tailers; verify all registrations use them. Preserve source JSONL, registrations

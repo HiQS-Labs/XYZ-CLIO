@@ -400,7 +400,7 @@ def verify_import(path, source_id, deadline=None):
                 'quarantined': quarantined, 'prefix_hash': prefix.hexdigest()}
 
 
-def activate(path, source_path, fresh=False):
+def activate(path, source_path, fresh=False, capture_only=False):
     """Explicit pilot operation. Does not install hooks or schedule jobs."""
     if CONFIG.exists():
         raise ValueError('already activated; preserve configuration for rollback')
@@ -434,7 +434,10 @@ def activate(path, source_path, fresh=False):
                 dst.flush()
                 os.fsync(dst.fileno())
         check_deadline(deadline)
-        atomic(CONFIG, (encode({'db': str(Path(path).expanduser().absolute()), 'owner': owner}) + '\n').encode())
+        cfg = {'db': str(Path(path).expanduser().absolute()), 'owner': owner}
+        if capture_only:
+            cfg['capture_only'] = True
+        atomic(CONFIG, (encode(cfg) + '\n').encode())
     finally:
         (append_lock / 'born').unlink(missing_ok=True)
         append_lock.rmdir()
@@ -624,7 +627,9 @@ def safe_output(conn, path, output, historical=False):
     return target
 
 
-def project(path, markdown=None, jsonl=None, cutoff=None):
+def project(path, markdown=None, jsonl=None, cutoff=None, jsonl_only=False):
+    if jsonl_only and (not jsonl or markdown is not None):
+        raise ValueError('JSONL-only projection requires JSONL and no Markdown destination')
     cutoff_dt = instant(cutoff) if cutoff else datetime.now(timezone.utc)
     cutoff_text, since = utc(cutoff_dt), utc(cutoff_dt - timedelta(hours=168))
     with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
@@ -632,18 +637,29 @@ def project(path, markdown=None, jsonl=None, cutoff=None):
             conn.execute('BEGIN')
             cfg = config()
             view = cfg.get('view', {})
-            if markdown is None:
+            if markdown is None and not jsonl_only:
                 markdown = view.get('path')
                 if not markdown:
                     raise ValueError('run migrate-view first, or provide --markdown for an explicit preview')
-            target = Path(markdown).expanduser().resolve()
+            target = Path(markdown).expanduser().resolve() if markdown is not None else None
             registered = target == Path(view['path']) if view else False
             current = None
             if registered:
                 cfg, current = checked_view(conn, path, target)
                 view = cfg['view']
-            target = safe_output(conn, path, target, historical=registered)
+            if target is not None:
+                target = safe_output(conn, path, target, historical=registered)
             all_rows = [json.loads(row[0]) for row in conn.execute('SELECT payload FROM events ORDER BY timestamp,record_id')]
+            compat = safe_output(conn, path, jsonl) if jsonl else None
+            if compat is not None and compat == target:
+                raise ValueError('Markdown and JSONL outputs must differ')
+            if compat:
+                # Preserve the legacy UTC-second spelling for existing consumers.
+                compatibility = [dict(row, timestamp=row['timestamp'].replace('.000000Z', 'Z')) for row in all_rows]
+                atomic(compat, ''.join(encode(row) + '\n' for row in compatibility).encode())
+            if jsonl_only:
+                return {'jsonl': str(compat), 'history_rows': len(all_rows),
+                        'markdown': None, 'note_publication': 'paused'}
             recent = [row for row in reversed(all_rows) if since <= row['timestamp'] <= cutoff_text]
             lines = ['# CLIO — recent 168 hours', '', 'UTC cutoff: ' + cutoff_text,
                      'Window starts: ' + since, 'Records: ' + str(len(recent)),
@@ -669,14 +685,6 @@ def project(path, markdown=None, jsonl=None, cutoff=None):
             data = ('\n'.join(lines) + '\n').encode()
             if registered:
                 data = view['header'].encode() + b'\n' + data
-            compat = safe_output(conn, path, jsonl) if jsonl else None
-            if compat == target:
-                raise ValueError('Markdown and JSONL outputs must differ')
-            if compat:
-                # Legacy Rebalance derives IDs from the timestamp text; keep UTC-second
-                # spelling where exact seconds were originally captured.
-                compatibility = [dict(row, timestamp=row['timestamp'].replace('.000000Z', 'Z')) for row in all_rows]
-                atomic(compat, ''.join(encode(row) + '\n' for row in compatibility).encode())
             if registered:
                 # Record both crash outcomes before replacing the note. A retry may
                 # see either file, but never treats an unexpected edit as disposable.
@@ -755,6 +763,7 @@ def main():
     activation = commands.add_parser('activate')
     activation.add_argument('--source', default=str(Path.home() / '.claude/prompt-log.jsonl'))
     activation.add_argument('--fresh', action='store_true')
+    activation.add_argument('--capture-only', action='store_true', help='capture and export full JSONL without changing the shared note')
     migration = commands.add_parser('migrate-view')
     migration.add_argument('--markdown')
     migration.add_argument('--publishers-paused', action='store_true')
@@ -774,6 +783,7 @@ def main():
     projection.add_argument('--markdown')
     projection.add_argument('--jsonl')
     projection.add_argument('--cutoff')
+    projection.add_argument('--jsonl-only', action='store_true')
     exporter = commands.add_parser('export-device')
     exporter.add_argument('output')
     exporter.add_argument('--cutoff')
@@ -796,16 +806,21 @@ def main():
         elif args.command == 'verify-import':
             result = verify_import(path, args.source)
         elif args.command == 'activate':
-            result = activate(path, args.source, args.fresh)
+            result = activate(path, args.source, args.fresh, args.capture_only)
         elif args.command == 'migrate-view':
             result = migrate_view(path, args.markdown, args.publishers_paused)
         elif args.command == 'scheduled-export':
             if args.mode != 'export':
                 raise ValueError('legacy maintenance is unavailable in SQLite mode; use query, drain and project')
             with contextlib.closing(database(path)) as conn:
-                checked_view(conn, path, Path(args.markdown).expanduser().resolve())
+                capture_only = active_config(conn, path).get('capture_only') and not cfg.get('view')
+                if capture_only:
+                    existing_destination(args.markdown)
+                else:
+                    checked_view(conn, path, Path(args.markdown).expanduser().resolve())
             recovery = drain(path)
-            result = project(path, args.markdown, Path.home() / '.claude/prompt-log-compat.jsonl')
+            result = project(path, None if capture_only else args.markdown,
+                             Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=bool(capture_only))
             result['pending'] = recovery['pending']
         elif args.command == 'capture':
             if not cfg or Path(cfg['db']).resolve() != Path(path).expanduser().resolve():
@@ -816,7 +831,7 @@ def main():
         elif args.command == 'query':
             result = query(path, args)
         elif args.command == 'project':
-            result = project(path, args.markdown, args.jsonl, args.cutoff)
+            result = project(path, args.markdown, args.jsonl, args.cutoff, args.jsonl_only)
         elif args.command == 'export-device':
             result = export_device(path, args.output, args.cutoff)
         elif args.command == 'import-device':

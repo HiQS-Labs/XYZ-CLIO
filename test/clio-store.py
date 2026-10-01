@@ -558,13 +558,36 @@ class History(unittest.TestCase):
                 store.activate(self.db, path)
         self.assertFalse(store.CONFIG.exists())
         self.assertFalse((self.home / '.claude/prompt-log.lock').exists())
-        store.activate(self.db, path)
+        store.activate(self.db, path, capture_only=True)
         self.assertEqual(path.read_bytes(), before)
         backups = list(self.home.glob('original.jsonl.pre-sqlite-*'))
         self.assertEqual(len(backups), 1)
         self.assertEqual(backups[0].read_bytes(), before)
         with self.assertRaisesRegex(ValueError, 'overwrite'):
             store.project(self.db, self.home / 'recent.md', path)
+        note, job, _ = self.note_and_job([self.row()])
+        note.write_bytes(note.read_bytes() + b'\n<!-- CLIO:ENTRIES -->\nUnrecovered historical content\n')
+        note_bytes, job_bytes = note.read_bytes(), job.read_bytes()
+        for agent in ('claude-code', 'zcode', 'codex', 'agy'):
+            row = self.row(agent=agent, timestamp=store.utc(), source_event_id='capture-only-' + agent)
+            subprocess.run(['bash', str(self.home / '.claude/hooks/clio-capture.sh'), '--agent', agent, '--record'],
+                           input=json.dumps(row), text=True, check=True, capture_output=True)
+        command = plistlib.loads(job_bytes)['ProgramArguments']
+        result = json.loads(subprocess.run(command, check=True, capture_output=True, text=True).stdout)
+        self.assertEqual(result['note_publication'], 'paused')
+        self.assertEqual(result['history_rows'], 5)
+        self.assertEqual(result['pending'], 0)
+        self.assertEqual(note.read_bytes(), note_bytes)
+        self.assertEqual(job.read_bytes(), job_bytes)
+        self.assertEqual(path.read_bytes(), before)
+        compat = self.home / '.claude/prompt-log-compat.jsonl'
+        rows = [json.loads(line) for line in compat.read_bytes().splitlines()]
+        self.assertEqual(len(rows), 5)
+        self.assertEqual({row['agent'] for row in rows}, {'claude-code', 'zcode', 'codex', 'agy'})
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            store.project(self.db, jsonl=path, jsonl_only=True)
+        with self.assertRaisesRegex(ValueError, 'one standalone'):
+            store.migrate_view(self.db, publishers_paused=True)
 
 
 if __name__ == '__main__':

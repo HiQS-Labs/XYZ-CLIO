@@ -1,6 +1,6 @@
 # CLIO without a required Mac — replicated SQLite through Git Pulse
 
-Date: 2026-10-01. Status: draft for Agy QA; database requirements confirmed, note transport choice pending. Canonical issue: https://github.com/HiQS-Labs/XYZ-CLIO/issues/3 . Recon: [recon-gh3-device-independent.md](recon-gh3-device-independent.md).
+Date: 2026-10-01. Status: Agy approved staged plan (relay exit 0); database requirements confirmed, note transport choice pending. Not implementation-ready for note rollout. Canonical issue: https://github.com/HiQS-Labs/XYZ-CLIO/issues/3 . Recon: [recon-gh3-device-independent.md](recon-gh3-device-independent.md).
 
 This supersedes the permanent Studio-hub assumption in gh3-plan.md and gh3-same-path-plan.md. Their shipped capture, verified backup, same-path header and accepted-gap contracts remain. This is a plan, not authorization to upload private history, restart other Macs, change Sync settings, or modify installed jobs during this turn.
 

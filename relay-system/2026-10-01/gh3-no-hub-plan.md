@@ -101,4 +101,12 @@ Basis: The plan successfully addresses all architectural and procedural requirem
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-01T22:41:40Z
+task: CLIO-GH3-NO-HUB-R1
+reviewer: agy
+status: Approved
+reviewed-head: 0a2ec7540797a488209332757c5def3a202d8183
+added-range: 7611+2292
+added-sha256: da2fd251c3ca45a0afcf14fad627f6a45f04a9b41f3cf74239f9d6ff34e84dad
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

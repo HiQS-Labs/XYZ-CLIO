@@ -1,0 +1,14 @@
+{
+  "operation": "independent-pr5-review",
+  "model": "claude-fable-5-1",
+  "effort": "medium",
+  "status": "Approved",
+  "reviewed_head": "045a1c0ecf4d375aadc511724b9c09e02118c5e7",
+  "review_sha256": "a1fe49797f1939259c1eab84ec6896af2f62db311f7cf375519818865799ccc9",
+  "isolated": true,
+  "driver_exit": 0,
+  "runtime_changes": false,
+  "suites_rerun": false,
+  "suite_evidence": "TESTS-RESULTS/2026-09-30-gh3-local-capture/",
+  "at": "2026-10-01T19:16:09Z"
+}

@@ -143,3 +143,7 @@ SQLite-era arrivals and restore the verified original note/config while the
 local exporter is stopped. Check synthetic repeated-marker migration and
 post-publication foreign edits in the existing activation case, independently
 review, then run existing suites in a disposable full clone before deployment.
+
+### 2026-10-01 no required machine — revised architecture plan
+
+The operator rejects a permanent Studio hub. [gh3-device-independent-plan.md](gh3-device-independent-plan.md) is the new fleet architecture, superseding that assumption: every Mac holds full replicated history through existing Git Pulse; travel capture/query/same-note refresh must work with Studio off. Current local pilot remains installed unchanged. Note transport choice requires explicit resolution; no automatic failover is claimed.

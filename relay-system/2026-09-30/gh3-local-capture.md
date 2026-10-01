@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -143,5 +143,46 @@ For bounded R2: adjudicate the actual backup guard and its existing-case verific
 VERDICT: PASS
 Basis: R1 root backup guard fixed and witnessed; independent re-review required.
 Handing off to Reviewer (codex).
+
+### Reviewer · Round 2
+
+swept file: yes
+
+Verify-tier source fallback: list_projects returned all 77 projects (has_more=false), with no matching CLIO/worktree project; no applicable generation or index coverage exists. Read the complete storage helper, INSTALL.md, exporter and storage test, AGENTS.md and latest operator scope. No additional material pre-existing defect found in the swept files. No git, executable tests/fixtures, private-home inspection or installed changes. Origin/main diff remains unverified because it was not seeded. Used relay-xyz locator first: exit 0, harness found; it also emitted `driver_lock_path_for_repo: command not found`, so readiness is not claimed beyond discovery.
+
+- [Pass] R1 resolved narrowly: utils/CLIO/clio-store.py:611–617 derives protected backup siblings from recorded sources plus the default legacy source, rejecting the `.pre-sqlite-` prefix independent of file completeness. project checks this guard before atomic JSONL publication (:657–663). The existing activation case uses the actual created backup and asserts refusal plus preserved bytes (test/clio-store.py:563–565, :589–591). No new guard framework or suite.
+  Guard-only probe command (exit 0; in-memory synthetic source table; no output publication or source files created):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PROBE'
+  import importlib.util, os, sqlite3
+  from pathlib import Path
+  spec = importlib.util.spec_from_file_location("store", "utils/CLIO/clio-store.py")
+  s = importlib.util.module_from_spec(spec); spec.loader.exec_module(s)
+  root = Path(os.environ["TMPDIR"]).resolve()
+  s.CONFIG = root / "absent-r2-config.json"
+  conn = sqlite3.connect(":memory:")
+  conn.executescript("CREATE TABLE sources(path TEXT); CREATE TABLE device_imports(source TEXT);")
+  source = root / "r2-original.jsonl"
+  conn.execute("INSERT INTO sources VALUES (?)", (str(source),))
+  for name, target in [("source", source), ("activation-backup", root / "r2-original.jsonl.pre-sqlite-123"), ("partial-backup", root / "r2-original.jsonl.pre-sqlite-456"), ("compatibility", root / "r2-compat.jsonl")]:
+      try:
+          s.safe_output(conn, root / "r2-history.sqlite3", target)
+          print(name + ": ACCEPTED")
+      except ValueError as e:
+          print(name + ": REJECTED " + str(e))
+  PROBE
+  ```
+  Decisive output: `source: REJECTED output would overwrite storage, configuration or source history`; `activation-backup: REJECTED output would overwrite a preserved activation source backup`; `partial-backup: REJECTED output would overwrite a preserved activation source backup`; `compatibility: ACCEPTED`. Backup labels designate naming predicates, not created complete/partial files; actual backup preservation execution belongs to the clone gate.
+- [Pass] Q1/Q3 source review still holds: explicit activation flag persists capture-only under the existing final import/verification/append-lock boundary (utils/CLIO/clio-store.py:403–443). scheduled-export validates active DB/owner (:480–485), checks existing destination, drains receipts, exports JSONL and reports pending (:816–828). Normal mode uses checked_view; JSONL-only returns before Markdown rendering with `note_publication: paused` (:664–666). Existing positional adapter routes before legacy mutations (utils/CLIO/prompt-log-to-md.sh:53–62). No schedule/job writer added.
+- [Pass] Q2 source review: both projection modes share full timestamp/record-ID ordered payload serialization, including provenance and extras (utils/CLIO/clio-store.py:656–663). Config, DB/WAL, recorded inputs, pending receipts, historical marker note and registered backup guards remain (:608–630). Registered publication retains checked_view and accepted-hash protection (:651–653, :690–699).
+- [Pass] Q4 verification design: the existing activation case asserts four shared-writer agent routes, five compatibility rows, paused publication, zero pending and unchanged note/plist/source, then rejects source/actual backup output and multi-marker migration (test/clio-store.py:552–593). Existing actual Codex/Agy tailer coverage remains (:439–479); normal activation's scheduled-export refusal is asserted at :208–219. These checks address the stated local envelope.
+- [Pass] Q5 scope: INSTALL.md's capture-only paragraph explicitly says the original JSONL stops growing, downstream readers switch to full-history compatibility JSONL, and other Macs remain unchanged (:333–343). Adoption provenance remains ownership assigned at import, not recovered hardware (:495–500); rollback preserves SQLite-era arrivals (:520–537). Latest doc/gh3-plan.md operator scope accepts the final collection/gap and separates rolling cutover. migrate-view still requires publisher pause, complete historical body coverage and verified backup (utils/CLIO/clio-store.py:511–605).
+- [Unverified — needs clone run] Producer's red/green execution reports and final 16 storage cases plus four shell suites were not run here. Author/harness must complete the authorized disposable-full-clone gate before installed activation; this approval does not assert deployed acceptance or diff verification.
+
+VERDICT: PASS
+Basis: all five packet questions pass source review and existing-case design; the sole open finding R1 is resolved with a measured guard result. No further behavior change requested. Full executable gate remains the required next step.
+Relay closed (Approved), no further review turn needed; author/harness proceeds with the final full-clone gate before local activation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -121,4 +121,12 @@ Basis: Default migration is still strict; archive mode differs only in skipping 
 
 Handoff: relay closed (Approved), no further Reviewer turn needed. Producer/operator: run the existing suites in a disposable full clone before any deployment.
 
+
+### Attestation · relay-drive — 2026-10-01T22:09:16Z
+task: CLIO-GH3-ARCHIVE-QA
+reviewer: claude
+status: Approved
+reviewed-head: abfc004fbc92a2d7d06ca93ddba98ae9eb37b7b9
+added-range: 6571+7836
+added-sha256: 7b2c987f00c57c50dfb7f0b91a8e9ce7623d61c869b9076d1562a014840a2b68
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

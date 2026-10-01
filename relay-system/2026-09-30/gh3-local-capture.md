@@ -66,7 +66,7 @@ Review CLIO local capture-only implementation for authorized MacStudio deploymen
 4. Does the existing activation case meaningfully prove four-agentfuturewrites, private-source preservation, stable scheduled compat export and unchangednote/plist, and refuse unsafeJSONLoutput/multimarkermigration? Focusedcase passed; false capture_only configflag redcontrol failed at scheduled invocation. Suites run only in separate fullclone, never this relay worktree. All16+4shell suites will run after finalapproval.
 5. Scope/rollback: legacyJSONLstops growing, downstreamsource must point to compatJSONL; provided foreignJSONLcan be adopted in separate private stores thenimported by existing snapshot protocol without claiming realdeviceUUIDs. Oldnote preservedoutsideSQLite; existinggapaccepted notclaimedrecovered. Review proportionality and material correctness, cite exact source. Only edit this relaythread. No executable tests/fixtures or private-home inspection. Approve if sound; otherwise concrete observedfailures with falsifiers, no speculativeguardframeworks.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: all five packet questions pass; explicit local capture and compatibility export, unchanged note/job/source, intact default migration guards, proportionate existing-suite verification.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -77,5 +77,13 @@ Review CLIO local capture-only implementation for authorized MacStudio deploymen
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer · Round 1
+
+Implemented explicit capture-only activation and JSONL-only projection in the existing helper; scheduled exporter keeps the original job and note unchanged while refreshing complete compatibility history. Focused existing activation case passed with all four writer routes and preservation checks. Red control setting capture_only=false failed at the scheduled invocation (exit3); restored candidate afterward. Review against the five packet questions. Final fullclone suites follow approval. No installed activation yet.
+
+VERDICT: PASS
+Basis: ready for independent QA, not a self-approval of landing.
+Handing off to Reviewer (codex) for independent QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

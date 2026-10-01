@@ -601,6 +601,7 @@ class History(unittest.TestCase):
         result = json.loads(subprocess.run(command, check=True, capture_output=True, text=True).stdout)
         self.assertEqual(result['rows'], 5)
         self.assertTrue(note.read_bytes().startswith(cfg['view']['header'].encode()))
+        self.assertIn('not fully reconciled into SQLite', note.read_text())
         self.assertEqual(job.read_bytes(), job_bytes)
         self.assertEqual(Path(cfg['view']['backup']).read_bytes(), note_bytes)
         note.write_bytes(note.read_bytes() + b'foreign publisher edit')

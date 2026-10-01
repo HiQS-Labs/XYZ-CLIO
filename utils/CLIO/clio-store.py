@@ -591,7 +591,7 @@ def migrate_view(path, markdown=None, publishers_paused=False, archive_unreconci
                 header, count = text[:marker.end()], None
             else:
                 header, count = legacy_coverage(conn, original)
-            coverage = 'archived-not-reconciled' if archive_unreconciled_note else 'verified' 
+            coverage = 'archived-not-reconciled' if archive_unreconciled_note else 'verified'
             folder = Path(path).expanduser().resolve().parent / (Path(path).name + '.view-backups')
             folder.mkdir(mode=0o700, parents=True, exist_ok=True)
             backup_path = folder / (str(uuid.uuid4()) + '.md')
@@ -677,7 +677,9 @@ def project(path, markdown=None, jsonl=None, cutoff=None, jsonl_only=False):
             recent = [row for row in reversed(all_rows) if since <= row['timestamp'] <= cutoff_text]
             lines = ['# CLIO — recent 168 hours', '', 'UTC cutoff: ' + cutoff_text,
                      'Window starts: ' + since, 'Records: ' + str(len(recent)),
-                     'Older history remains in SQLite. This view covers imported/local records only.', '']
+                     'Imported history remains in SQLite. This view covers imported/local records only.', '']
+            if view.get('coverage') == 'archived-not-reconciled':
+                lines.extend(['Earlier note content is preserved in a verified backup, not fully reconciled into SQLite.', ''])
             if not recent:
                 lines.extend(['No prompts in this window.', ''])
             for row in recent:

@@ -23,3 +23,16 @@ Rollback follows INSTALL.md: pause capture/tailers/exporters, preserve SQLite-er
 2026-09-30 workhorse continuation: source-copy import/online-backup and two-entry private repair verified. Live legacy exporter exit1 traced to intentional delivered-missing alarm. Missing original IDs attributed by rendered labels: MacStudio1861, MBP14 170, MBP16 437. Cutover remains held; [device collection](gh3-device-handoff.md) and TESTS-RESULTS/2026-09-30-gh3-cutover-readiness/ contain next steps and sanitized evidence.
 
 2026-09-30 latest scope/result: operator declared the eleven-file fleet collection final and accepted missing older history. MacStudio SQLite is now ACTIVE in explicit capture-only mode; current shared note and existing300-second job definition remain unchanged. The job now drains and refreshes full-history compatibility JSONL, reporting note publication paused. Provided laptop histories imported with retained separate adoption origins; Mini’s duplicate Studio copy excluded after subset verification. Existing Rebalance runtime config reads compatibility JSONL. Other Macs await individual installation; no further data recovery chase. Same-path rolling publication is not activated. See TESTS-RESULTS/2026-09-30-gh3-local-capture/ and INSTALL.md’s per-Mac retry guidance. Source-code review Approved R2; all16 storage and four shell suites passed; live four-agent shared-writer diagnostics and replay dedup passed. Earlier no-activation state is historical. Preserve task clone while this follow-up branch is unmerged and rolling/fleet work remains open.
+
+## 2026-10-01 same-path rolling publication active
+
+Operator confirms CLIO off on all other devices. Studio now publishes a seven-day
+view to the same `0. Claude Prompts.md` on the unchanged 300-second job. Original
+ten-section note fully archived in verified private backups; personal header
+preserved. Explicit archive mode records archived-not-reconciled/null covered
+count, honoring the accepted historical gap without a parity claim. SQLite
+3,921 history records, 332 in-window at cutover, integrity OK, pending zero and
+repeat publication verified. Evidence: TESTS-RESULTS/2026-10-01-gh3-seven-day/.
+
+PR #5 remains the implementation landing; clone retained until verified landing.
+Fleet integration remains dependent on Rebalance #282; other Macs are disabled.

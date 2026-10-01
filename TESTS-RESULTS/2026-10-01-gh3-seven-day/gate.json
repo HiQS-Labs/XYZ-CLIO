@@ -1,0 +1,57 @@
+{
+  "candidate": "abfc004",
+  "operation": "accepted-gap-existing-suite-gate",
+  "identity_unchanged": true,
+  "results": [
+    {
+      "command": [
+        "bash",
+        "test/clio-capture.sh"
+      ],
+      "rc": 0,
+      "seconds": 14.527,
+      "log": "clio-capture.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/clio-exporter.sh"
+      ],
+      "rc": 0,
+      "seconds": 4.869,
+      "log": "clio-exporter.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/clio-codex-tail.sh"
+      ],
+      "rc": 0,
+      "seconds": 19.683,
+      "log": "clio-codex-tail.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/clio-agy-tail.sh"
+      ],
+      "rc": 0,
+      "seconds": 13.134,
+      "log": "clio-agy-tail.log"
+    },
+    {
+      "command": [
+        "python3",
+        "test/clio-store.py"
+      ],
+      "rc": 0,
+      "seconds": 6.237,
+      "log": "clio-store.log"
+    }
+  ],
+  "input_sha256": {
+    "utils/CLIO/clio-store.py": "838d61c6fd754a4741388ece24f3007cedc6b9ab73144ca392d7fb21ceb8f6dd",
+    "utils/CLIO/INSTALL.md": "faa033fbafa2995fb79ff2a1d533080f174dff3b6fe70ce92ad7bb83bd37bfc2",
+    "test/clio-store.py": "8f9b0fbdc4e5900a1b9bcb087c71296ddd921909be4efc7d90e07dfb21cca75a"
+  }
+}

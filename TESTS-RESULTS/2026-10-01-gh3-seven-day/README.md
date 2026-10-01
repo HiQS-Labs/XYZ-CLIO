@@ -1,0 +1,7 @@
+# Same-note seven-day activation — 2026-10-01
+
+Operator confirms CLIO is off on every other device and authorizes the Studio's same-note cutover. Explicit archive mode preserves the complete ten-section original note and exact personal header without claiming unreconciled history is in SQLite. Default migration remains strict. Existing backup/destination/publisher/foreign-write guards remain active.
+
+Claude Fable 5.1 medium approved the adaptation at abfc004. Four shell suites and 16 SQLite cases passed in a disposable full clone with unchanged Git identity. Existing capture malformed-input jq diagnostic and environment-specific skips/ResourceWarnings remain in logs. Missing-option red control witnessed before implementation. A test expectation was corrected from four to five recent rows (the synthetic initial row is also in-window); no production behavior was altered for it. After review, wording was clarified as requested and all 16 SQLite cases passed again.
+
+Installed deployment: 3,921 SQLite history rows, 332 recent rows, integrity OK, pending zero; repeated publication through the original exporter command passed. Original note is archived in a hash-verified exclusive view backup and separately in the private cutover backup. Header and exact original path preserved; plist unchanged, 300-second interval restored. Private note/DB/backups remain outside Git. This is the Studio pilot; other devices are disabled, and fleet/provenance/semantic integration beyond the existing compatibility path remains pending Rebalance #282.

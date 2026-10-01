@@ -185,4 +185,12 @@ VERDICT: PASS
 Basis: all five packet questions pass source review and existing-case design; the sole open finding R1 is resolved with a measured guard result. No further behavior change requested. Full executable gate remains the required next step.
 Relay closed (Approved), no further review turn needed; author/harness proceeds with the final full-clone gate before local activation.
 
+
+### Attestation · relay-drive — 2026-10-01T04:14:38Z
+task: CLIO-GH3-LOCAL-CAPTURE-R2
+reviewer: codex
+status: Approved
+reviewed-head: 07d4a7196b8c29e981a071e74b7b059a91ae69ed
+added-range: 15802+5628
+added-sha256: 2e988f962e8126b5f114ed1b6a387b3894f0b332a37b31ab66645b0bd5d4af24
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

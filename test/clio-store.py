@@ -586,6 +586,9 @@ class History(unittest.TestCase):
         self.assertEqual({row['agent'] for row in rows}, {'claude-code', 'zcode', 'codex', 'agy'})
         with self.assertRaisesRegex(ValueError, 'overwrite'):
             store.project(self.db, jsonl=path, jsonl_only=True)
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            store.project(self.db, jsonl=backups[0], jsonl_only=True)
+        self.assertEqual(backups[0].read_bytes(), before)
         with self.assertRaisesRegex(ValueError, 'one standalone'):
             store.migrate_view(self.db, publishers_paused=True)
 

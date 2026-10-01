@@ -608,9 +608,13 @@ def migrate_view(path, markdown=None, publishers_paused=False):
 def safe_output(conn, path, output, historical=False):
     target = Path(output).expanduser().resolve()
     forbidden = {Path(path).expanduser().resolve(), CONFIG.resolve()}
-    forbidden.update(Path(row[0]).resolve() for row in conn.execute('SELECT path FROM sources'))
+    sources = {Path(row[0]).resolve() for row in conn.execute('SELECT path FROM sources')}
+    sources.add((Path.home() / '.claude/prompt-log.jsonl').resolve())
+    forbidden.update(sources)
     forbidden.update(Path(row[0]).resolve() for row in conn.execute('SELECT source FROM device_imports'))
-    forbidden.add((Path.home() / '.claude/prompt-log.jsonl').resolve())
+    if any(target.parent == source.parent and target.name.startswith(source.name + '.pre-sqlite-')
+           for source in sources):
+        raise ValueError('output would overwrite a preserved activation source backup')
     base = Path(path).expanduser().resolve()
     cfg = config()
     view = cfg.get('view', {})

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -133,5 +133,15 @@ Reviewed the complete clio-store.py, INSTALL.md, exporter adapter and existing s
 VERDICT: FAIL
 Basis: the core capture-only flow is proportionate and source-reviewed, but Q2's explicit backup guard contract fails for an activation-produced backup path. Address R1, then rerun the existing clone gate; no additional historical collection is requested.
 Handing off to Producer (author) — take your turn to disposition R1 and revise the existing guard.
+
+### Producer · Round 2
+
+R1 Implemented. safe_output now protects known source backup siblings named <source>.pre-sqlite-*, including partial backups, alongside existing original-source guards. No new service/ledger; normal compatibility paths unchanged. Extended the same activation case to pass its actual activation-created backup as JSONL-only output and assert original bytes remain. Witnessed pre-fix failure: ValueError not raised (backup-red log); candidate passes (backup-green log). No live data involved.
+
+For bounded R2: adjudicate the actual backup guard and its existing-case verification, and confirm R1 passing capture-only/projection/migration conclusions still hold. Full gate follows final approval. Supplied origin/main diff was not seeded earlier; do not assert it was reviewed via git. The exact material code is present in this isolated target checkout. User scope remains no more collection, local capture enabled after final checks, same note untouched until a separate rolling cutover.
+
+VERDICT: PASS
+Basis: R1 root backup guard fixed and witnessed; independent re-review required.
+Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

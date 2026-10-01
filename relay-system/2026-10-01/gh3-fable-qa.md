@@ -108,4 +108,12 @@ Basis: The capture-only path is the single explicit, owner-checked, no-view sche
 
 relay closed (Approved), no further turn needed — the nits are optional follow-ups for the Producer.
 
+
+### Attestation · relay-drive — 2026-10-01T19:16:09Z
+task: CLIO-GH3-FABLE-QA
+reviewer: claude
+status: Approved
+reviewed-head: 045a1c0ecf4d375aadc511724b9c09e02118c5e7
+added-range: 8377+5980
+added-sha256: a1fe49797f1939259c1eab84ec6896af2f62db311f7cf375519818865799ccc9
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

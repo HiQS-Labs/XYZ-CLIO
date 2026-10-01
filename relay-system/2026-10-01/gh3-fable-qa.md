@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,26 @@ Current PR #5 executable implementation and documentation are ready for an indep
 
 VERDICT: PASS
 Basis: Ready for independent review; no claim of Claude approval yet.
+
+### Reviewer · Round 1 (claude, claude-fable-5-1)
+
+swept file: yes — read all 860 lines of `utils/CLIO/clio-store.py`, the full `origin/main...HEAD` diff of helper/INSTALL/test/plan/handoff, and the receipts under `TESTS-RESULTS/2026-09-30-gh3-local-capture/`. Static review only; no suite, fixture, private home or database was run or read. Definition of Done is an unfilled placeholder, so I graded against the artifact's five questions.
+
+- [Pass] Q1 only new no-view scheduled path, explicit flag. The flag is written only by `activate(..., capture_only=True)` (`utils/CLIO/clio-store.py:438-440`); the scheduled branch needs activated DB + owner and no registered view: `capture_only = active_config(conn, path).get('capture_only') and not cfg.get('view')` (`clio-store.py:820`), then `existing_destination(args.markdown)` (`:822`) refuses a destination that differs from the installed job. Without the flag it still goes to `checked_view` (`:824`) → `'run migrate-view for the existing destination before exporting'` (`:562`). Source import/verify/backup and the `prompt-log.lock` handling in `activate` are untouched by the diff (`:415-443`). The installed adapter passes no `--db` (`utils/CLIO/prompt-log-to-md.sh:62`), so `cfg` is the real config.
+- [Pass] Q2 JSONL-only reuses the same serializer and guards. One compatibility writer serves both modes (`clio-store.py:657-663`), still through `safe_output`; `jsonl_only` requires a JSONL path and no Markdown (`:635-636`) and returns before any note rendering (`:664-666`). Rows are full stored payloads, so `origin_id`/`origin_kind`/`extras` ride along. New sibling guard blocks `*.pre-sqlite-*` activation backups (`:615-617`). Registered rolling path is the same statements in the same order relative to the note check (`:690-699`).
+- [Pass] Q3 honest scheduled reporting. Drain runs first (`:825`), result carries `history_rows`, `'note_publication': 'paused'`, `'markdown': None` (`:665-666`) and post-drain `pending` (`:828`). `target` is `None`, so no Markdown is created; `migrate_view` gates are unchanged (`:571-573`, `legacy_coverage` `:514-516`).
+- [Pass] Q4 test proves what it claims, by reading. `test/clio-store.py:561` activates capture-only; the added block (`:568-593`) drives four `clio-capture.sh --agent … --record` writes, runs the plist's own command, asserts `note_publication == 'paused'`, `history_rows == 5`, `pending == 0`, byte-identical note/plist/source, four agents in compat, and refusals for JSONL onto source, onto the backup, and for a two-marker `migrate_view`. Normal activation still failing the scheduled job is covered separately: `self.assertNotEqual(rejected.returncode, 0)  # Activation alone is not view migration.` (`test/clio-store.py:210`). Red control receipt shows the false-flag run dying at the scheduled command with `returned non-zero exit status 3` (`capture-only-red.log`).
+- [Unverified — needs clone run] Suite results. I did not execute anything; `clio-store.log` reads `Ran 16 tests in 6.323s` / `OK` and the shell logs read `PASS`, but that is the Producer's receipt, not my measurement. Harness gate should confirm.
+- [Pass] Q5 scope, rollback, per-Mac retry guidance matches the code. "do not initialize or activate a second store" ↔ `'already activated; preserve configuration for rollback'` (`clio-store.py:405-406`); "failed verification should leave the current capture mode intact" ↔ config is the last write in `activate` (`:440`); "`--fresh` only when the legacy source genuinely does not exist" ↔ `:421-423`. INSTALL states "This is not a rolling-note cutover or proof of complete fleet coverage" and "the original JSONL stops growing after activation". No new store, service, push loop, ledger writer or note in the diff.
+- [Pass] Claims separate shared-writer diagnostics from real IDE callbacks. Receipts say "Four explicitly labelled synthetic installed shared-writer diagnostics (one per agent)" (`TESTS-RESULTS/2026-09-30-gh3-local-capture/README.md:9`), `"labelled_synthetic_health_events": 4` (`deployment.json`), and the handoff says "live four-agent shared-writer diagnostics and replay dedup passed" (`doc/gh3-handoff.md:25`). Nothing claims an IDE hook or tailer fired live. Keep that wording; "four agents verified" must never be shortened to imply real callbacks.
+- [Nit] `clio-capture.log:4` ends with `jq: parse error: Invalid literal at line 1, column 5` after `PASS: all capture cases (bash)`. The receipt README discloses ResourceWarnings and skips but not this line. Fix: one sentence in the receipt README saying which case emits it and that it is expected (or pre-existing on main). No code change requested.
+- [Nit] A manual `clio-store.py --db PATH scheduled-export NOTE` sets `cfg = {}` (`clio-store.py:800`), so `not cfg.get('view')` at `:820` is true even after a later `migrate-view`; that run would stay JSONL-only. It fails safe (no note write) and the installed adapter never passes `--db`, so no change requested; reading `view` from the `active_config(...)` result would remove the asymmetry if this line is touched again.
+- [Nit] Pre-existing: redundant function-local `import re` (`clio-store.py:194`; module import at `:12`).
+- Pre-existing sweep otherwise: no material defect found in the unchanged parts of the helper (init, normalize/identity, capture/drain receipts, import accounting, verify, migrate-view, device snapshot, backup). I have no observed failing input for any of them and request no behaviour change.
+
+VERDICT: PASS
+Basis: The capture-only path is the single explicit, owner-checked, no-view scheduled route; it reuses the existing serializer and output guards, reports paused publication honestly, leaves default activation and migrate-view fail-closed, and the docs/receipts do not overclaim. Three nits, none blocking; suite results remain the harness gate's to confirm.
+
+relay closed (Approved), no further turn needed — the nits are optional follow-ups for the Producer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,7 +66,7 @@ Operational envelope: four personal Macs, private Git Pulse transport, eventual 
 Read AGENTS.md, doc/gh3-device-independent-plan.md (latest executable section and dispositions), doc/recon-gh3-device-independent.md, utils/CLIO/clio-store.py, test/clio-store.py, new INSTALL.md integration section and TESTS-RESULTS/2026-10-02-gh3-auto-recovery/.
 Questions:
 1. Do configure/reconcile/export safely consume only committed inventory-matching owner snapshots, with bounded Git calls, partial progress and no push path? Does own recovery precede serialization and retain unsent rows without echo?
-2. Are own immutable conflicts refused, original committed delivery labels restored through the sole writer seam, indexed fields consistent, and prior observations grouped into one verified private archive? Are foreign imports strict and cumulative regressions refused?
+2. Are own immutable conflicts refused, original committed delivery labels restored through the sole writer seam, indexed fields consistent, and prior observations grouped into one verified private archive? Are foreign imports strict and cumulative regressions refused?  [Unverified — no citation]
 3. Does optional machine-owned body repair preserve exact header/original backup, archive complete unknown merged body before replacement, defer unknown IDs with persistent bounded expiry, and refuse safely at archive quotas/failures? Check compare-before-replace and stated external-edit race without inventing fencing.
 4. Do scheduled capture/drain/import/full compatibility outputs continue on note refusals? Are default mode, existing collector scripts/schema/exporter cadence preserved?
 5. Does synthetic four-store/Git-checkout coverage demonstrate delivered history parity, outage/rejoin, no echo, old-backup own recovery, 129 label updates in one archive and exact note convergence? Identify missing material controls, proportionately.
@@ -97,5 +97,38 @@ Committed candidate ready for independent review; no installed changes.
 
 VERDICT: PASS
 Basis: Ready for QA.
+
+### Reviewer · Round 1 (claude, claude-fable-5-1)
+
+swept file: yes — `utils/CLIO/clio-store.py` read in full this turn (1–1178, pre-existing code included); `test/clio-store.py` 495–699 (whole four-store case); plan "Implementation Fable high Round3 disposition" (`doc/gh3-device-independent-plan.md:164-166`); receipts README, `provenance.jsonl`, `check-5.log`, tail of `check-6.log`, `registered-alias-red.log`; prior thread `gh3-auto-implementation-fable-r3.md` H1. INSTALL.md not re-read: its hash `114d8977…` is unchanged from the round-3 review. No suites run here; no git writes by me. `shasum -a 256` helper/INSTALL/test = `4ab6c0a2…`/`114d8977…`/`27b4cbd1…`, equal to `provenance.jsonl` line 7 `sources`; `shasum -a 256 check-*.log` = `b3b337eb…`, `f37e1714…`, `3ec02a7d…`, `53222ef9…`, `9fb6ab11…`, `831d8a62…`, equal to provenance lines 1–6, all `"exit": 0`. Probe: `/usr/bin/python3 .relay-scratch/probe_r4.py utils/CLIO/clio-store.py` → `exit=0` (Python 3.9.6; synthetic row, throwaway HOME under `.relay-scratch/tmp`, CLI-only `init` / `activate --fresh` / `capture` / `migrate-view` / `scheduled-export`; fleet cases point at a non-existent checkout, so no Git object is read or written). Repeated under `/opt/homebrew/bin/python3` (3.14.7): same results except case L below.
+
+**H1 (round 3) — the three path identities**
+
+- [Pass] H1 implemented as dispositioned, three lines, no new machinery: `clio-store.py:1109-1112` `elif destination != Path(activated['view']['path']):` / `if destination.resolve() != Path(activated['view']['path']): raise ValueError('scheduled destination differs from registered note')` / `destination = Path(activated['view']['path'])`. Parent-only resolution is retained at `:1098-1099`, and the same `destination` reaches `project()` in both branches (`:1129` fleet, `:1144` default).
+- [Pass] Identity 1, canonical registered final component: unchanged path. Measured `A default canonical regular note | rc= 0 | … markdown= note.md | compat= True | registered_file_rewritten= True` and `A fleet … note_status= {'state': 'published'}`; parent-directory alias `P default parent-dir alias | rc= 0 | … registered_file_rewritten= True`, `P fleet … {'state': 'published'}`.
+- [Pass] Identity 2, alias resolving exactly to the registered real file, the round-3 failing input: `S default view.path is real file: True | arg is symlink: True` then `S default registered-via-symlink alias | rc= 0 | stderr=  | … markdown= real-note.md | compat= True | registered_file_rewritten= True` and `S fleet   registered-via-symlink alias | rc= 0 | … note_status= {'state': 'published'} | markdown= real-note.md | compat= True | registered_file_rewritten= True`; `alias still symlink: True` in both modes. `markdown= real-note.md` shows `project()` received the canonical registered path, not the alias. Round 3 measured `rc= 3` for the same input.
+- [Pass] Identity 3, registered file later becomes a symlink: `destination == view.path`, so `:1110` is not consulted and `:760-762` refuses note-locally. `G fleet   registered note became symlink | rc= 0 | … note_status= {'error': 'ValueError', 'reason': 'publication_guard', 'state': 'refused'} | … compat= True | registered_file_rewritten= False`, `other untouched: True | still symlink: True`. Default mode keeps its existing single-call refusal: `G default … rc= 3 | stderr= ValueError: registered note became a symlink; publication refused`, target untouched.
+- [Pass] Unrelated destinations stay rejected in both modes, nothing written: `U1 … unrelated regular file | rc= 3 | stderr= ValueError: scheduled destination differs from registered note`, `U2 … symlink to unrelated file | rc= 3 | (same)`, `stray untouched: True`.
+- [Pass] Controls and receipts: `test/clio-store.py:639-652` registers the alias (`already_registered`), then asserts `scheduled(node, alias).returncode == 0` in fleet mode (`:644`) and with `fleet` popped (`:649`); `:653-665` keeps the changed-to-symlink control; `:614`, `:620` keep the unrelated controls. `registered-alias-red.log` shows the pre-fix failure at exactly `line 644 … AssertionError: 3 != 0`. `check-5.log` and `check-6.log` end `Ran 16 tests … OK`. [Unverified — needs clone run]: I did not re-execute any suite; the harness gate does.
+
+**No regression in earlier passes (current line numbers; the only helper change since round 3 is `:1109-1112`)**
+
+- [Pass] Q1: HEAD pinned once `:975-978`; only `rev-parse` and `cat-file -s` / `cat-file blob` `:982-985`; `timeout=min(5, remaining)` `:927`, 30 s budget `:971`, ≤16 origins `:969`, 64 MiB `:983`, `GIT_NO_LAZY_FETCH` `:922`; own recovery precedes serialization and refuses on own error `:800-803`; export is own-origin only `:813`; unsent rows counted, not deleted `:877`. No push or fetch call exists in the file.
+- [Pass] Q2: own immutable conflict refused `:861-863`; labels restored only inside `insert` with payload and indexed columns together `:243-249`; one grouped archive before updates `:865-866`; foreign strict `:870`; cumulative regression refused `:856-857`; generic self-import refused `:852-853`.
+- [Pass] Q3: header prefix `:604-605`; pinned header/coverage `:587-589`; backup hash `:583-584`; whole file archived `:631` before the accepted-hash write `:791-793`; archive exclusive, verified, quota-bound `:895-909`; bounded wait `:612-617`, cleared on accepted note `:599-600`; compare-before-replace `:788-790`.
+- [Pass] Q4: drain errors isolated `:1115-1119`; compatibility output precedes and is independent of the note attempt `:1124-1134`; schema `:129-156` and `VERSION = 1` `:23` untouched; 300 s cutoff bucket only with fleet `:748-749`; default branch `:1142-1145` unchanged apart from the canonical `destination`.
+- [Pass] Q5: four-store controls `test/clio-store.py:561-565` parity, `:566-571` rejoin, `:572-578` dirty exclusion, `:579-597` 129 labels → one archive, `:598` no echo, `:599-609` own restore + unsent, `:668-691` bad/missing origins, `:692-699` regression.
+- [Pass] Q6: stdlib only `:3-20`; no new command, timer, schema or store in this increment; receipts README still states "No live cross-device delivery/Obsidian Sync pilot is claimed".
+
+**Nits — no change requested, none blocks**
+
+- [Nit] Compound residual already named in round 3: an alias whose target is the registered path, where the registered path itself later became a symlink, aborts the tick instead of refusing note-locally. `R fleet   alias to registered-turned-symlink | rc= 3 | stderr= ValueError: scheduled destination differs from registered note | … compat= False`, `other untouched: True`. Fails closed; captures stay committed or queued; needs two unusual states at once.
+- [Nit] Pre-existing, interpreter-dependent: a self-referential symlink given as the scheduled destination raises an uncaught `RuntimeError` from `destination.resolve()` at `:1110` on Python 3.9 (`L default symlink loop argument | rc= 1 | stderr= RuntimeError: Symlink loop from '…`), versus `rc= 3 … scheduled destination differs from registered note` on 3.14.7. Nothing is written either way; the round-2 guard and `:763` resolve the same way, so this is not introduced by H1. `RuntimeError` is absent from the catch at `:1165`, so no line reaches the diagnostics log on 3.9.
+- [Nit] `test/clio-store.py:644` asserts only exit 0 in fleet mode, which a note refusal would also satisfy; the default-mode assertion `:649` and the probe line `S fleet … {'state': 'published'}` cover publication. Asserting `note_status.state == 'published'` there would tighten it.
+- [Nit] `provenance.jsonl` line 7 still records `head: 2a64aa84…` before and after; the receipts are tied to the candidate by the three source hashes, which match.
+- Pre-existing code outside the fleet paths (`:1-580`, `:638-742`, `:1014-1021`): re-read this turn; no other defect found.
+
+VERDICT: PASS
+Basis: H1 is fixed as dispositioned in three lines; the canonical path, the registered alias and the changed-to-symlink note each behave as specified in default and fleet mode on measured inputs, unrelated destinations stay rejected, and source/receipt hashes match provenance. No implementation blocker remains; four nits are recorded without a change request. Suites were not re-run here (harness gate). Source-only envelope unchanged: Rebalance #282 wiring and the disconnected/Obsidian pilot remain deployment gates. Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

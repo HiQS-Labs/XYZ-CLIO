@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -58,7 +58,7 @@ ROUND: 1 / 4
 
 ### Artifact — gh3-publish-final-qa.md
 ```
-Final incremental QA of outstanding PR5 review fixes for issue3. Review cdceaa1: scheduled-export --db now reads capture_only and view from activated configuration; existing activation test extended, witnessed old conditional red rows None!=5 and fixed green. Fleet document now confirmed requirements/target outcomes with disconnected pilot and staged rollout still pending, existing cadence requirement not delivery guarantee. Review current entire relevant helper and test, plan, receipts, previous WAL approvals. No suites in review worktree or installed mutations. Only relay writes. Approve if both outstanding findings resolved and WAL fix preserved. Final four shell suites and16cases bothPython follow; no fleet rollout/merge authority inferred.
+Final incremental QA of outstanding PR5 review fixes for issue3. Review cdceaa1: scheduled-export --db now reads capture_only and view from activated configuration; existing activation test extended, witnessed old conditional red rows None!=5 and fixed green. Fleet document now confirmed requirements/target outcomes with disconnected pilot and staged rollout still pending, existing cadence requirement not delivery guarantee. Review current entire relevant helper and test, plan, receipts, previous WAL approvals. No suites in review worktree or installed mutations. Only relay writes. Approve if both outstanding findings resolved and WAL fix preserved. Final four shell suites and16cases bothPython follow; no fleet rollout/merge authority inferred.  [Unverified — no citation]
 ```
 - Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
 
@@ -78,5 +78,23 @@ Both concrete PR findings addressed with existing-case red/green receipt.
 
 VERDICT: PASS
 Basis: Ready for incremental final QA.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Both outstanding findings are resolved and the reviewed WAL repair is preserved. Graded against the embedded artifact's explicit acceptance; the DoD placeholder adds no criterion. Read the entire storage helper, storage test, fleet plan and issue plan, plus relevant receipts and previous WAL approvals; inspected scheduler/install seams. No additional pre-existing blocker found in these swept files within the stated incremental scope. Approval covers source QA, not the pending final gates, incremental installation, fleet rollout or merge.
+
+- [Pass] Explicit DB scheduled publication uses the activated configuration consistently. `activated = active_config(conn, path)` and `capture_only = activated.get('capture_only') and not activated.get('view')` (utils/CLIO/clio-store.py:835–844) eliminate the empty CLI-config view check. Active DB/owner validation remains at :482–487; view destination, original backup and accepted-note hashes remain checked at :560–570 before drain/project. Fix: retain this focused conditional and existing guards.
+- [Pass] The existing activation case exercises the concrete failing input: activation retains capture_only=true, migration registers a view, then explicit `--db ... scheduled-export` must return rows=5 (test/clio-store.py:584, :617–633). The recorded old-conditional run reports `AssertionError: None != 5` (TESTS-RESULTS/2026-10-01-gh3-wal-repair/explicit-db-red.log:10); green reports `Ran 1 test` / `OK` (explicit-db-green.log:4–6); provenance.jsonl:9 records red_exit=1, green_exit=0 and the current helper hash. Fix: retain the case and associate the final gate with current bytes.
+- [Pass] Fleet wording distinguishes requirements from delivered capability. doc/gh3-device-independent-plan.md:9 says the outcome follows the disconnected pilot/staged rollout and cadence is a scheduling requirement, not a delivery guarantee. :72–73 require the actual disconnected pilot and per-Mac rollout; :83 explicitly states replication/failover is not claimed installed or tested and note transport/#282 remain unresolved. Fix: preserve these qualifications when reporting status.
+- [Pass] WAL repair remains intact: existing-file mode=rw, query_only before schema reads and close-on-validation-failure remain in utils/CLIO/clio-store.py:89–107. The existing cold-copy case still asserts absent sidecars before the Apple query and exact nonempty payload (test/clio-store.py:389–411); DELETE refusal and missing-file noncreation remain at :382–388. Prior gh3-wal-plan.md and gh3-wal-final.md have STATUS: Approved. Historical gate/installed receipts identify the previous helper hash (provenance.jsonl:2–8), so they are not claimed as current incremental gates. Fix: preserve the connection seam and both-runtime gate.
+- [Pass] Narrow source-only probe corroborates receipt identity and branch selection. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with inline pathlib/hashlib/json/ast inspection of the helper and existing test: SHA256 bytes, compare last provenance source_sha256, enumerate database execute literals, compile/evaluate only the capture_only AST expression with three synthetic dictionaries, count test_ definitions. Exit 0. Decisive output: `helper_sha256 8f088b25863673d5ac64c3bb1115cce8e82591ab05bf74dc62f0f7d8d24a7550`; `explicit_receipt_matches True`; `reader_sql_order ['PRAGMA query_only=ON', 'PRAGMA application_id', 'PRAGMA user_version']`; capture-only without view → True, capture-only with view → False, view without capture-only → False; `storage_test_cases 16`. This is source measurement, not execution of the helper/test fixture. Fix: no additional mechanism needed.
+- [Unverified — needs clone run] Final four shell suites and all 16 storage cases under both Python runtimes on the incremental helper remain pending, as stated in TESTS-RESULTS/2026-10-01-gh3-wal-repair/README.md:7 and the embedded artifact. Required next action: Producer/harness runs existing gates in a disposable full clone and records current helper identity. No suite, executable fixture, installed mutation or git command ran here.
+
+Evidence limitation: list_projects pagination exhausted all 77 projects (has_more=false); no CLIO project or matching checkout is indexed, so no graph generation or check_index_coverage result is available. Complete direct source reads supply the bounded evidence. The relay-xyz locator returned exit 0 and found the harness, but printed `driver_lock_path_for_repo: command not found`; it is not a clean harness-validation receipt. Only this relay file was changed.
+
+Relay closed (Approved), no further review turn needed. Producer/harness owns the pending clone gates and relay-only commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

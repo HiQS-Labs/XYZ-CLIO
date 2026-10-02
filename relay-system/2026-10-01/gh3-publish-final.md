@@ -97,4 +97,12 @@ Evidence limitation: list_projects pagination exhausted all 77 projects (has_mor
 
 Relay closed (Approved), no further review turn needed. Producer/harness owns the pending clone gates and relay-only commit.
 
+
+### Attestation · relay-drive — 2026-10-02T05:34:34Z
+task: CLIO-GH3-PUBLISH-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 6f4cc5b4cdb4c727f2df688af0beb98f69137fe2
+added-range: 6216+4839
+added-sha256: e1d6d01483c64f373aa24e480207f351af116e133d6fd42df8119523ace8acd7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

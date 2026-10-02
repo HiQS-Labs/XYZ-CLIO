@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,24 @@ Committed candidate ready for independent review; no installed changes.
 
 VERDICT: PASS
 Basis: Ready for QA.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Read in full: `doc/gh3-device-independent-plan.md` and prior Fable R2 findings in `relay-system/2026-10-02/gh3-auto-plan-fable-r2.md`. 
+
+Dispositions of F5–F8 from gh3-auto-plan-fable-r2:
+- [Pass] **F5 disposition (own-origin replay conflict & labels).** Plan `:111` correctly identifies that `replay=True` alone would re-export changed labels and stall strict peers. The revised mechanism limits trusted committed label restoration to own rows whose immutable identity agrees, preserves the previous local observation in an exclusive private archive before updating, and keeps generic capture/foreign imports strictly on first-observation semantics. It also correctly retains the identity/payload conflict refusal.
+- [Pass] **F6 disposition (archive unbound/frequency).** Plan `:119` adds "unknown-ID deferral" (defer note replacement byte-intact until Git snapshots arrive), bounding the ordinary concurrent-capture oscillation. Added explicit limits (`max128 files/256MiB total`, `max64MiB` per input) and pilot stop rules (`max12/day` or `32MiB/day` per Mac) and surfaces count/bytes in status.
+- [Pass] **F7 disposition (committed-local reporting).** Plan `:111` correctly labels the count as "committed-local/unsent/restored/label-restored" rather than remote-delivery acknowledgement.
+- [Pass] **F8 disposition (duplicate owner warning).** Plan `:111` notes "a nonzero restore also warns to check duplicate owner if this store was not intentionally restored".
+
+Implementation readiness: the plan is safe and proportionate. Reversibility and boundary conditions (native Rebalance 282, offline queries, original headers, and Sync sync-interval constraints) remain clear. 
+
+VERDICT: PASS
+Basis: F5-F8 are thoroughly addressed with safe, resource-bounded, and well-identified fallback mechanisms. The plan is safe, cleanly defines its boundaries, and maintains strict semantics for cross-device history synchronization.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -100,4 +100,12 @@ Evidence limitation: `list_projects` returned all 77 entries over offsets 0 and 
 
 Relay closed (Approved), no further turn needed. Producer may implement the approved scope; the harness owns the relay-only commit.
 
+
+### Attestation · relay-drive — 2026-10-02T05:20:00Z
+task: CLIO-GH3-WAL-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 5acb4033e7828929074ccf1941c361bb707a02d6
+added-range: 6595+5356
+added-sha256: f4c8f2ba170ff9a4bc21ce18d62418b11214bce5c42bd80dc864460953a032f0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

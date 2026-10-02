@@ -1,5 +1,7 @@
 # GH3 device collection and cutover handoff
 
+Current milestone (2026-10-02): CLIO #5 and Rebalance #303 landed and the Studio is locally deployed with verified history/header/same-note preservation. Other Macs remain disabled; accepted historical gaps need no additional collection. Earlier collection notes below are historical. Use INSTALL.md and Rebalance #282 for current rollout gates.
+
 PR4 landed; runtime installed. Cutover held on authoritative originals, lossless reconciliation of ten historical sections, and one shared-note publisher. Capture and ordinary IDE work continue. Do not activate SQLite or change the shared note while these remain unknown.
 
 1. On each Mac, record the resolved CLIO source and any original JSONL archives. Copy them privately, preserving complete raw lines, unknown metadata and device identity. Include older MacStudio sources: the current JSONL alone cannot account for1,861 rendered IDs. MBP14 and MBP16 currently account for another170 and437 absent IDs. These labels are inventory hints, not proven origin UUIDs. Do not reconstruct omitted metadata from Markdown or commit snapshots to the Pulse repo before#282.

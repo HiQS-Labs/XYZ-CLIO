@@ -1,0 +1,15 @@
+test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History) ... FAIL
+
+======================================================================
+FAIL: test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/temp/gh3-review-verification/test/clio-store.py", line 647, in test_device_roundtrip_preserves_owner_extras_and_no_echo
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 3 != 0 : ValueError: scheduled destination differs from registered note
+
+
+----------------------------------------------------------------------
+Ran 1 test in 7.035s
+
+FAILED (failures=1)

@@ -201,7 +201,6 @@ def normalize(row, owner=None, kind='legacy-adopted'):
     references = row.get('references', [])
     if not isinstance(references, list):
         raise ValueError('references must be a list')
-    import re
     for ref in references:
         if not isinstance(ref, dict) or ref.get('relation') not in ('mentioned', 'task-context'):
             raise ValueError('invalid reference relation')
@@ -936,7 +935,7 @@ def git_read(checkout, args, deadline):
 def configure_fleet(path, checkout, origins, repair=False):
     owners = [valid_origin(value) for value in origins]
     if not owners or len(owners) > 16 or len(set(owners)) != len(owners):
-        raise ValueError('fleet inventory must contain 1 to16 unique origins')
+        raise ValueError('fleet inventory must contain 1 to 16 unique origins')
     checkout = Path(checkout).expanduser().resolve()
     root = git_read(checkout, ['rev-parse', '--show-toplevel'], time.monotonic() + 5).decode().strip()
     if Path(root).resolve() != checkout:
@@ -1003,7 +1002,7 @@ def reconcile_fleet(path):
                 if owner == cfg['owner'] and (result['added'] or result['label_restored']):
                     result['warning'] = 'own history restored; verify no duplicate live owner'
                 status['origins'].append(result)
-            except (ValueError, KeyError, TypeError, AttributeError, OverflowError, OSError, sqlite3.Error) as error:
+            except (ValueError, KeyError, TypeError, AttributeError, OverflowError, RecursionError, OSError, sqlite3.Error) as error:
                 status['origins'].append({'owner': owner, 'state': 'error', 'error': type(error).__name__})
         status['partial'] = any(item['state'] != 'accepted' for item in status['origins'])
         status['archives'] = recovery_metrics(path)
@@ -1096,6 +1095,8 @@ def main():
         elif args.command == 'reconcile-fleet':
             result = reconcile_fleet(path)
         elif args.command == 'scheduled-export':
+            destination = Path(args.markdown).expanduser()
+            destination = destination.parent.resolve() / destination.name
             if args.mode != 'export':
                 raise ValueError('legacy maintenance is unavailable in SQLite mode; use query, drain and project')
             with contextlib.closing(database(path)) as conn:
@@ -1105,7 +1106,7 @@ def main():
                     existing_destination(args.markdown)
                 elif not activated.get('view'):
                     raise ValueError('register the existing note before scheduled publication')
-                elif Path(args.markdown).expanduser().resolve() != Path(activated['view']['path']):
+                elif destination != Path(activated['view']['path']):
                     raise ValueError('scheduled destination differs from registered note')
             if activated.get('fleet'):
                 errors = []
@@ -1117,13 +1118,13 @@ def main():
                 try:
                     fleet_result = reconcile_fleet(path)
                 except (ValueError, TypeError, KeyError, AttributeError, OverflowError, OSError, sqlite3.Error) as error:
-                    fleet_result = {'configured': True, 'partial': True, 'error': type(error).__name__}
+                    fleet_result = {'configured': True, 'at': utc(), 'partial': True, 'error': type(error).__name__}
                 # Compatibility output is independent of every note refusal.
                 result = project(path, jsonl=Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=True)
                 note_status = {'state': 'paused' if capture_only else 'published'}
                 if not capture_only:
                     try:
-                        result.update(project(path, args.markdown))
+                        result.update(project(path, destination))
                     except (ValueError, OSError, sqlite3.Error, TimeoutError) as error:
                         note_status = {'state': 'waiting_for_history' if 'waiting_for_history' in str(error) else 'refused', 'error': type(error).__name__,
                                        'reason': ('archive_budget_exhausted' if 'archive_budget_exhausted' in str(error)
@@ -1138,7 +1139,7 @@ def main():
                 result.update(fleet=fleet_result, note_publication=note_status['state'], note_status=note_status, drain_errors=errors)
             else:
                 recovery = drain(path)
-                result = project(path, None if capture_only else args.markdown,
+                result = project(path, None if capture_only else destination,
                                  Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=bool(capture_only))
             result['pending'] = recovery['pending']
         elif args.command == 'capture':

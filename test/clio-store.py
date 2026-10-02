@@ -636,6 +636,21 @@ class History(unittest.TestCase):
             store.project(node[2])
             self.assertEqual(store.config()['view']['last_note_repair']['state'], 'peer_generated')
             self.assertEqual(store.recovery_metrics(node[2])['count'], count)
+        # Symlink refusal is note-local: fleet history and compatibility continue.
+        untouched = node[0] / 'symlink-target.md'
+        untouched.write_bytes(b'Unrelated target\n')
+        note.unlink()
+        note.symlink_to(untouched)
+        compatibility = node[0] / '.claude/prompt-log-compat.jsonl'
+        compatibility.unlink(missing_ok=True)
+        result = scheduled(node, note)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['note_status']['state'], 'refused')
+        self.assertGreater(len(compatibility.read_bytes()), 0)
+        self.assertEqual(untouched.read_bytes(), b'Unrelated target\n')
+        self.assertTrue(note.is_symlink())
+        note.unlink()
+        note.write_bytes(peer_bytes)
         # Bad and missing origins are isolated; note refusal still refreshes compatibility.
         checkout = node[1]
         malformed = checkout / 'devices' / owners[2] / 'clio.jsonl'

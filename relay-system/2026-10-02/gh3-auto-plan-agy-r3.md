@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,20 @@ Committed candidate ready for independent review; no installed changes.
 
 VERDICT: PASS
 Basis: Ready for QA.
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The plan accurately addresses all requirements for the executable automatic-recovery mechanism and incorporates Fable Round 1 dispositions. It correctly implements opt-in machine-owned body logic with verified unknown-note archival, preserves original personal headers, allows own-origin snapshots to restore missing records, bounds Git commands, and cleanly separates native Rebalance #282 wiring.
+
+- [Pass] **Markdown merges and verified archive:** The plan requires exact complete unknown-note private archives before regeneration. "atomically preserve the COMPLETE current file in the existing private view-backups directory... deduplicated by SHA-256... Archive BEFORE recording accepted outcomes or replacing the note." (doc/gh3-device-independent-plan.md:119)
+- [Pass] **Header protection and peer setup:** Pinned headers, coverage, and proper setup on additional Macs are specified. "Configure additionally pins a SHA-256 of the personal header and coverage; deployment verifies header/coverage agree across Macs" (doc/gh3-device-independent-plan.md:109).
+- [Pass] **Own-origin restoration:** The trusted snapshot can restore missing own records while refusing generic self-import. "allow this owner snapshot to restore missing own records transactionally while retaining all unsent local captures... A restored older same-owner DB therefore recovers automatically without a new owner." (doc/gh3-device-independent-plan.md:111).
+- [Pass] **Bounded import and no new authority:** The design introduces no new external services or unbounded network calls. "No fetch, add, commit, push, reset, stash or network call." (doc/gh3-device-independent-plan.md:111) and "Bound Git calls (5s each, max16origins, total monotonic budget30s)" (doc/gh3-device-independent-plan.md:111).
+- [Pass] **Honest deployment and race boundaries:** The narrow unproved race of a concurrent human edit is surfaced honestly. "The remaining narrow race is explicitly unproved: an external edit after the final comparison can be overwritten... Do not claim lossless protection of such a concurrent human edit." (doc/gh3-device-independent-plan.md:121).
+- [Pass] **Native Rebalance #282 wiring:** The integration clearly reuses existing locking and pathways. "Collector wiring stays native Rebalance#282: existing publication lock encompasses owner-only export to private staging then exact-path commit/push via its current publisher." (doc/gh3-device-independent-plan.md:115).
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

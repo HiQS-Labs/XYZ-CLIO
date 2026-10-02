@@ -102,4 +102,12 @@ Basis: The plan successfully addresses all Fable Round1 dispositions and satisfi
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-10-02T06:20:35Z
+task: CLIO-GH3-AUTO-PLAN-AGY-R4
+reviewer: agy
+status: Approved
+reviewed-head: aa5355baf22fcfff1ead00f5d6d3a90440a07947
+added-range: 6729+2756
+added-sha256: 82a986dac5538928218a3c5bb6125387a927e8ec5a78029f6d25a87f9b0d3bcf
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

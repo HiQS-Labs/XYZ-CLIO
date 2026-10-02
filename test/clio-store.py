@@ -623,6 +623,10 @@ class History(unittest.TestCase):
         self.assertEqual(cfg['view']['header'], note_bytes.decode().split('<!-- CLIO:ENTRIES -->', 1)[0] + '<!-- CLIO:ENTRIES -->\n')
         result = json.loads(subprocess.run(command, check=True, capture_output=True, text=True).stdout)
         self.assertEqual(result['rows'], 5)
+        explicit = subprocess.run([sys.executable, str(ROOT / 'utils/CLIO/clio-store.py'),
+                                   '--db', str(self.db), 'scheduled-export', str(note)],
+                                  check=True, capture_output=True, text=True)
+        self.assertEqual(json.loads(explicit.stdout).get('rows'), 5)
         self.assertTrue(note.read_bytes().startswith(cfg['view']['header'].encode()))
         self.assertIn('not fully reconciled into SQLite', note.read_text())
         self.assertEqual(job.read_bytes(), job_bytes)

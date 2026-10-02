@@ -1,0 +1,21 @@
+test_activation_four_agent_routes_and_rollback_export (__main__.History) ... ok
+test_activation_import_gate_and_source_preservation (__main__.History) ... ok
+test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History) ... ok
+test_existing_schedule_reuses_obsidian_path (__main__.History) ... ok
+test_identity_replay_collision_and_busy_receipt (__main__.History) ... ok
+test_import_accounting_resume_and_negative_controls (__main__.History) ... ok
+test_migration_matches_actual_legacy_renderer (__main__.History) ... ok
+test_readonly_queries_refs_pagination_and_large_prompt (__main__.History) ... ok
+test_rolling_window_atomicity_idle_expiry_and_compatibility (__main__.History) ... ok
+test_same_path_default_failure_recovery_and_write_guards (__main__.History) ... ok
+test_same_path_migration_refuses_incomplete_or_ambiguous_inputs (__main__.History) ... ok
+test_simultaneous_capture_read_export (__main__.History) ... ok
+test_source_change_and_transaction_interruption (__main__.History) ... ok
+test_tailer_retry_freezes_first_observed_context (__main__.History) ... ok
+test_waiting_legacy_writer_rechecks_activation (__main__.History) ... ok
+test_write_failures_never_acknowledge_without_receipt (__main__.History) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 7.289s
+
+OK

@@ -833,7 +833,8 @@ def main():
             if args.mode != 'export':
                 raise ValueError('legacy maintenance is unavailable in SQLite mode; use query, drain and project')
             with contextlib.closing(database(path)) as conn:
-                capture_only = active_config(conn, path).get('capture_only') and not cfg.get('view')
+                activated = active_config(conn, path)
+                capture_only = activated.get('capture_only') and not activated.get('view')
                 if capture_only:
                     existing_destination(args.markdown)
                 else:

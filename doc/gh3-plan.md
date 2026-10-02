@@ -147,3 +147,61 @@ review, then run existing suites in a disposable full clone before deployment.
 ### 2026-10-01 no required machine — revised architecture plan
 
 The operator rejects a permanent Studio hub. [gh3-device-independent-plan.md](gh3-device-independent-plan.md) is the new fleet architecture, superseding that assumption: every Mac holds full replicated history through existing Git Pulse; travel capture/query/same-note refresh must work with Studio off. Current local pilot remains installed unchanged. Note transport choice requires explicit resolution; no automatic failover is claimed.
+
+### 2026-10-01 triangulate/start-task writer repair
+
+Resume issue #3 in retained clone, PR #5 main, HEAD37175a4. Native issue/plan
+record is used; no PDDA/RELEASES infrastructure exists in CLIO. Overall issue
+rating (LLM, no operator override): rated 90/85/50/45. Priority reflects imminent
+travel and observed publication outage; severity is recoverable work-blocking
+stale publication, not lost capture. Appeal neutral50. Fleet work crosses repos,
+hence modest cheapness45. Recurrence: one observed continuing incident with
+repeated scheduled failures; manual recovery relapsed. Last14-day trend beyond
+issue3 and its receipts is unknown, not inferred growing from duplicate runs.
+
+Triangulate card: writer fix reversible x contained (all database helper callers
+already enumerated); route known live bug through debug-mantra. Fleet authority
+remains irreversible x crossing/full floor, grounded by recon-gh3-device-independent
+and prior delta. No source-of-truth migration occurs in this writer fix.
+
+Falsifier survived: private synthetic DB created by Homebrew SQLite3.53.4, no
+WAL/SHM; Apple3.43.2 mode=ro SELECT fails unable to open database file. Same
+file/Apple version mode=rw+query_only=ON SELECT succeeds and DELETE is refused.
+Actual live database shows the same version-dependent result. Sidecars present
+then permit Apple mode=ro, explaining transient recovery. An existing readonly
+case alone passes because its initialization does not force this cross-version
+cold-open condition; extend that same case, no new suite.
+
+Root cause: application-owned WAL database opens with mode=ro across SQLite
+versions when auxiliary sidecars are absent; Fix site: database connection helper;
+Why not upstream/downstream: captures and renderer succeed; changing schedule,
+keeping a permanent connection or forcing one Python installation would conceal
+the connection contract rather than repair it.
+
+Smallest reviewed plan: use mode=rw for existing CLIO application DB connections,
+retain query_only for every reader, set it before validation reads. rw never
+creates a missing main DB. No immutable mode (live WAL data would be unsafe),
+no broad retries, WAL copying, timer/service or collector edits. External source
+metadata readers retain their mode=ro contract. Blast: helper queries/projection/
+backup/export now allow SQLite auxiliary bookkeeping; event mutations remain
+forbidden for readers and schema/owner checks remain. Easy code rollback; local
+installation still preserves helper/config/note/DB backups and existing schedule.
+
+1. Codex plan QA of this precise scope and proofs -> Approved before code edits.
+2. Extend existing readonly acceptance case for a fresh Homebrew-created DB,
+   absent sidecars and Apple helper query, nonempty record, preserved payload;
+   retain DELETE rejection/missing-DB check -> red on old helper, green with fix.
+3. Change only connection mode/query_only order -> both SQLite runtimes query
+   fresh WAL state; no missing DB creation or DML permitted.
+4. Codex final review with focused receipts -> Approved; final existing suites
+   once in disposable full clone, including16cases under both installedPython
+   runtimes, actual scheduled-shaped PATH -> pass and Git identity unchanged.
+5. Update PR5/issue3 and prepare current-authorized local runtime repair with
+   verified backups; observe real launchd invocation without priming sidecars ->
+   success, newcapture rendered, exact seven-day ID/payload membership.
+
+Fleet remains dependent on unmerged CLIO PR5 and native Rebalance#282; do not
+merge either just to continue. Same-note fleet transport/exact-file exclusion is
+unresolved; manual permanent Studio hub is explicitly rejected. No new fleet
+pusher, Sync change, remote capture re-enablement or private-history upload in
+this writer repair. Record blocked dependencies without calling issue3 complete.

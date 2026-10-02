@@ -131,4 +131,12 @@ swept file: yes — `utils/CLIO/clio-store.py` read in full (1–1175, pre-exist
 VERDICT: PASS
 Basis: All seven round-1 findings are implemented and each has a cited control or line; source hashes and log hashes match the receipts. No implementation blocker remains. G1 is a fail-closed availability regression on an improbable input and is recorded as a pre-deployment follow-up, G2–G3 are nits. Source-only envelope unchanged: native Rebalance #282 wiring and the disconnected/Obsidian pilot remain deployment gates. Relay closed (Approved), no further turn needed; token completed with `done`, not released.
 
+
+### Attestation · relay-drive — 2026-10-02T07:12:25Z
+task: CLIO-GH3-AUTO-IMPLEMENTATION-FABLE-R2
+reviewer: claude
+status: Approved
+reviewed-head: 48501fca4c66574c26769d619debd9143af5dc47
+added-range: 8915+8849
+added-sha256: d3e6341ba11bd7c096370928797214f7335c808b3a2a28e02cc73c0b4ba3fa12
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

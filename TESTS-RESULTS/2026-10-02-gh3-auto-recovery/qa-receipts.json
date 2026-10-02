@@ -1,0 +1,32 @@
+[
+  {
+    "receipt": "relay-system/2026-10-02/gh3-auto-plan-agy-r6.md",
+    "receipt_sha256": "1df95840ff37f714ca52e5f6619cb5d2c610249260d81d9eb152538b7081bcc2",
+    "reviewed_head": "52173a53f2333b46232046c7647bd671782ac28e",
+    "reviewer_model": "gemini-3.1-pro-high",
+    "effort": "high",
+    "driver_exit": 0,
+    "status": "Approved",
+    "added_sha256": "e6d998c8023f7247407277ea466ae9f4ac96d4e8e88b8ae7ad768fc3584c951c"
+  },
+  {
+    "receipt": "relay-system/2026-10-02/gh3-auto-plan-fable-r4.md",
+    "receipt_sha256": "53e15e02428efeb1b9bb2ed8a60d2c97c06bb2ae1fbb6084f5e3567618009680",
+    "reviewed_head": "ac5240d627ef0920edc7bf6fbc5513e4bc7ec319",
+    "reviewer_model": "claude-fable-5-1",
+    "effort": "high",
+    "driver_exit": 0,
+    "status": "Approved",
+    "added_sha256": "4c4b0edf61933c0984f6c3e838ac0b2106d849983d4d8f4f245bdd2472b1f1e6"
+  },
+  {
+    "receipt": "relay-system/2026-10-02/gh3-auto-implementation-fable-r4.md",
+    "receipt_sha256": "11fb823cffeae29e3bb7c87318f8f2c71e6af4030948ae1745df0dd92a539441",
+    "reviewed_head": "bb2fbdcc5871737282eee2c13e381d1e3d57166d",
+    "reviewer_model": "claude-fable-5-1",
+    "effort": "high",
+    "driver_exit": 0,
+    "status": "Approved",
+    "added_sha256": "d2300fcbe8721ea60ceae3c1c7b849a8f07b06e9a9a3b802a251bfed96146cc2"
+  }
+]

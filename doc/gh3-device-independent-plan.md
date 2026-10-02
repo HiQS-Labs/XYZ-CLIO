@@ -133,11 +133,11 @@ Use a common UTC 300-second cutoff bucket in fleet projection (same existing cad
 
 ### QA gates
 
-- [ ] Agy and Fable high plan receipts identify exact reviewed candidate.
-- [ ] Fable high implementation receipt and final gates cover exact helper.
-- [ ] Four-replica simulated outage/rejoin and stale-note recovery are recorded with nonempty complete payload equality and falsifiable refusals.
-- [ ] No new pusher/vector store/ledger writer/timer; no live database or private data in PR.
-- [ ] Deployment prerequisites and eventual-consistency/human-edit limits remain explicit; native#282 is not bypassed.
+- [x] Agy and Fable high plan receipts identify exact reviewed candidate.
+- [x] Fable high implementation receipt and final gates cover exact helper.
+- [x] Four-replica simulated outage/rejoin and stale-note recovery are recorded with nonempty complete payload equality and falsifiable refusals.
+- [x] No new pusher/vector store/ledger writer/timer; no live database or private data in PR.
+- [x] Deployment prerequisites and eventual-consistency/human-edit limits remain explicit; native#282 is not bypassed.
 
 ### Fable high Round1 dispositions
 
@@ -164,3 +164,7 @@ Fable high round2 attested Approved. G1 nevertheless implemented before final pu
 ### Implementation Fable high Round3 disposition
 
 H1 implemented: scheduled destination accepts either the canonical registered final component or an existing alias resolving to that registered file; in the latter case project receives the canonical registered path. A registered file that later becomes a symlink still reaches note-local refusal. Unrelated paths remain rejected. Existing four-store case covers accepted alias in both default/fleet modes plus the already-witnessed changed-to-symlink/unrelated controls; registered-alias-red.log records the pre-fix failure. No other behavior is changed.
+
+### Source delivery handoff — 2026-10-02
+
+Agy plan, Fable5.1 HIGH plan and final Fable5.1 HIGH implementation relays are attested Approved; exact reviewed heads and hashes are in TESTS-RESULTS/2026-10-02-gh3-auto-recovery/qa-receipts.json. Existing four shell suites and16 SQLite cases under both runtimes cover the unchanged reviewed helper, with identity and source hashes recorded. No installation/Sync changes, merge or clone cleanup occurred. Native Rebalance#282 wiring/landing and the >=3-Pulse-interval disconnected fleet pilot remain open deployment gates. Installed Studio continues its earlier verified local pipeline; other devices remain disabled. Retain this clone until origin landing is verified.

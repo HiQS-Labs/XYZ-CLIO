@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,25 @@ Committed candidate ready for independent review; no installed changes.
 
 VERDICT: PASS
 Basis: Ready for QA.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- `[Pass]` Obsidian Markdown merges handled via opt-in machine-owned body. Verified in `doc/gh3-device-independent-plan.md:117` "The repair flag explicitly designates ONLY the body after the preserved `<!-- CLIO:ENTRIES -->` header as machine-owned output" and `:119` "By opting in, unexpected body edits are preserved... then replaced".
+- `[Pass]` exact complete unknown-note private archive before canonical reconstruction. Verified in `doc/gh3-device-independent-plan.md:119` "atomically preserve the COMPLETE current file in the existing private view-backups directory... Archive BEFORE recording accepted outcomes or replacing the note."
+- `[Pass]` exact personal header protected, defaults unchanged. Verified in `doc/gh3-device-independent-plan.md:117` "Human comments belong above that marker... Default repair-off behavior remains refusal."
+- `[Pass]` Own trusted configured committed snapshot restores old-backup missing records automatically. Verified in `doc/gh3-device-independent-plan.md:111` "allow this owner snapshot to restore missing own records transactionally... A restored older same-owner DB therefore recovers automatically".
+- `[Pass]` general self-import still refused. Verified in `doc/gh3-device-independent-plan.md:111` "The ordinary import-device CLI continues to refuse self-import."
+- `[Pass]` Pin header/coverage and spell peer setup/archives. Verified in `doc/gh3-device-independent-plan.md:109` "Additional Macs register their already-generated note via existing migrate-view --archive-unreconciled-note... Configure additionally pins a SHA-256 of the personal header and coverage".
+- `[Pass]` Verify no history loss/pusher/service/newauthority assumptions. Verified in `doc/gh3-device-independent-plan.md:113` "No new schema/version/store or ledger writer." and `115` "No extra scheduler/pusher."
+- `[Pass]` honest race/pilot/deployment boundary. Verified in `doc/gh3-device-independent-plan.md:121` "The remaining narrow race is explicitly unproved... Do not claim lossless protection of such a concurrent human edit."
+- `[Pass]` bounded committed import. Verified in `doc/gh3-device-independent-plan.md:111` "Bound Git calls (5s each, max16origins, total monotonic budget30s)".
+- `[Pass]` Native Rebalance282 wiring remains separate. Verified in `doc/gh3-device-independent-plan.md:115` "Collector wiring stays native Rebalance#282... not a claim that unrelated Rebalance runtime was modified."
+
+VERDICT: PASS
+Basis: The plan successfully addresses all Fable Round1 dispositions and satisfies the requirements for the automatic-recovery mechanism without compromising data safety or overstepping the architectural boundaries.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -101,4 +101,12 @@ Basis: F5-F8 are thoroughly addressed with safe, resource-bounded, and well-iden
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-10-02T06:29:30Z
+task: CLIO-GH3-AUTO-PLAN-AGY-R5
+reviewer: agy
+status: Approved
+reviewed-head: 8b8f1fbbd296208f5262c6446c8c039ef3a1f4c0
+added-range: 6787+2017
+added-sha256: 8d7bb91c756a8316698c9516551266ade1ca1f544fdf326c9404cccdcd073b5d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

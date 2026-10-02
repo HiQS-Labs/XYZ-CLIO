@@ -93,4 +93,12 @@ swept file: yes
 VERDICT: PASS
 Basis: The plan adheres to the system constraints and does not introduce unauthorized changes.
 
+
+### Attestation · relay-drive — 2026-10-02T06:37:33Z
+task: CLIO-GH3-AUTO-PLAN-AGY-R6
+reviewer: agy
+status: Approved
+reviewed-head: 52173a53f2333b46232046c7647bd671782ac28e
+added-range: 6893+443
+added-sha256: e6d998c8023f7247407277ea466ae9f4ac96d4e8e88b8ae7ad768fc3584c951c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

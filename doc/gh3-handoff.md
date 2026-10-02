@@ -36,3 +36,11 @@ repeat publication verified. Evidence: TESTS-RESULTS/2026-10-01-gh3-seven-day/.
 
 PR #5 remains the implementation landing; clone retained until verified landing.
 Fleet integration remains dependent on Rebalance #282; other Macs are disabled.
+
+## 2026-10-01 PT local writer repair and current handoff
+
+PR5 fixes cross-runtime cold WAL reads with existing-file rw plus SQL query_only before validation, and resolves the outstanding explicit --db registered-view conditional. IDE collectors and the 300-second exporter schedule remain unchanged. Independent Codex plan/final/incremental QA Approved; final four shell suites and16cases pass under both installed Python runtimes in a disposable full clone, Git identity unchanged. Red controls, exact reviewed/helper hashes and sanitized installed receipts are committed in TESTS-RESULTS/2026-10-01-gh3-wal-repair/.
+
+The backed-up installed helper was replaced atomically. A labelled diagnostic capture left WAL/SHM absent before actual launchd success; the next ordinary five-minute job also succeeded. Final combined helper verified actual launchd and explicit-db publication, integrity, exact seven-day IDs/rendered prompts, full-history compatibility IDs, original backup/hash and header.3935 history rows/299recent at recorded cutoff; accepted historical gap remains disclosed. Backup folders under ~/Backups/CLIO retain prior helper/config/plist/note and online DB copies. Rollback restores the backed-up helper only after verifying retained SQLite-era arrivals; no history deletion or stale-source activation.
+
+PR5 is review-ready but unmerged; retain this clone until landing is verified. Issue3 stays open. Device-independent fleet is planned, not deployed: every Mac must have full delivered history and use existing Git Pulse cadence, with Studio-off capture/query/combined-note projection proved in a disconnected pilot. Native Rebalance#282 remains a dependency; exact shared-note transport/publisher choice remains unresolved. Other devices remain disabled. Continue downstream on native Rebalance rails after prerequisites land; no new push loop/vector store/XYZ ledger writer.

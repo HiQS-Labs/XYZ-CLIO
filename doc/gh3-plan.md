@@ -205,3 +205,5 @@ merge either just to continue. Same-note fleet transport/exact-file exclusion is
 unresolved; manual permanent Studio hub is explicitly rejected. No new fleet
 pusher, Sync change, remote capture re-enablement or private-history upload in
 this writer repair. Record blocked dependencies without calling issue3 complete.
+
+2026-10-01 PT closure of local repair scope: Codex plan/final/incremental approvals, witnessed cold-WAL and explicit-db red controls, final four shell suites plus16cases under both runtimes, and backed-up installed launchd/cold-open/normal-schedule/explicit-db success recorded in TESTS-RESULTS/2026-10-01-gh3-wal-repair/. Collector scripts and schedule unchanged. This completes the local writer repair, not fleet issue3; dependencies and note transport remain as above.

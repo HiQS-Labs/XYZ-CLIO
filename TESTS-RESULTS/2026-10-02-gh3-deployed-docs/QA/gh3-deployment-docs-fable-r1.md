@@ -165,4 +165,12 @@ as the acceptance criteria.
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-02T20:22:46Z
+task: CLIO-GH3-DEPLOYMENT-DOCS-FABLE-R1
+reviewer: claude
+status: Approved
+reviewed-head: 19e46f35980e6c4e96783151cc53b772583f288f
+added-range: 6729+8078
+added-sha256: 2d1a9a482d7443c8582dd0c26466a71298dca1e3ba11f02d126e8c89b068449c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1107,7 +1107,9 @@ def main():
                 elif not activated.get('view'):
                     raise ValueError('register the existing note before scheduled publication')
                 elif destination != Path(activated['view']['path']):
-                    raise ValueError('scheduled destination differs from registered note')
+                    if destination.resolve() != Path(activated['view']['path']):
+                        raise ValueError('scheduled destination differs from registered note')
+                    destination = Path(activated['view']['path'])
             if activated.get('fleet'):
                 errors = []
                 try:

@@ -16,6 +16,6 @@ test_waiting_legacy_writer_rechecks_activation (__main__.History) ... ok
 test_write_failures_never_acknowledge_without_receipt (__main__.History) ... ok
 
 ----------------------------------------------------------------------
-Ran 16 tests in 15.015s
+Ran 16 tests in 15.164s
 
 OK

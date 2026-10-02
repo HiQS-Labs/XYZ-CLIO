@@ -160,3 +160,7 @@ F1 implemented: scheduled-export checks destination equality against the registe
 ### Implementation Fable high Round2 follow-ups
 
 Fable high round2 attested Approved. G1 nevertheless implemented before final push: resolve only the scheduled destination's parent, retaining the registered final component so a symlink is a note-local refusal; capture/drain/import/compatibility continue and its target is untouched. The existing four-store case witnesses the pre-fix failure and fixed outcome. G2 defensive malformed-input RecursionError is isolated per origin using the existing exception seam, without a new parser/guard. G3 duplicate import/spacing corrected and failed reconciliation status timestamped. Return the revised exact helper for final Fable high QA.
+
+### Implementation Fable high Round3 disposition
+
+H1 implemented: scheduled destination accepts either the canonical registered final component or an existing alias resolving to that registered file; in the latter case project receives the canonical registered path. A registered file that later becomes a symlink still reaches note-local refusal. Unrelated paths remain rejected. Existing four-store case covers accepted alias in both default/fleet modes plus the already-witnessed changed-to-symlink/unrelated controls; registered-alias-red.log records the pre-fix failure. No other behavior is changed.

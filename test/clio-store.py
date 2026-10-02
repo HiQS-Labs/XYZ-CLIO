@@ -636,6 +636,20 @@ class History(unittest.TestCase):
             store.project(node[2])
             self.assertEqual(store.config()['view']['last_note_repair']['state'], 'peer_generated')
             self.assertEqual(store.recovery_metrics(node[2])['count'], count)
+        # An existing alias to the registered real file remains supported.
+        alias = node[0] / 'registered-alias.md'
+        alias.symlink_to(note)
+        with context(node):
+            self.assertTrue(store.migrate_view(node[2], alias, True, True)['already_registered'])
+        self.assertEqual(scheduled(node, alias).returncode, 0)
+        with context(node):
+            cfg = store.config()
+            configured = cfg.pop('fleet')
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+            self.assertEqual(scheduled(node, alias).returncode, 0)
+            cfg = store.config()
+            cfg['fleet'] = configured
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
         # Symlink refusal is note-local: fleet history and compatibility continue.
         untouched = node[0] / 'symlink-target.md'
         untouched.write_bytes(b'Unrelated target\n')

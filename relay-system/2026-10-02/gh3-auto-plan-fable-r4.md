@@ -120,4 +120,12 @@ Basis: All six Round 3 findings are dispositioned in executable plan text with a
 
 relay closed (Approved), no further turn needed. Token completed with `done`, not released.
 
+
+### Attestation · relay-drive — 2026-10-02T06:40:48Z
+task: CLIO-GH3-AUTO-PLAN-FABLE-R4
+reviewer: claude
+status: Approved
+reviewed-head: ac5240d627ef0920edc7bf6fbc5513e4bc7ec319
+added-range: 6905+8279
+added-sha256: 4c4b0edf61933c0984f6c3e838ac0b2106d849983d4d8f4f245bdd2472b1f1e6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -131,4 +131,12 @@ swept file: yes — `utils/CLIO/clio-store.py` read in full this turn (1–1178,
 VERDICT: PASS
 Basis: H1 is fixed as dispositioned in three lines; the canonical path, the registered alias and the changed-to-symlink note each behave as specified in default and fleet mode on measured inputs, unrelated destinations stay rejected, and source/receipt hashes match provenance. No implementation blocker remains; four nits are recorded without a change request. Suites were not re-run here (harness gate). Source-only envelope unchanged: Rebalance #282 wiring and the disconnected/Obsidian pilot remain deployment gates. Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-02T07:24:14Z
+task: CLIO-GH3-AUTO-IMPLEMENTATION-FABLE-R4
+reviewer: claude
+status: Approved
+reviewed-head: bb2fbdcc5871737282eee2c13e381d1e3d57166d
+added-range: 10223+8481
+added-sha256: d2300fcbe8721ea60ceae3c1c7b849a8f07b06e9a9a3b802a251bfed96146cc2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

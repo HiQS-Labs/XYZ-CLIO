@@ -4,8 +4,10 @@
 > Migration keeps the existing Obsidian path and exporter schedule, with a verified
 > backup and complete old-note coverage before switching. Existing installations
 > stay on JSONL until explicit migration/activation. Fleet
-> publishing and Rebalance's provenance upgrade are separate dependent work; no live
-> database synchronization or task-status writes are introduced.
+> publishing and Rebalance's provenance upgrade remain dependent rollout work.
+> The helper now supports committed origin reconciliation and opt-in recovery of
+> the same combined fleet note; see the device-independent integration section
+> in INSTALL.md. No new Git push loop or task-status writer is introduced.
 
 # CLIO
 

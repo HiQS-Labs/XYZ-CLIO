@@ -12,6 +12,7 @@ import plistlib
 import re
 import sqlite3
 import sys
+import subprocess
 import tempfile
 import time
 from datetime import datetime, timedelta, timezone
@@ -24,6 +25,10 @@ FIELDS = ('timestamp', 'repo', 'branch', 'machine', 'agent', 'session_id',
           'prompt', 'checkout', 'repo_slug', 'source_event_id')
 RESERVED = set(FIELDS) | {'record_id', 'legacy_id', 'origin_id', 'origin_kind',
                           'references', 'extras', 'clio_version'}
+MAX_FLEET_BYTES = 64 * 1024 * 1024
+MAX_ARCHIVES = 128
+MAX_ARCHIVE_BYTES = 256 * 1024 * 1024
+FLEET_WAIT_SECONDS = 7200
 CONFIG = Path(os.environ.get('CLIO_CONFIG', str(Path.home() / '.claude/clio-storage.json')))
 
 
@@ -48,7 +53,7 @@ def utc(value=None):
     return value.isoformat(timespec='microseconds').replace('+00:00', 'Z')
 
 
-def atomic(path, data):
+def atomic(path, data, exclusive=False):
     """One-file publication; never expose an incomplete replacement."""
     path = Path(path).expanduser().absolute()
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -58,7 +63,10 @@ def atomic(path, data):
             stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        if exclusive:
+            os.link(temporary, path)
+        else:
+            os.replace(temporary, path)
         directory = os.open(path.parent, os.O_RDONLY)
         try:
             os.fsync(directory)
@@ -225,7 +233,7 @@ def identity_payload(row):
     return payload
 
 
-def insert(conn, row, replay=False):
+def insert(conn, row, replay=False, restore_labels=False):
     """The only event writer, shared by import, capture and recovery."""
     payload = encode(row)
     prior = conn.execute('SELECT payload FROM events WHERE record_id=?', (row['record_id'],)).fetchone()
@@ -233,6 +241,13 @@ def insert(conn, row, replay=False):
         if prior[0] != payload and not (replay and row.get('source_event_id')
                 and identity_payload(json.loads(prior[0])) == identity_payload(row)):
             raise ValueError('identity payload conflict')
+        if restore_labels and prior[0] != payload:
+            # Only trusted own-origin reconciliation calls this after archiving
+            # all previous observations. Immutable identity must agree above.
+            if not replay or not row.get('source_event_id'):
+                raise ValueError('label restoration requires a replay identity')
+            conn.execute('UPDATE events SET repo=?,machine=?,repo_slug=?,payload=? WHERE record_id=?',
+                         (row['repo'], row['machine'], row['repo_slug'], payload, row['record_id']))
         return False
     conn.execute('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?)',
                  tuple(row[k] for k in ('record_id', 'timestamp', 'repo', 'machine',
@@ -474,6 +489,10 @@ def query(path, args):
         plan = [list(row) for row in conn.execute('EXPLAIN QUERY PLAN ' + sql, values)] if args.explain else None
     result = {'records': rows, 'limit': args.limit, 'offset': args.offset,
               'pending': len(list(pending_dir(path).glob('clio1-*.json')))}
+    cfg = config()
+    if cfg.get('fleet') and Path(cfg['db']).resolve() == Path(path).expanduser().resolve():
+        result['fleet'] = cfg['fleet'].get('last_result', {'configured': True, 'state': 'not_reconciled'})
+        result['note_status'] = cfg.get('view', {}).get('last_note_status')
     if plan is not None:
         result['query_plan'] = plan
     return result
@@ -564,9 +583,54 @@ def checked_view(conn, path, target):
         raise ValueError('run migrate-view for the existing destination before exporting')
     if digest(Path(view['backup']).read_bytes()) != view['backup_sha256']:
         raise ValueError('historical backup changed; publication refused')
-    current = digest(target.read_bytes())
+    fleet = cfg.get('fleet', {})
+    repair = fleet.get('repair_generated_note', False)
+    if repair and (digest(view['header'].encode()) != fleet.get('header_sha256')
+                   or view.get('coverage') != fleet.get('coverage')):
+        raise ValueError('fleet header or coverage changed; publication refused')
+    if not target.exists():
+        if not repair:
+            raise ValueError('registered note is missing; publication refused')
+        view.pop('waiting_since', None)
+        return cfg, None
+    if repair and target.stat().st_size > MAX_FLEET_BYTES:
+        raise ValueError('note exceeds fleet repair size bound; preserved in place')
+    original = target.read_bytes()
+    current = digest(original)
     if current not in view['accepted_hashes']:
-        raise ValueError('note changed outside this publisher; preserve and reconcile edits before exporting')
+        if not repair:
+            raise ValueError('note changed outside this publisher; preserve and reconcile edits before exporting')
+        if not original.startswith(view['header'].encode()):
+            raise ValueError('personal header changed; publication refused')
+        text = original.decode('utf-8')
+        ids = re.findall(r'^<!-- clio:record:(clio1-[0-9a-f]{64}) -->$', text, re.M)
+        known = {item['record_id']: item for item in
+                 (json.loads(r[0]) for r in conn.execute('SELECT payload FROM events'))}
+        unknown = set(ids).difference(known)
+        if unknown:
+            now = instant(utc())
+            waiting = instant(view.setdefault('waiting_since', utc(now)))
+            # Future timestamps expire, rather than extending a clock rollback.
+            if 0 <= (now - waiting).total_seconds() < FLEET_WAIT_SECONDS:
+                atomic(CONFIG, (encode(cfg) + '\n').encode())
+                raise ValueError('waiting_for_history; note preserved until bounded expiry')
+        else:
+            view.pop('waiting_since', None)
+        peer = False
+        match = re.search(r'^UTC cutoff: (.+)$', text, re.M)
+        if not unknown and len(ids) == len(set(ids)) and match:
+            try:
+                cutoff = utc(instant(match[1]))
+                if cutoff == match[1] and instant(cutoff) <= instant(utc()) + timedelta(minutes=5):
+                    peer = any(render_markdown([known[i] for i in ids], cutoff,
+                                               view['header'], coverage)[0] == original
+                               for coverage in ('verified', 'archived-not-reconciled'))
+            except (ValueError, OverflowError):
+                pass
+        archive = None if peer else preserve_recovery(path, original, 'conflict', '.md')
+        view['last_note_repair'] = {'at': utc(), 'state': 'peer_generated' if peer else 'archived_conflict',
+                                    'digest': current, 'archive': str(archive) if archive else None}
+        view.pop('waiting_since', None)
     return cfg, current
 
 
@@ -623,7 +687,8 @@ def safe_output(conn, path, output, historical=False):
     sources = {Path(row[0]).resolve() for row in conn.execute('SELECT path FROM sources')}
     sources.add((Path.home() / '.claude/prompt-log.jsonl').resolve())
     forbidden.update(sources)
-    forbidden.update(Path(row[0]).resolve() for row in conn.execute('SELECT source FROM device_imports'))
+    forbidden.update(Path(row[0]).resolve() for row in conn.execute('SELECT source FROM device_imports')
+                     if not row[0].startswith('git-blob:'))
     if any(target.parent == source.parent and target.name.startswith(source.name + '.pre-sqlite-')
            for source in sources):
         raise ValueError('output would overwrite a preserved activation source backup')
@@ -643,10 +708,44 @@ def safe_output(conn, path, output, historical=False):
     return target
 
 
+def render_markdown(rows, cutoff, header='', coverage='verified'):
+    cutoff_dt = instant(cutoff)
+    cutoff_text, since = utc(cutoff_dt), utc(cutoff_dt - timedelta(hours=168))
+    all_rows = sorted(rows, key=lambda row: (row['timestamp'], row['record_id']))
+    recent = [row for row in reversed(all_rows) if since <= row['timestamp'] <= cutoff_text]
+    lines = ['# CLIO — recent 168 hours', '', 'UTC cutoff: ' + cutoff_text,
+             'Window starts: ' + since, 'Records: ' + str(len(recent)),
+             'Imported history remains in SQLite. This view covers imported/local records only.', '']
+    if coverage == 'archived-not-reconciled':
+        lines.extend(['Earlier note content is preserved in a verified backup, not fully reconciled into SQLite.', ''])
+    if not recent:
+        lines.extend(['No prompts in this window.', ''])
+    for row in recent:
+        esc = lambda value: html.escape(value or 'unknown', quote=False)
+        lines.extend(['<!-- clio:record:' + row['record_id'] + ' -->',
+                      '## ' + esc(row['repo']), row['timestamp'] + ' (UTC)',
+                      ' · '.join(esc(row[key]) for key in ('machine', 'branch', 'agent')),
+                      'Session: ' + esc(row['session_id']),
+                      'Checkout: ' + esc(row['checkout']),
+                      'Repository: ' + esc(row['repo_slug']),
+                      'Origin: ' + esc(row['origin_id']) + ' (' + row['origin_kind'] + ')',
+                      'Record: ' + row['record_id'], ''])
+        lines.extend('> ' + html.escape(line, quote=False) for line in row['prompt'].split('\n'))
+        if row['extras']:
+            lines.extend(['', 'Metadata: ' + html.escape(encode(row['extras']), quote=False)])
+        if row['references']:
+            lines.extend(['', 'References: ' + html.escape(encode(row['references']), quote=False)])
+        lines.append('')
+    data = ('\n'.join(lines) + '\n').encode()
+    return header.encode() + (b'\n' if header else b'') + data, len(recent)
+
+
 def project(path, markdown=None, jsonl=None, cutoff=None, jsonl_only=False):
     if jsonl_only and (not jsonl or markdown is not None):
         raise ValueError('JSONL-only projection requires JSONL and no Markdown destination')
     cutoff_dt = instant(cutoff) if cutoff else datetime.now(timezone.utc)
+    if not cutoff and config().get('fleet'):
+        cutoff_dt = datetime.fromtimestamp(int(cutoff_dt.timestamp()) // 300 * 300, timezone.utc)
     cutoff_text, since = utc(cutoff_dt), utc(cutoff_dt - timedelta(hours=168))
     with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
         with contextlib.closing(database(path)) as conn:
@@ -657,12 +756,12 @@ def project(path, markdown=None, jsonl=None, cutoff=None, jsonl_only=False):
                 markdown = view.get('path')
                 if not markdown:
                     raise ValueError('run migrate-view first, or provide --markdown for an explicit preview')
+            if markdown is not None and view and Path(markdown).expanduser().absolute() == Path(view['path']):
+                if Path(markdown).is_symlink():
+                    raise ValueError('registered note became a symlink; publication refused')
             target = Path(markdown).expanduser().resolve() if markdown is not None else None
             registered = target == Path(view['path']) if view else False
             current = None
-            if registered:
-                cfg, current = checked_view(conn, path, target)
-                view = cfg['view']
             if target is not None:
                 target = safe_output(conn, path, target, historical=registered)
             all_rows = [json.loads(row[0]) for row in conn.execute('SELECT payload FROM events ORDER BY timestamp,record_id')]
@@ -676,50 +775,39 @@ def project(path, markdown=None, jsonl=None, cutoff=None, jsonl_only=False):
             if jsonl_only:
                 return {'jsonl': str(compat), 'history_rows': len(all_rows),
                         'markdown': None, 'note_publication': 'paused'}
-            recent = [row for row in reversed(all_rows) if since <= row['timestamp'] <= cutoff_text]
-            lines = ['# CLIO — recent 168 hours', '', 'UTC cutoff: ' + cutoff_text,
-                     'Window starts: ' + since, 'Records: ' + str(len(recent)),
-                     'Imported history remains in SQLite. This view covers imported/local records only.', '']
-            if view.get('coverage') == 'archived-not-reconciled':
-                lines.extend(['Earlier note content is preserved in a verified backup, not fully reconciled into SQLite.', ''])
-            if not recent:
-                lines.extend(['No prompts in this window.', ''])
-            for row in recent:
-                esc = lambda value: html.escape(value or 'unknown', quote=False)
-                lines.extend(['<!-- clio:record:' + row['record_id'] + ' -->',
-                              '## ' + esc(row['repo']), row['timestamp'] + ' (UTC)',
-                              ' · '.join(esc(row[key]) for key in ('machine', 'branch', 'agent')),
-                              'Session: ' + esc(row['session_id']),
-                              'Checkout: ' + esc(row['checkout']),
-                              'Repository: ' + esc(row['repo_slug']),
-                              'Origin: ' + esc(row['origin_id']) + ' (' + row['origin_kind'] + ')',
-                              'Record: ' + row['record_id'], ''])
-                lines.extend('> ' + html.escape(line, quote=False) for line in row['prompt'].split('\n'))
-                if row['extras']:
-                    lines.extend(['', 'Metadata: ' + html.escape(encode(row['extras']), quote=False)])
-                if row['references']:
-                    lines.extend(['', 'References: ' + html.escape(encode(row['references']), quote=False)])
-                lines.append('')
-            data = ('\n'.join(lines) + '\n').encode()
             if registered:
-                data = view['header'].encode() + b'\n' + data
+                cfg, current = checked_view(conn, path, target)
+                view = cfg['view']
+            data, recent_count = render_markdown(all_rows, cutoff_text,
+                                                   view['header'] if registered else '',
+                                                   view.get('coverage', 'verified'))
             if registered:
                 # Record both crash outcomes before replacing the note. A retry may
                 # see either file, but never treats an unexpected edit as disposable.
-                if digest(target.read_bytes()) != current:
+                observed = digest(target.read_bytes()) if target.exists() else None
+                if observed != current:
                     raise ValueError('note changed during projection; publication refused')
-                cfg['view']['accepted_hashes'] = list(dict.fromkeys([current, digest(data)]))
+                cfg['view']['accepted_hashes'] = list(dict.fromkeys([value for value in (current, digest(data)) if value is not None]))
                 atomic(CONFIG, (encode(cfg) + '\n').encode())
             atomic(target, data)
-    return {'markdown': str(target), 'rows': len(recent), 'bytes': len(data),
+    return {'markdown': str(target), 'rows': recent_count, 'bytes': len(data),
             'cutoff': cutoff_text, 'history_rows': len(all_rows)}
 
 
-def export_device(path, output, cutoff=None):
+def export_device(path, output, cutoff=None, origin=None):
+    cfg = config()
+    if origin is None and cfg.get('fleet') and Path(cfg['db']).resolve() == Path(path).expanduser().resolve():
+        status = reconcile_fleet(path)
+        if any(item['owner'] == cfg['owner'] and item['state'] == 'error' for item in status['origins']):
+            raise ValueError('own committed history recovery failed; export refused')
     with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
         with contextlib.closing(database(path)) as conn:
             conn.execute('BEGIN')
             owner = conn.execute('SELECT owner FROM metadata').fetchone()[0]
+            if origin is not None:
+                owner = valid_origin(origin)
+                if not conn.execute('SELECT 1 FROM events WHERE origin_id=? LIMIT 1', (owner,)).fetchone():
+                    raise ValueError('bootstrap origin has no known history')
             target = safe_output(conn, path, output)
             rows = [row[0] for row in conn.execute('SELECT payload FROM events WHERE origin_id=? ORDER BY timestamp,record_id', (owner,))]
             payload = ''.join(row + '\n' for row in rows).encode()
@@ -728,32 +816,198 @@ def export_device(path, output, cutoff=None):
             atomic(target, (encode(manifest) + '\n').encode() + payload)
         return manifest
 
-def import_device(path, source):
-    with Path(source).open('rb') as stream:
-        manifest = json.loads(stream.readline())
-        payload = stream.read()
-    if manifest.get('clio_snapshot') != VERSION or digest(payload) != manifest.get('sha256'):
+def snapshot_records(raw, expected_owner=None, deadline=None):
+    line, payload = raw.split(b'\n', 1)
+    manifest = json.loads(line)
+    if (not isinstance(manifest, dict) or manifest.get('clio_snapshot') != VERSION
+            or digest(payload) != manifest.get('sha256')):
         raise ValueError('invalid snapshot version or digest')
+    if expected_owner is not None and manifest.get('owner') != expected_owner:
+        raise ValueError('snapshot owner does not match its inventory path')
     instant(manifest['generated_at'])
     raw_rows = payload.splitlines()
-    if len(raw_rows) != manifest.get('rows'):
+    if type(manifest.get('rows')) is not int or len(raw_rows) != manifest['rows']:
         raise ValueError('snapshot row count mismatch')
-    added = 0
+    rows = []
+    for raw_row in raw_rows:
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError('fleet reconciliation budget exhausted')
+        row = normalize(json.loads(raw_row))
+        if row['origin_id'] != manifest.get('owner'):
+            raise ValueError('snapshot contains a foreign-owned record')
+        rows.append(row)
+    if len({row['record_id'] for row in rows}) != len(rows):
+        raise ValueError('snapshot contains duplicate record identities')
+    return manifest, rows
+
+
+def import_snapshot(path, raw, source, expected_owner=None, trusted_own=False, cumulative=False, deadline=None):
+    manifest, rows = snapshot_records(raw, expected_owner, deadline)
+    added = labels = 0
     with contextlib.closing(database(path, True)) as conn, conn:
         conn.execute('BEGIN IMMEDIATE')
         local_owner = conn.execute('SELECT owner FROM metadata').fetchone()[0]
-        if manifest.get('owner') == local_owner:
+        own = manifest['owner'] == local_owner
+        if own and not trusted_own:
             raise ValueError('snapshot claims this store as origin; refuse self-import')
-        for raw in raw_rows:
-            row = normalize(json.loads(raw))
-            if row['origin_id'] != manifest['owner']:
-                raise ValueError('snapshot contains a foreign-owned record')
-            added += insert(conn, row)
+        prior = {r[0]: r[1] for r in conn.execute('SELECT record_id,payload FROM events WHERE origin_id=?', (manifest['owner'],))}
+        ids = {row['record_id'] for row in rows}
+        if cumulative and not own and set(prior).difference(ids):
+            raise ValueError('cumulative snapshot regressed known history')
+        restored = []
+        for row in rows:
+            old = prior.get(row['record_id'])
+            if own and old is not None and old != encode(row):
+                if not row.get('source_event_id') or identity_payload(json.loads(old)) != identity_payload(row):
+                    raise ValueError('identity payload conflict')
+                restored.append(json.loads(old))
+        if restored:
+            preserve_recovery(path, (encode(restored) + '\n').encode(), 'recovery', '.json')
+        for row in rows:
+            if deadline is not None and time.monotonic() >= deadline:
+                raise TimeoutError('fleet reconciliation budget exhausted')
+            added += insert(conn, row, replay=own, restore_labels=own)
+        labels = len(restored)
         conn.execute('INSERT OR IGNORE INTO device_imports VALUES (?,?,?,?,?,?)',
                      (manifest['owner'], manifest['sha256'], manifest['generated_at'],
-                      str(Path(source).resolve()), len(raw_rows), utc()))
-    return {'added': added, 'rows': len(raw_rows), 'owner': manifest['owner'],
-            'generated_at': manifest['generated_at']}
+                      source, len(rows), utc()))
+    return {'added': added, 'rows': len(rows), 'owner': manifest['owner'],
+            'generated_at': manifest['generated_at'], 'label_restored': labels,
+            'unsent': len(set(prior).difference(ids)) if own else 0}
+
+
+def import_device(path, source):
+    return import_snapshot(path, Path(source).read_bytes(), str(Path(source).resolve()))
+
+
+def recovery_metrics(path):
+    folder = Path(path).expanduser().absolute().with_name(Path(path).name + '.view-backups')
+    archives = list(folder.glob('conflict-*')) + list(folder.glob('recovery-*'))
+    return {'count': len(archives), 'bytes': sum(p.stat().st_size for p in archives)}
+
+
+def preserve_recovery(path, data, kind, suffix):
+    folder = Path(path).expanduser().absolute().with_name(Path(path).name + '.view-backups')
+    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fingerprint = digest(data)
+    target = folder / (kind + '-' + fingerprint + suffix)
+    if target.exists() or target.is_symlink():
+        if target.is_symlink() or digest(target.read_bytes()) != fingerprint:
+            raise ValueError('recovery archive changed; preserved content not replaceable')
+        return target
+    metrics = recovery_metrics(path)
+    if (len(data) > MAX_FLEET_BYTES or metrics['count'] >= MAX_ARCHIVES
+            or metrics['bytes'] + len(data) > MAX_ARCHIVE_BYTES):
+        raise ValueError('archive_budget_exhausted; current content preserved')
+    try:
+        atomic(target, data, exclusive=True)
+    except FileExistsError:
+        pass
+    if target.is_symlink() or digest(target.read_bytes()) != fingerprint:
+        raise ValueError('recovery archive verification failed')
+    return target
+
+
+def valid_origin(value):
+    if str(uuid.UUID(value)) != value:
+        raise ValueError('origin must be a canonical UUID')
+    return value
+
+
+def git_read(checkout, args, deadline):
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError('fleet reconciliation budget exhausted')
+    env = dict(os.environ)
+    for key in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_NAMESPACE'):
+        env.pop(key, None)
+    try:
+        result = subprocess.run(['git', '--no-pager', '-C', str(checkout), *args],
+                                capture_output=True, timeout=min(5, remaining), env=env)
+    except subprocess.TimeoutExpired:
+        raise TimeoutError('fleet Git read timed out') from None
+    if result.returncode:
+        raise ValueError('committed fleet snapshot unavailable')
+    return result.stdout
+
+
+def configure_fleet(path, checkout, origins, repair=False):
+    owners = [valid_origin(value) for value in origins]
+    if not owners or len(owners) > 16 or len(set(owners)) != len(owners):
+        raise ValueError('fleet inventory must contain 1 to16 unique origins')
+    checkout = Path(checkout).expanduser().resolve()
+    root = git_read(checkout, ['rev-parse', '--show-toplevel'], time.monotonic() + 5).decode().strip()
+    if Path(root).resolve() != checkout:
+        raise ValueError('configure the fleet checkout root')
+    with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
+        with contextlib.closing(database(path)) as conn:
+            cfg = active_config(conn, path)
+            if cfg['owner'] not in owners:
+                raise ValueError('fleet inventory must include this owner')
+            fleet = {'checkout': str(checkout), 'origins': sorted(owners), 'repair_generated_note': repair}
+            if repair:
+                view = cfg.get('view', {})
+                if not view or digest(Path(view['backup']).read_bytes()) != view['backup_sha256']:
+                    raise ValueError('register and verify the existing note before enabling repair')
+                if not Path(view['path']).read_bytes().startswith(view['header'].encode()):
+                    raise ValueError('personal header differs; repair not enabled')
+                fleet.update(header_sha256=digest(view['header'].encode()), coverage=view['coverage'])
+            if all(cfg.get('fleet', {}).get(k) == v for k, v in fleet.items()):
+                return {'configured': True, 'unchanged': True, 'fleet': cfg['fleet']}
+            cfg['fleet'] = fleet
+            atomic(CONFIG, (encode(cfg) + '\n').encode())
+    return {'configured': True, 'fleet': fleet}
+
+
+def reconcile_fleet(path):
+    cfg = config()
+    fleet = cfg.get('fleet')
+    if not fleet:
+        return {'configured': False}
+    owners = [valid_origin(value) for value in fleet['origins']]
+    if not 1 <= len(owners) <= 16 or len(set(owners)) != len(owners) or cfg['owner'] not in owners:
+        raise ValueError('invalid configured fleet inventory')
+    deadline = time.monotonic() + 30
+    status = {'configured': True, 'at': utc(), 'revision': None, 'origins': [], 'partial': False}
+    blobs = []
+    try:
+        head = git_read(fleet['checkout'], ['rev-parse', '--verify', 'HEAD^{commit}'], deadline).decode().strip()
+        if not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', head):
+            raise ValueError('invalid committed revision')
+        status['revision'] = head
+        for owner in owners:
+            spec = head + ':devices/' + owner + '/clio.jsonl'
+            try:
+                size = int(git_read(fleet['checkout'], ['cat-file', '-s', spec], deadline))
+                if size > MAX_FLEET_BYTES:
+                    raise ValueError('fleet snapshot exceeds size bound')
+                blobs.append((owner, git_read(fleet['checkout'], ['cat-file', 'blob', spec], deadline)))
+            except (ValueError, OSError, TimeoutError, subprocess.TimeoutExpired) as error:
+                status['origins'].append({'owner': owner, 'state': 'missing' if isinstance(error, ValueError) and str(error) == 'committed fleet snapshot unavailable' else 'error', 'error': type(error).__name__})
+    except (ValueError, OSError, TimeoutError, subprocess.TimeoutExpired) as error:
+        status['origins'] = [{'owner': owner, 'state': 'error', 'error': type(error).__name__} for owner in owners]
+    # Git reads precede the existing lock; no network operation holds this lock.
+    with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
+        with contextlib.closing(database(path)) as conn:
+            latest = active_config(conn, path)
+            if latest.get('fleet', {}) != fleet:
+                raise ValueError('fleet configuration changed during reconciliation; retry')
+            cfg = latest
+        for owner, raw in blobs:
+            try:
+                result = import_snapshot(path, raw, 'git-blob:' + status['revision'] + ':' + owner,
+                                         owner, trusted_own=owner == cfg['owner'], cumulative=True, deadline=deadline)
+                result.update(state='accepted', committed_local_rows=result['rows'])
+                if owner == cfg['owner'] and (result['added'] or result['label_restored']):
+                    result['warning'] = 'own history restored; verify no duplicate live owner'
+                status['origins'].append(result)
+            except (ValueError, KeyError, TypeError, OSError, sqlite3.Error, TimeoutError) as error:
+                status['origins'].append({'owner': owner, 'state': 'error', 'error': type(error).__name__})
+        status['partial'] = any(item['state'] != 'accepted' for item in status['origins'])
+        status['archives'] = recovery_metrics(path)
+        cfg['fleet']['last_result'] = status
+        atomic(CONFIG, (encode(cfg) + '\n').encode())
+    return status
 
 
 def backup(path, output):
@@ -807,6 +1061,12 @@ def main():
     exporter = commands.add_parser('export-device')
     exporter.add_argument('output')
     exporter.add_argument('--cutoff')
+    exporter.add_argument('--origin', help='explicit one-time bootstrap of a known preserved origin')
+    fleet = commands.add_parser('configure-fleet')
+    fleet.add_argument('checkout')
+    fleet.add_argument('--origin', action='append', required=True)
+    fleet.add_argument('--repair-generated-note', action='store_true', help='machine-owned body: archive unknown body edits before rebuilding; preserve personal header')
+    commands.add_parser('reconcile-fleet')
     importer = commands.add_parser('import-device')
     importer.add_argument('input')
     copier = commands.add_parser('backup')
@@ -829,6 +1089,10 @@ def main():
             result = activate(path, args.source, args.fresh, args.capture_only)
         elif args.command == 'migrate-view':
             result = migrate_view(path, args.markdown, args.publishers_paused, args.archive_unreconciled_note)
+        elif args.command == 'configure-fleet':
+            result = configure_fleet(path, args.checkout, args.origin, args.repair_generated_note)
+        elif args.command == 'reconcile-fleet':
+            result = reconcile_fleet(path)
         elif args.command == 'scheduled-export':
             if args.mode != 'export':
                 raise ValueError('legacy maintenance is unavailable in SQLite mode; use query, drain and project')
@@ -837,11 +1101,41 @@ def main():
                 capture_only = activated.get('capture_only') and not activated.get('view')
                 if capture_only:
                     existing_destination(args.markdown)
-                else:
-                    checked_view(conn, path, Path(args.markdown).expanduser().resolve())
-            recovery = drain(path)
-            result = project(path, None if capture_only else args.markdown,
-                             Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=bool(capture_only))
+                elif not activated.get('view'):
+                    raise ValueError('register the existing note before scheduled publication')
+            if activated.get('fleet'):
+                errors = []
+                try:
+                    recovery = drain(path)
+                except (ValueError, OSError, sqlite3.Error, TimeoutError) as error:
+                    recovery = {'pending': len(list(pending_dir(path).glob('clio1-*.json')))}
+                    errors.append(type(error).__name__)
+                try:
+                    fleet_result = reconcile_fleet(path)
+                except (ValueError, OSError, sqlite3.Error) as error:
+                    fleet_result = {'configured': True, 'partial': True, 'error': type(error).__name__}
+                # Compatibility output is independent of every note refusal.
+                result = project(path, jsonl=Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=True)
+                note_status = {'state': 'paused' if capture_only else 'published'}
+                if not capture_only:
+                    try:
+                        result.update(project(path, args.markdown))
+                    except (ValueError, OSError, sqlite3.Error, TimeoutError) as error:
+                        note_status = {'state': 'waiting_for_history' if 'waiting_for_history' in str(error) else 'refused', 'error': type(error).__name__,
+                                       'reason': ('archive_budget_exhausted' if 'archive_budget_exhausted' in str(error)
+                                                  else 'header_changed' if 'header' in str(error)
+                                                  else 'backup_changed' if 'backup' in str(error) else 'publication_guard')}
+                with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
+                    with contextlib.closing(database(path)) as conn:
+                        latest = active_config(conn, path)
+                        latest.get('view', {})['last_note_status'] = note_status
+                        latest['fleet'].setdefault('last_result', fleet_result)['archives'] = recovery_metrics(path)
+                        atomic(CONFIG, (encode(latest) + '\n').encode())
+                result.update(fleet=fleet_result, note_publication=note_status['state'], note_status=note_status, drain_errors=errors)
+            else:
+                recovery = drain(path)
+                result = project(path, None if capture_only else args.markdown,
+                                 Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=bool(capture_only))
             result['pending'] = recovery['pending']
         elif args.command == 'capture':
             if not cfg or Path(cfg['db']).resolve() != Path(path).expanduser().resolve():
@@ -854,7 +1148,7 @@ def main():
         elif args.command == 'project':
             result = project(path, args.markdown, args.jsonl, args.cutoff, args.jsonl_only)
         elif args.command == 'export-device':
-            result = export_device(path, args.output, args.cutoff)
+            result = export_device(path, args.output, args.cutoff, args.origin)
         elif args.command == 'import-device':
             result = import_device(path, args.input)
         else:

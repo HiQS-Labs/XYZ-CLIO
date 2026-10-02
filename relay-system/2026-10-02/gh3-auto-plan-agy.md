@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,25 @@ Committed candidate ready for independent review; no installed changes.
 
 VERDICT: PASS
 Basis: Ready for QA.
+
+### Reviewer · Round 1
+
+swept file: yes
+I have reviewed the entire `doc/gh3-device-independent-plan.md` plan and the `doc/recon-gh3-device-independent.md` delta against the requirements. No pre-existing defects were found in the scope of this file.
+
+* `[Pass]` **Trusted committed snapshot imports**: "read ONLY `devices/<UUID>/clio.jsonl` committed blobs, not dirty worktree files" (`doc/gh3-device-independent-plan.md:111`).
+* `[Pass]` **No echo/bootstrap old origins**: "Preserve imported-origin no-echo in ordinary exports. Add explicit `--origin UUID` bootstrap export for already-known legacy seed origins" (`doc/gh3-device-independent-plan.md:113`).
+* `[Pass]` **Eventual generated-note convergence**: "an unrecognized current note is replaceable ONLY if: exact configured personal header... exact byte equality to rendering those records" (`doc/gh3-device-independent-plan.md:117`) and "The bet is eventual repair, not instantaneous shared-file consistency" (`doc/gh3-device-independent-plan.md:105`).
+* `[Pass]` **Honest unknown/human race limits**: "Persistent malformed history/human edits/auth or disk failures are surfaced, never silently erased." (`doc/gh3-device-independent-plan.md:105`) and "human/unsupported body or header edits remain untouched" (`doc/gh3-device-independent-plan.md:117`).
+* `[Pass]` **Scheduled path reuse**: "In the existing `scheduled-export`, when fleet configured: drain pending receipts, reconcile committed snapshots... no extra scheduler/pusher" (`doc/gh3-device-independent-plan.md:115`).
+* `[Pass]` **No new publisher/service/store**: "No new schema/version/store or ledger writer." (`doc/gh3-device-independent-plan.md:113`) and "no fixed Mac or distributed leader" (`doc/gh3-device-independent-plan.md:103`).
+* `[Pass]` **Bounds/rollback/proofs**: "Git calls (5s each, max16origins, total monotonic budget30s); a failure leaves all captures and earlier good imports intact" (`doc/gh3-device-independent-plan.md:111`). Rollback "restores verified previous config... never delete delivered snapshots" (`doc/gh3-device-independent-plan.md:79`).
+* `[Pass]` **CLIO PR5 and native Rebalance282 separated**: "External wiring scope: Rebalance#282 must invoke local-owner export... That source change cannot be placed in CLIO PR5" (`doc/recon-gh3-device-independent.md:33`).
+* `[Pass]` **No claim existing GPS invokes CLIO**: "This PR provides callable CLIO seams and executable simulated proof, not a claim that unrelated Rebalance runtime was modified." (`doc/gh3-device-independent-plan.md:115`).
+
+VERDICT: PASS
+Basis: The executable automatic-recovery revision and recon meet all strict requirements. Mechanism is safe, bounded, completely delegates sync complexity, cleanly separates CLIO from Rebalance, and honest about human race limitations.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

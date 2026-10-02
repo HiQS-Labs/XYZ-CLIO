@@ -1,0 +1,13 @@
+{
+  "stage": "installed",
+  "integrity": "ok",
+  "history_rows": 3935,
+  "recent_rows": 299,
+  "exact_note_id_set": true,
+  "rendered_payloads_preserved": true,
+  "compatibility_full_history": true,
+  "personal_header_preserved": true,
+  "original_backup_verified": true,
+  "launchd_exit": 0,
+  "cutoff": "2026-10-02T05:34:38.164953Z"
+}

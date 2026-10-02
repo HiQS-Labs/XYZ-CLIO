@@ -1,0 +1,19 @@
+{
+  "operation": "same-existing-note-seven-day-activation",
+  "activated": true,
+  "coverage": "archived-not-reconciled",
+  "covered_entries": null,
+  "source_note_archived": true,
+  "original_section_markers": 10,
+  "header_preserved": true,
+  "same_destination": true,
+  "schedule_seconds": 300,
+  "plist_unchanged": true,
+  "integrity": "ok",
+  "history_rows": 3921,
+  "recent_rows": 332,
+  "pending": 0,
+  "repeat_publication_ok": true,
+  "operator_confirms_other_devices_off": true,
+  "installed_helper_sha256": "9b60deae7c00a47649df24a8d51a5cf345e8aae353a155defd50566884eae132"
+}

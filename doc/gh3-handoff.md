@@ -21,3 +21,26 @@ Current follow-up validation: independent Codex round1 Approved (attested exit0)
 Rollback follows INSTALL.md: pause capture/tailers/exporters, preserve SQLite-era arrivals in full chronological compatibility history, reconcile them with retained originals, and restore the verified original note to the same path with its personal header. Do not delete history or replace a live WAL database with a raw main-file copy. Deployment cutover is Costly; isolated branch fixes are Easy.
 
 2026-09-30 workhorse continuation: source-copy import/online-backup and two-entry private repair verified. Live legacy exporter exit1 traced to intentional delivered-missing alarm. Missing original IDs attributed by rendered labels: MacStudio1861, MBP14 170, MBP16 437. Cutover remains held; [device collection](gh3-device-handoff.md) and TESTS-RESULTS/2026-09-30-gh3-cutover-readiness/ contain next steps and sanitized evidence.
+
+2026-09-30 latest scope/result: operator declared the eleven-file fleet collection final and accepted missing older history. MacStudio SQLite is now ACTIVE in explicit capture-only mode; current shared note and existing300-second job definition remain unchanged. The job now drains and refreshes full-history compatibility JSONL, reporting note publication paused. Provided laptop histories imported with retained separate adoption origins; Mini’s duplicate Studio copy excluded after subset verification. Existing Rebalance runtime config reads compatibility JSONL. Other Macs await individual installation; no further data recovery chase. Same-path rolling publication is not activated. See TESTS-RESULTS/2026-09-30-gh3-local-capture/ and INSTALL.md’s per-Mac retry guidance. Source-code review Approved R2; all16 storage and four shell suites passed; live four-agent shared-writer diagnostics and replay dedup passed. Earlier no-activation state is historical. Preserve task clone while this follow-up branch is unmerged and rolling/fleet work remains open.
+
+## 2026-10-01 same-path rolling publication active
+
+Operator confirms CLIO off on all other devices. Studio now publishes a seven-day
+view to the same `0. Claude Prompts.md` on the unchanged 300-second job. Original
+ten-section note fully archived in verified private backups; personal header
+preserved. Explicit archive mode records archived-not-reconciled/null covered
+count, honoring the accepted historical gap without a parity claim. SQLite
+3,921 history records, 332 in-window at cutover, integrity OK, pending zero and
+repeat publication verified. Evidence: TESTS-RESULTS/2026-10-01-gh3-seven-day/.
+
+PR #5 remains the implementation landing; clone retained until verified landing.
+Fleet integration remains dependent on Rebalance #282; other Macs are disabled.
+
+## 2026-10-01 PT local writer repair and current handoff
+
+PR5 fixes cross-runtime cold WAL reads with existing-file rw plus SQL query_only before validation, and resolves the outstanding explicit --db registered-view conditional. IDE collectors and the 300-second exporter schedule remain unchanged. Independent Codex plan/final/incremental QA Approved; final four shell suites and16cases pass under both installed Python runtimes in a disposable full clone, Git identity unchanged. Red controls, exact reviewed/helper hashes and sanitized installed receipts are committed in TESTS-RESULTS/2026-10-01-gh3-wal-repair/.
+
+The backed-up installed helper was replaced atomically. A labelled diagnostic capture left WAL/SHM absent before actual launchd success; the next ordinary five-minute job also succeeded. Final combined helper verified actual launchd and explicit-db publication, integrity, exact seven-day IDs/rendered prompts, full-history compatibility IDs, original backup/hash and header.3935 history rows/299recent at recorded cutoff; accepted historical gap remains disclosed. Backup folders under ~/Backups/CLIO retain prior helper/config/plist/note and online DB copies. Rollback restores the backed-up helper only after verifying retained SQLite-era arrivals; no history deletion or stale-source activation.
+
+PR5 is review-ready but unmerged; retain this clone until landing is verified. Issue3 stays open. Device-independent fleet is planned, not deployed: every Mac must have full delivered history and use existing Git Pulse cadence, with Studio-off capture/query/combined-note projection proved in a disconnected pilot. Native Rebalance#282 remains a dependency; exact shared-note transport/publisher choice remains unresolved. Other devices remain disabled. Continue downstream on native Rebalance rails after prerequisites land; no new push loop/vector store/XYZ ledger writer.

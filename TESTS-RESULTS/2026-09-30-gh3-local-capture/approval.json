@@ -1,0 +1,10 @@
+{
+  "schema": "relay-drive/attest@1",
+  "task": "CLIO-GH3-LOCAL-CAPTURE-R2",
+  "reviewer": "codex",
+  "status": "Approved",
+  "reviewed_head": "07d4a7196b8c29e981a071e74b7b059a91ae69ed",
+  "attested_at": "2026-10-01T04:14:38Z",
+  "added_sha256": "2e988f962e8126b5f114ed1b6a387b3894f0b332a37b31ab66645b0bd5d4af24",
+  "relay_file_rel": "relay-system/2026-09-30/gh3-local-capture.md"
+}

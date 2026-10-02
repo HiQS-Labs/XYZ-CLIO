@@ -1,0 +1,5 @@
+# Installed end-to-end check — 2026-10-01 PT
+
+Status inspection found publication stale since 2026-10-01T22:16Z, while SQLite continued accepting captures. Launchd last exit 3; scheduled-export logs repeatedly reported `OperationalError: unable to open database file`. Root cause not established. Manual scheduled-export succeeded, then actual launchd kickstart succeeded without a source/config/job change. Current recovery is observed, not proof the intermittent fault is permanently fixed.
+
+One clearly labelled synthetic diagnostic through installed log-prompt.sh reached SQLite and the existing launchd-driven same-path note. Exit 0, exact record-ID set for published 168-hour cutoff matches SQLite, complete compatibility export 3,931 rows, 300 in-window, integrity OK; original backup/hash and personal header intact. Existing Codex/Agy jobs loaded with last exit 0; this live diagnostic verifies Claude hook/shared-writer route, not all IDE callbacks. No new tests or runtime source changes; health receipt contains no private prompts. Follow-up must reproduce or instrument the database-open failure before a durable fix is claimed.

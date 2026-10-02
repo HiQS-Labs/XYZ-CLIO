@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """SQLite acceptance cases using only synthetic data and temporary homes."""
 import argparse
+import contextlib
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import importlib.util
@@ -237,6 +238,57 @@ class History(unittest.TestCase):
             store.project(self.db)
         self.assertTrue(note.read_bytes().endswith(b'Unexpected foreign arrival\n'))
         note.write_bytes(current)
+        cfg = store.config()
+        cfg['fleet'] = {'repair_generated_note': True,
+                        'header_sha256': store.digest(header.encode()),
+                        'coverage': cfg['view']['coverage']}
+        store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+        hybrid = current + b'\nMerged generated-body fragment\n'
+        note.write_bytes(hybrid)
+        store.project(self.db, cutoff='2026-09-30T00:00:00Z')
+        archives = list(Path(result['backup']).parent.glob('conflict-*.md'))
+        self.assertEqual(len(archives), 1)
+        self.assertEqual(archives[0].read_bytes(), hybrid)
+        self.assertTrue(note.read_bytes().startswith(header.encode()))
+        self.assertEqual(archives[0].stat().st_mode & 0o777, 0o600)
+        # Repeated content is deduplicated; archive failure preserves current bytes.
+        note.write_bytes(hybrid)
+        store.project(self.db, cutoff='2026-09-30T00:00:00Z')
+        self.assertEqual(len(list(archives[0].parent.glob('conflict-*.md'))), 1)
+        failed_body = hybrid + b'new conflict'
+        note.write_bytes(failed_body)
+        with patch.object(store, 'preserve_recovery', side_effect=OSError('fixture disk failure')):
+            with self.assertRaises(OSError):
+                store.project(self.db)
+        self.assertEqual(note.read_bytes(), failed_body)
+        note.write_bytes(b'Changed personal header\n' + current)
+        with self.assertRaisesRegex(ValueError, 'personal header'):
+            store.project(self.db)
+        unknown = current + ('\n<!-- clio:record:clio1-' + '0' * 64 + ' -->\n').encode()
+        note.write_bytes(unknown)
+        with self.assertRaisesRegex(ValueError, 'waiting_for_history'):
+            store.project(self.db)
+        waiting = store.config()['view']['waiting_since']
+        with self.assertRaisesRegex(ValueError, 'waiting_for_history'):
+            store.project(self.db)
+        self.assertEqual(store.config()['view']['waiting_since'], waiting)
+        self.assertEqual(note.read_bytes(), unknown)
+        cfg = store.config()
+        cfg['view']['waiting_since'] = '2000-01-01T00:00:00Z'
+        store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+        store.project(self.db, cutoff='2026-09-30T00:00:00Z')
+        self.assertTrue(any(p.read_bytes() == unknown for p in archives[0].parent.glob('conflict-*.md')))
+        self.assertNotIn('waiting_since', store.config()['view'])
+        note.unlink()
+        store.project(self.db, cutoff='2026-09-30T00:00:00Z')
+        self.assertTrue(note.read_bytes().startswith(header.encode()))
+        # Admission refuses additional archives without deleting any prior data.
+        note.write_bytes(failed_body)
+        with patch.object(store, 'MAX_ARCHIVES', 1):
+            with self.assertRaisesRegex(ValueError, 'archive_budget_exhausted'):
+                store.project(self.db)
+        self.assertEqual(note.read_bytes(), failed_body)
+        note.write_bytes(current)
         Path(result['backup']).write_bytes(original + b'altered backup')
         with self.assertRaisesRegex(ValueError, 'backup changed'):
             store.project(self.db)
@@ -386,6 +438,29 @@ class History(unittest.TestCase):
         with self.assertRaises(sqlite3.OperationalError):
             store.database(missing)
         self.assertFalse(missing.exists())
+        # Exercise the launchd interpreter against a cold database made by this
+        # interpreter. On macOS these can use different SQLite versions.
+        if sys.platform == 'darwin' and Path('/usr/bin/python3').exists():
+            cold = self.home / 'cross-runtime.sqlite3'
+            helper = ROOT / 'utils/CLIO/clio-store.py'
+            source = self.source([self.row(prompt='Synthetic cold WAL Unicode: 日本語')])
+            for command in (['init'], ['import-jsonl', str(source)]):
+                subprocess.run([sys.executable, str(helper), '--db', str(cold), *command],
+                               check=True, capture_output=True, text=True)
+            # The creator has exited and checkpointed its committed data. A
+            # separate main-file copy forces absent sidecars on either runtime.
+            cold_copy = self.home / 'cold-copy.sqlite3'
+            shutil.copyfile(cold, cold_copy)
+            cold = cold_copy
+            for suffix in ('-wal', '-shm'):
+                self.assertFalse(Path(str(cold) + suffix).exists())
+            result = subprocess.run(['/usr/bin/python3', str(helper), '--db', str(cold),
+                                     'query', '--limit', '1'],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            records = json.loads(result.stdout)['records']
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]['prompt'], 'Synthetic cold WAL Unicode: 日本語')
 
     def test_device_roundtrip_preserves_owner_extras_and_no_echo(self):
         path = self.source([self.row(machine='', agent='', client_extension={'version': 2})])
@@ -420,6 +495,208 @@ class History(unittest.TestCase):
         a.write_bytes(a.read_bytes() + b'corrupt\n')
         with self.assertRaisesRegex(ValueError, 'digest'):
             store.import_device(other, a)
+
+        # Four independent stores and Git checkouts: only fixture Git transports snapshots.
+        fleet = self.home / 'fleet'
+        fleet.mkdir()
+        remote = fleet / 'remote.git'
+        def git(repo, *args):
+            self.assertTrue(repo.resolve().is_relative_to(self.home.resolve()))
+            return subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
+                                   '-c', 'commit.gpgsign=false', '-c', 'user.name=Fixture',
+                                   '-c', 'user.email=fixture@example.invalid', *args],
+                                  check=True, capture_output=True).stdout
+        git(fleet, 'init', '--bare', '-q', '--initial-branch=main', str(remote))
+        nodes = []
+        for number in range(4):
+            home = fleet / str(number)
+            home.mkdir()
+            checkout = home / 'pulse'
+            git(home, 'clone', '-q', str(remote), str(checkout))
+            if number == 0:
+                git(checkout, 'commit', '-q', '--allow-empty', '-m', 'fixture seed')
+                git(checkout, 'push', '-q', 'origin', 'main')
+            db = home / 'history.sqlite3'
+            nodes.append((home, checkout, db, store.initialize(db)))
+        owners = [node[3] for node in nodes]
+        def context(node):
+            return patch.object(store, 'CONFIG', node[0] / 'config.json')
+        def scheduled(node, destination):
+            return subprocess.run([sys.executable, str(ROOT / 'utils/CLIO/clio-store.py'), '--db', str(node[2]),
+                                   'scheduled-export', str(destination)], capture_output=True, text=True,
+                                  env=dict(os.environ, HOME=str(node[0]), CLIO_CONFIG=str(node[0] / 'config.json')))
+        for node in nodes:
+            with context(node):
+                store.activate(node[2], node[0] / 'absent.jsonl', fresh=True)
+                note = node[0] / '0. Claude Prompts.md'
+                note.write_text('# Personal header\n<!-- CLIO:ENTRIES -->\n')
+                store.migrate_view(node[2], note, True, True)
+                store.configure_fleet(node[2], node[1], owners, True)
+                with self.assertRaises(ValueError):
+                    store.configure_fleet(node[2], node[1], owners + [owners[0]], True)
+                store.capture(node[2], node[3], self.row(timestamp=store.utc(), source_event_id='fleet-' + node[3], repo='original'))
+        def publish(node):
+            home, checkout, db, owner = node
+            git(checkout, 'pull', '-q', '--ff-only')
+            destination = checkout / 'devices' / owner / 'clio.jsonl'
+            with context(node):
+                store.export_device(db, destination)
+            git(checkout, 'add', 'devices')
+            git(checkout, 'commit', '-q', '-m', 'owned snapshot')
+            git(checkout, 'push', '-q', 'origin', 'main')
+        for node in nodes:
+            publish(node)
+        def converge():
+            bodies, payloads = [], []
+            cutoff = store.utc()
+            for node in nodes:
+                git(node[1], 'pull', '-q', '--ff-only')
+                with context(node):
+                    result = store.reconcile_fleet(node[2])
+                    self.assertFalse(result['partial'], result)
+                    store.project(node[2], node[0] / '0. Claude Prompts.md', cutoff=cutoff)
+                    bodies.append((node[0] / '0. Claude Prompts.md').read_bytes())
+                    with contextlib.closing(store.database(node[2])) as conn:
+                        payloads.append(dict(conn.execute('SELECT record_id,payload FROM events')))
+            self.assertTrue(payloads[0])
+            self.assertTrue(all(p == payloads[0] for p in payloads))
+            self.assertTrue(all(b == bodies[0] for b in bodies))
+            return payloads[0]
+        self.assertEqual(len(converge()), 4)
+        # Offline capture survives locally; rejoin needs no role change.
+        offline = nodes[0]
+        with context(offline):
+            store.capture(offline[2], offline[3], self.row(timestamp=store.utc(), source_event_id='offline'))
+        publish(offline)
+        self.assertEqual(len(converge()), 5)
+        # Dirty working files cannot become committed imports.
+        foreign = nodes[1][1] / 'devices' / owners[0] / 'clio.jsonl'
+        saved = foreign.read_bytes()
+        foreign.write_bytes(b'uncommitted corruption')
+        with context(nodes[1]):
+            self.assertFalse(store.reconcile_fleet(nodes[1][2])['partial'])
+        foreign.write_bytes(saved)
+        # 129 replay-label restorations consume one archive, before export.
+        with context(offline):
+            for number in range(129):
+                store.capture(offline[2], offline[3], self.row(timestamp=store.utc(), source_event_id='restore-' + str(number), repo='original'))
+        publish(offline)
+        converge()
+        with contextlib.closing(store.database(offline[2], True)) as conn:
+            old = list(conn.execute('SELECT record_id,payload FROM events WHERE origin_id=?', (offline[3],)))
+            for record_id, payload in old:
+                row = json.loads(payload)
+                row['repo'] = 'replayed'
+                conn.execute('UPDATE events SET repo=?,payload=? WHERE record_id=?', ('replayed', store.encode(row), record_id))
+            conn.commit()
+        with context(offline):
+            out = offline[0] / 'restored.jsonl'
+            store.export_device(offline[2], out)
+            self.assertEqual(store.recovery_metrics(offline[2])['count'], 1)
+            with contextlib.closing(store.database(offline[2], True)) as conn:
+                self.assertEqual(conn.execute("SELECT count(*) FROM events WHERE repo='replayed'").fetchone()[0], 0)
+            self.assertEqual(store.import_device(nodes[1][2], out)['added'], 0)
+            # Restore missing committed own history without deleting unsent events.
+            with contextlib.closing(store.database(offline[2], True)) as conn:
+                conn.execute('DELETE FROM events WHERE record_id=?', (old[0][0],))
+                conn.commit()
+            store.capture(offline[2], offline[3], self.row(timestamp=store.utc(), source_event_id='unsent'))
+            restored_result = store.reconcile_fleet(offline[2])
+            own = next(item for item in restored_result['origins'] if item['owner'] == offline[3])
+            self.assertEqual(own['added'], 1)
+            self.assertEqual(own['unsent'], 1)
+            with self.assertRaisesRegex(ValueError, 'refuse self-import'):
+                store.import_device(offline[2], out)
+        # Scheduled destination guard, both opt-in fleet and default mode.
+        node = nodes[1]
+        unrelated = node[0] / 'personal.md'
+        unrelated.write_bytes(b'Unrelated personal note\n')
+        self.assertNotEqual(scheduled(node, unrelated).returncode, 0)
+        self.assertEqual(unrelated.read_bytes(), b'Unrelated personal note\n')
+        with context(node):
+            cfg = store.config()
+            fleet_config = cfg.pop('fleet')
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+            self.assertNotEqual(scheduled(node, unrelated).returncode, 0)
+            self.assertEqual(unrelated.read_bytes(), b'Unrelated personal note\n')
+            cfg['fleet'] = fleet_config
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+        # Peer rendering is regenerable without archive, even at another cutoff.
+        with context(nodes[0]):
+            store.project(nodes[0][2], cutoff=store.utc())
+        peer_bytes = (nodes[0][0] / '0. Claude Prompts.md').read_bytes()
+        # Node0 still has an unsent event: deliver its snapshot before peer note.
+        publish(nodes[0])
+        git(node[1], 'pull', '-q', '--ff-only')
+        with context(node):
+            store.reconcile_fleet(node[2])
+            count = store.recovery_metrics(node[2])['count']
+            note = node[0] / '0. Claude Prompts.md'
+            note.write_bytes(peer_bytes)
+            store.project(node[2])
+            self.assertEqual(store.config()['view']['last_note_repair']['state'], 'peer_generated')
+            self.assertEqual(store.recovery_metrics(node[2])['count'], count)
+        # An existing alias to the registered real file remains supported.
+        alias = node[0] / 'registered-alias.md'
+        alias.symlink_to(note)
+        with context(node):
+            self.assertTrue(store.migrate_view(node[2], alias, True, True)['already_registered'])
+        self.assertEqual(scheduled(node, alias).returncode, 0)
+        with context(node):
+            cfg = store.config()
+            configured = cfg.pop('fleet')
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+            self.assertEqual(scheduled(node, alias).returncode, 0)
+            cfg = store.config()
+            cfg['fleet'] = configured
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+        # Symlink refusal is note-local: fleet history and compatibility continue.
+        untouched = node[0] / 'symlink-target.md'
+        untouched.write_bytes(b'Unrelated target\n')
+        note.unlink()
+        note.symlink_to(untouched)
+        compatibility = node[0] / '.claude/prompt-log-compat.jsonl'
+        compatibility.unlink(missing_ok=True)
+        result = scheduled(node, note)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['note_status']['state'], 'refused')
+        self.assertGreater(len(compatibility.read_bytes()), 0)
+        self.assertEqual(untouched.read_bytes(), b'Unrelated target\n')
+        self.assertTrue(note.is_symlink())
+        note.unlink()
+        note.write_bytes(peer_bytes)
+        # Bad and missing origins are isolated; note refusal still refreshes compatibility.
+        checkout = node[1]
+        malformed = checkout / 'devices' / owners[2] / 'clio.jsonl'
+        manifest = {'clio_snapshot':1, 'owner':owners[2], 'generated_at':None,
+                    'rows':0, 'sha256':store.digest(b'')}
+        malformed.write_bytes((store.encode(manifest) + '\n').encode())
+        (checkout / 'devices' / owners[3] / 'clio.jsonl').unlink()
+        git(checkout, 'add', '-A', 'devices')
+        git(checkout, 'commit', '-q', '-m', 'fixture bad and missing origins')
+        note.write_bytes(b'Edited header\n' + peer_bytes)
+        before = note.read_bytes()
+        result = scheduled(node, note)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        status = json.loads(result.stdout)
+        states = {item['owner']:item['state'] for item in status['fleet']['origins']}
+        self.assertEqual(states[owners[2]], 'error')
+        self.assertEqual(states[owners[3]], 'missing')
+        self.assertEqual(states[owners[0]], 'accepted')
+        self.assertEqual(status['note_status']['state'], 'refused')
+        self.assertEqual(note.read_bytes(), before)
+        compatibility = node[0] / '.claude/prompt-log-compat.jsonl'
+        self.assertGreater(len(compatibility.read_bytes()), 0)
+        with context(node):
+            self.assertTrue(store.config()['fleet']['last_result']['partial'])
+        # Foreign cumulative regression is rejected transactionally.
+        raw = out.read_bytes()
+        manifest, rows = store.snapshot_records(raw)
+        payload = (store.encode(rows[0]) + '\n').encode()
+        manifest.update(rows=1, sha256=store.digest(payload))
+        with self.assertRaisesRegex(ValueError, 'regressed'):
+            store.import_snapshot(nodes[1][2], (store.encode(manifest) + '\n').encode() + payload,
+                                  'fixture-regression', owners[0], cumulative=True)
 
     def test_simultaneous_capture_read_export(self):
         rows = [self.row() for _ in range(16)]
@@ -558,13 +835,59 @@ class History(unittest.TestCase):
                 store.activate(self.db, path)
         self.assertFalse(store.CONFIG.exists())
         self.assertFalse((self.home / '.claude/prompt-log.lock').exists())
-        store.activate(self.db, path)
+        store.activate(self.db, path, capture_only=True)
         self.assertEqual(path.read_bytes(), before)
         backups = list(self.home.glob('original.jsonl.pre-sqlite-*'))
         self.assertEqual(len(backups), 1)
         self.assertEqual(backups[0].read_bytes(), before)
         with self.assertRaisesRegex(ValueError, 'overwrite'):
             store.project(self.db, self.home / 'recent.md', path)
+        note, job, _ = self.note_and_job([self.row()])
+        note.write_bytes(note.read_bytes() + b'\n<!-- CLIO:ENTRIES -->\nUnrecovered historical content\n')
+        note_bytes, job_bytes = note.read_bytes(), job.read_bytes()
+        for agent in ('claude-code', 'zcode', 'codex', 'agy'):
+            row = self.row(agent=agent, timestamp=store.utc(), source_event_id='capture-only-' + agent)
+            subprocess.run(['bash', str(self.home / '.claude/hooks/clio-capture.sh'), '--agent', agent, '--record'],
+                           input=json.dumps(row), text=True, check=True, capture_output=True)
+        command = plistlib.loads(job_bytes)['ProgramArguments']
+        result = json.loads(subprocess.run(command, check=True, capture_output=True, text=True).stdout)
+        self.assertEqual(result['note_publication'], 'paused')
+        self.assertEqual(result['history_rows'], 5)
+        self.assertEqual(result['pending'], 0)
+        self.assertEqual(note.read_bytes(), note_bytes)
+        self.assertEqual(job.read_bytes(), job_bytes)
+        self.assertEqual(path.read_bytes(), before)
+        compat = self.home / '.claude/prompt-log-compat.jsonl'
+        rows = [json.loads(line) for line in compat.read_bytes().splitlines()]
+        self.assertEqual(len(rows), 5)
+        self.assertEqual({row['agent'] for row in rows}, {'claude-code', 'zcode', 'codex', 'agy'})
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            store.project(self.db, jsonl=path, jsonl_only=True)
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            store.project(self.db, jsonl=backups[0], jsonl_only=True)
+        self.assertEqual(backups[0].read_bytes(), before)
+        with self.assertRaisesRegex(ValueError, 'one standalone'):
+            store.migrate_view(self.db, publishers_paused=True)
+        result = store.migrate_view(self.db, publishers_paused=True, archive_unreconciled_note=True)
+        self.assertEqual(result['coverage'], 'archived-not-reconciled')
+        self.assertIsNone(result['covered_entries'])
+        self.assertEqual(Path(result['backup']).read_bytes(), note_bytes)
+        self.assertEqual(note.read_bytes(), note_bytes)
+        cfg = store.config()
+        self.assertEqual(cfg['view']['header'], note_bytes.decode().split('<!-- CLIO:ENTRIES -->', 1)[0] + '<!-- CLIO:ENTRIES -->\n')
+        result = json.loads(subprocess.run(command, check=True, capture_output=True, text=True).stdout)
+        self.assertEqual(result['rows'], 5)
+        explicit = subprocess.run([sys.executable, str(ROOT / 'utils/CLIO/clio-store.py'),
+                                   '--db', str(self.db), 'scheduled-export', str(note)],
+                                  check=True, capture_output=True, text=True)
+        self.assertEqual(json.loads(explicit.stdout).get('rows'), 5)
+        self.assertTrue(note.read_bytes().startswith(cfg['view']['header'].encode()))
+        self.assertIn('not fully reconciled into SQLite', note.read_text())
+        self.assertEqual(job.read_bytes(), job_bytes)
+        self.assertEqual(Path(cfg['view']['backup']).read_bytes(), note_bytes)
+        note.write_bytes(note.read_bytes() + b'foreign publisher edit')
+        with self.assertRaisesRegex(ValueError, 'outside this publisher'):
+            store.project(self.db)
 
 
 if __name__ == '__main__':

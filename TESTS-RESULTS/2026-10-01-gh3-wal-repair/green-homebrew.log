@@ -1,0 +1,6 @@
+test_readonly_queries_refs_pagination_and_large_prompt (__main__.History.test_readonly_queries_refs_pagination_and_large_prompt) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.427s
+
+OK

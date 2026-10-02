@@ -330,6 +330,49 @@ The database defaults to `~/.claude/prompt-log.sqlite3`; pass `--db /private/pat
 **before** a subcommand to use another local path. Files are private. Never put a live
 SQLite database, its WAL, or its pending directory in a synchronized folder.
 
+For a local installation where historical gaps are accepted but other Macs still
+publish the shared note, use `activate --capture-only` after import/verification.
+New captures use SQLite. The unchanged scheduled exporter drains receipts and
+refreshes `~/.claude/prompt-log-compat.jsonl`, reporting `note_publication: paused`;
+it does not touch the Obsidian note or create another Markdown note. Existing
+sources/backups remain intact. Point existing downstream readers at this full-history
+compatibility file; the original JSONL stops growing after activation. Other Macs
+remain unchanged until individually installed. This is not a rolling-note cutover
+or proof of complete fleet coverage. `migrate-view` still requires its explicit
+single-publisher and historical-coverage checks before the same note can be replaced.
+An explicit `project --jsonl PATH --jsonl-only` uses the same guarded export path.
+
+### Per-Mac installation and retry
+
+Use this existing procedure per device; do not assume another Mac's paths, jobs,
+available agents or history. Inspect the actual source, helper/writer versions,
+storage config, exporter plist and tailer cursor paths before replacing anything.
+Back them up privately, verify hashes, install the helper before enabling capture,
+and preserve existing job arguments and intervals. Install only the adapters that
+the device uses. A missing collector source is not permission to reset its cursor.
+
+If a valid CLIO config already exists, retain its database and owner, query/drain it
+and upgrade the runtime files; do not initialize or activate a second store. If a
+database exists without config, inspect its schema, owner and import receipts before
+resuming the interrupted install; never delete/reinitialize it just to make retry
+pass. Keep incomplete backups and pending receipts until accounted for. A busy lock,
+changed source or failed verification should leave the current capture mode intact.
+Use `--db` and `activate --source` for a device's inspected alternate paths; use
+`--fresh` only when the legacy source genuinely does not exist.
+
+Prefer `--capture-only` while shared-note ownership or historical reconciliation is
+unresolved. Verify the installed shared writer, receipt draining and full-history
+compatibility export before pointing downstream readers at the new source. Keep
+unavailable historical data in its verified original backups without claiming it is
+in SQLite. Imported laptop adoption stores are private history namespaces, not proof
+of installed device identities; inspect their retained mapping before a later device
+installation to avoid importing the same historical log under a second origin.
+
+After each install, verify the routes actually present on that Mac, inspect pending
+receipts and exporter status, and confirm source/note/plist preservation. On failure,
+retain diagnostics and SQLite-era arrivals, use the rollback below, and adapt the
+existing procedure to the observed device rather than adding another job or writer.
+
 1. Pause the Markdown exporter on **every device writing the shared note**, and
    designate one publisher. Install the updated shared writer/helper, exporter and
    tailers; verify all registrations use them. Preserve source JSONL, registrations
@@ -392,6 +435,16 @@ SQLite database, its WAL, or its pending directory in a synchronized folder.
    entry formats or missing device records stop migration for reconciliation. No
    entries are guessed or discarded. The note itself is unchanged until publication.
 
+   If the operator explicitly accepts unrecoverable historical gaps or repeated
+   sections, use `migrate-view --publishers-paused --archive-unreconciled-note`.
+   This preserves the entire original note in the same exclusive verified backup
+   and keeps the exact header through the first historical marker. Remaining
+   original content is archived, not claimed imported into SQLite: the receipt
+   reports `coverage: archived-not-reconciled` and `covered_entries: null`.
+   Default migration still requires full entry parity. This option retains the
+   single-publisher assertion, destination checks, backup verification, and
+   rejection of later foreign edits. It never guesses lost prompt metadata.
+
    `--publishers-paused` asserts that you paused all shared-note writers and selected
    this publisher; it does not discover or control other Macs. Verify fleet convergence
    and resolve the existing Pulse ownership dependency before shared deployment.
@@ -441,8 +494,10 @@ python3 ~/.claude/hooks/clio-store.py query \
   --reference https://github.com/HiQS-Labs/XYZ-CLIO/issues/3 --explain
 ```
 
-Queries use SQLite `mode=ro` and `query_only`, never initialize a missing DB, and use
-bound parameters. Text is a literal, case-sensitive substring. Results include
+Queries open the existing CLIO DB with SQLite `mode=rw` and enforce SQL
+`query_only` before reading. This permits WAL/SHM bookkeeping across SQLite
+runtimes while refusing changes to event data. Queries never initialize a missing
+DB and use bound parameters. Text is a literal, case-sensitive substring. Results include
 prompt, time, device (`machine`), agent, session, branch, checkout, canonical repo
 when supplied, identity, references and extras. `--origin` filters the stable store
 owner rather than a mutable human device label. Tailers include `source_event_id`
@@ -764,3 +819,22 @@ rm -f ~/.claude/hooks/clio-capture.sh ~/.claude/hooks/clio-store.py ~/.claude/ho
 - **Legacy render filtering (reversible):** `PROMPT_LOG_EXCLUDE` defaults to `file-based relay|cross-agent dependency drift`; matching text stays in raw JSONL but is omitted from the Markdown (reported as `state: excluded` by `--status`). Set it empty to render all prompts.
 - **Legacy resetting:** deleting the state file rescans JSONL, but ID-based note deduplication prevents a duplicate rendered entry. The manifest is intentionally independent of that cursor.
 - **Errors:** legacy hooks skip invalid/filtered prompts; tailers return nonzero on retryable failures. SQLite capture acknowledges only committed or durably queued rows and returns nonzero when no receipt can be saved. Failures and drop diagnostics go to `~/.claude/prompt-log-errors.log`; tailers surface lock/parse failures there too and never advance a cursor over undelivered rows; a manifest receipt failure is reported but never rolls back a successful export.
+
+### Device-independent replica integration (source capability; rollout pending)
+
+The existing capture scripts, SQLite schema and five-minute exporter stay in place. Git Pulse/Rebalance #282 must call CLIO's snapshot interface within its existing schedule; CLIO does not fetch, push or install another timer. Each device has a unique persistent origin UUID and an independent full-history SQLite replica. Only committed `devices/<origin-UUID>/clio.jsonl` snapshots from the configured private checkout are imported; dirty files are ignored.
+
+After registering the same existing note with `migrate-view`, configure a trusted inventory including this device and every preserved origin:
+
+```bash
+python3 ~/.claude/hooks/clio-store.py configure-fleet /path/to/private/pulse-checkout \
+  --origin <this-origin-UUID> --origin <other-origin-UUID> --repair-generated-note
+python3 ~/.claude/hooks/clio-store.py reconcile-fleet
+python3 ~/.claude/hooks/clio-store.py export-device /path/to/private/pulse-checkout/devices/<this-origin-UUID>/clio.jsonl
+```
+
+Use real canonical UUIDs, not the placeholders above. The checkout must have a committed HEAD. A one-time `export-device ... --origin <known-legacy-origin>` can seed preserved adoption history. Normal exports contain only the local origin, and reconcile runs before serialization to restore committed own history after backup recovery. Generic `import-device` still refuses self-import. Query output includes last reconciliation and note status; a local committed snapshot is not proof that another Mac received it.
+
+`--repair-generated-note` explicitly makes the content below `<!-- CLIO:ENTRIES -->` machine-owned. Keep personal edits above that marker. Exact header and verified original backup remain protected. Unknown or merged bodies are archived completely and verified before replacement; unknown record IDs defer replacement for at most two hours while capture, imports and compatibility JSONL continue. Archives are private, deduplicated, limited to 128 files/256 MiB total (64 MiB each), and never automatically deleted. Capacity exhaustion refuses replacement and appears in status. A missing derived note can rebuild in this mode. Without opt-in, the original foreign-edit refusal remains.
+
+Obsidian Sync can merge Markdown. Compare-before-replace cannot fence an edit arriving after its final comparison; archive protects observed bytes, not an unseen concurrent write. Before enabling a second Mac, native #282 must land and a disconnected/rejoin pilot must cover at least three existing Pulse intervals, expiry, source parity, header preservation and conflict archival. Record archive growth and stop rollout if projected capacity is below 180 days. No fleet runtime or Sync setting is changed by this PR.

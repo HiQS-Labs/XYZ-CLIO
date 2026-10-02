@@ -13,7 +13,7 @@ reversibility: Costly at deployed cutover; Easy in isolated fixtures
 
 | Most recently completed phase | What's next |
 |---|---|
-| Phase 1 merged as fd48d1c; Agy QA and final gate passed; local runtime installed | Phase 2 consumer work is eligible; fleet blocked on #282; rolling pilot blocked on missing history, note reconciliation and one publisher |
+| Phase 1 merged as fd48d1c; Agy QA and final gate passed; local runtime installed | Local capture-only active; Phase 2 consumers eligible; rolling note not cut over; fleet blocked on #282 |
 
 ## Table of contents
 - [Phase 1: Local history and export contract](#phase-1-local-history-and-export-contract)
@@ -44,7 +44,7 @@ Migration is additive, not in-place transformation: importer reads complete JSON
 
 Compatibility JSONL is a derived, atomic chronological (timestamp,record_id) full-history export, retaining seven legacy fields plus additive provenance. Schedule catches projection failures without rolling back capture. Keep compatibility JSONL separate from the active legacy capture log while mixed writers remain; publish Markdown only at the registered existing Obsidian destination. The revised migrate-view command registers the existing Obsidian path after coverage and backup checks; project defaults to that registered path and the existing job invocation is unchanged. Existing exporter gets an explicit SQLite mode/config path; legacy mode and cursor/manifest retain original meaning. Existing60second job can invoke new mode for drain+projection with no new timer. Same snapshot+cutoff produces same bytes. UTC display avoids timezone-dependent output; all metadata and full quoted multiline prompts included. Render in timestamp descending, record_id descending order (compatibility JSONL remains timestamp ascending, record_id ascending). Select cutoff−168h ≤ timestamp ≤ cutoff; future rows retained in DB but excluded from view. Empty view states empty. Report rows and bytes; never truncate. Atomic temp+fsync+replace in destination directory preserves prior file on failure. Do not update old permanent receipt/cursor for rolling view.
 
-Read-only query opens URI mode=ro with query_only; never initializes/migrates. Parameterized filters: from/to UTC, repo/repo_slug, device, agent, session, recordID, text, issue/PR/ledger reference, limit/offset with deterministic time+ID ordering. Return complete metadata and typed references. Add time and common filter indexes. Start substring text search; evaluate available FTS5 on nonempty measurements, add only if justified. Explicit links use fully qualified issue/PR URLs or ledger repository+rowID and relation `mentioned`/`task-context`; no NLP ownership inference, no automatic accepted-start/status writes. CLI accepts explicit metadata context; historical unknown checkout stays unknown. Captured Codex cwd should be preserved (currently dropped).
+Read-only query opens existing-file URI mode=rw with query_only before validation, permitting WAL bookkeeping across runtimes; never initializes/migrates. Parameterized filters: from/to UTC, repo/repo_slug, device, agent, session, recordID, text, issue/PR/ledger reference, limit/offset with deterministic time+ID ordering. Return complete metadata and typed references. Add time and common filter indexes. Start substring text search; evaluate available FTS5 on nonempty measurements, add only if justified. Explicit links use fully qualified issue/PR URLs or ledger repository+rowID and relation `mentioned`/`task-context`; no NLP ownership inference, no automatic accepted-start/status writes. CLI accepts explicit metadata context; historical unknown checkout stays unknown. Captured Codex cwd should be preserved (currently dropped).
 
 Device export is an explicit atomic versioned snapshot (stable records plus device ID, generated UTC, row count and content digest), imported idempotently with retained origin; no upload/push within CLIO. File contract devices/<device-id>/clio.jsonl uses an embedded first-line manifest so payload and digest publish in one atomic file, with one device owner; imported records must not be re-exported as local. Provide a staged export command and example for existing publisher integration; transport/combined read is Phase 2, not falsely called active fleet sync. No live SQLite/WAL sync.
 
@@ -119,3 +119,91 @@ Same-path revision completed: existing Obsidian path/filename and plist remain u
 Review takeover and ordered merge/deployment continuation: [gh3-handoff.md](gh3-handoff.md). PR review follow-up Approved by independent Codex round1 (attested exit0); four shell suites plus 16 SQLite cases passed afterward on unchanged implementation. See TESTS-RESULTS/2026-09-30-gh3-review-followup/.
 
 2026-09-30 deployed-source update: Agy round2 Approved (attested exit0), final five-suite gate passed, PR4 merged; five runtime files installed with existing plists and note bytes preserved. SQLite/rolling activation is held on actual coverage and ambiguous-note guards. See TESTS-RESULTS/2026-09-30-gh3-local-runtime/. Earlier “not authorized”/await-merge handoff language records prior scope; the latest user explicitly authorized merge and local deployment.
+
+
+2026-09-30 local capture continuation (latest operator scope): the supplied eleven-file collection is final; the operator accepts unrecoverable older MacStudio history and requires no further recovery chase. Preserve the original note and all decoded sources privately. Implement explicit activate --capture-only: SQLite capture plus existing scheduled full-history compatibility JSONL, without any Markdown replacement. Extend the existing project function with guarded JSONL-only output; retain default fail-closed behavior for activation without this explicit mode and all migrate-view gates. No timer, collector, shared writer, new Markdown note, vector store, push loop or ledger writer. Imported legacy laptop histories receive separate local adoption-store origins; these are not claims about future installed device UUIDs. Skip the Mini’s copied Studio history after proving exact subset equivalence. Other Macs stay unchanged until individual installation. Same-path rolling publication remains separate from this capture-only stage; the known active laptop publishers make it inappropriate here.
+
+Reversibility: code Easy; installed activation Costly. Back up scripts, source, cursor, registrations and note privately; verify import accounting. Rollback must pause capture, drain receipts and export all SQLite-era events before restoring legacy capture. The original note alone is not a history rollback. Existing storage activation test covers all four shared-writer routes, scheduled JSONL-only publication, unchanged note/plist/source and rejection of unsafe outputs and incomplete migration. A false capture-only flag witnessed the scheduled-export failure; no new suite. Independent relay and final existing suites precede runtime installation.
+
+Local capture continuation deployed: SQLite active, existing five-minute job healthy with JSONL-only compatibility refresh, downstream configured, note preserved. Operator accepts unrecovered older history; no further collection. Other Macs remain per-install work. Rolling-note/fleet acceptance remains unclaimed.
+
+### 2026-10-01 authorized same-path cutover
+
+The operator confirms CLIO is turned off on all other devices and authorizes
+activating the same-note seven-day view. The current note has ten historical
+section markers; the accepted historical gap prevents strict parity. Extend the
+existing migration with explicit `--archive-unreconciled-note`: preserve the
+whole note with its verified exclusive backup, use the header through the first
+marker, and report archived-not-reconciled/null covered count. Default migration,
+publisher assertion, target identity, hashes, and foreign-write refusal stay
+strict. No recovery chase, metadata reconstruction, new service or note.
+
+Cutover is Costly: it replaces the live note body. Rollback must retain all
+SQLite-era arrivals and restore the verified original note/config while the
+local exporter is stopped. Check synthetic repeated-marker migration and
+post-publication foreign edits in the existing activation case, independently
+review, then run existing suites in a disposable full clone before deployment.
+
+### 2026-10-01 no required machine — revised architecture plan
+
+The operator rejects a permanent Studio hub. [gh3-device-independent-plan.md](gh3-device-independent-plan.md) is the new fleet architecture, superseding that assumption: every Mac holds full replicated history through existing Git Pulse; travel capture/query/same-note refresh must work with Studio off. Current local pilot remains installed unchanged. Note transport choice requires explicit resolution; no automatic failover is claimed.
+
+### 2026-10-01 triangulate/start-task writer repair
+
+Resume issue #3 in retained clone, PR #5 main, HEAD37175a4. Native issue/plan
+record is used; no PDDA/RELEASES infrastructure exists in CLIO. Overall issue
+rating (LLM, no operator override): rated 90/85/50/45. Priority reflects imminent
+travel and observed publication outage; severity is recoverable work-blocking
+stale publication, not lost capture. Appeal neutral50. Fleet work crosses repos,
+hence modest cheapness45. Recurrence: one observed continuing incident with
+repeated scheduled failures; manual recovery relapsed. Last14-day trend beyond
+issue3 and its receipts is unknown, not inferred growing from duplicate runs.
+
+Triangulate card: writer fix reversible x contained (all database helper callers
+already enumerated); route known live bug through debug-mantra. Fleet authority
+remains irreversible x crossing/full floor, grounded by recon-gh3-device-independent
+and prior delta. No source-of-truth migration occurs in this writer fix.
+
+Falsifier survived: private synthetic DB created by Homebrew SQLite3.53.4, no
+WAL/SHM; Apple3.43.2 mode=ro SELECT fails unable to open database file. Same
+file/Apple version mode=rw+query_only=ON SELECT succeeds and DELETE is refused.
+Actual live database shows the same version-dependent result. Sidecars present
+then permit Apple mode=ro, explaining transient recovery. An existing readonly
+case alone passes because its initialization does not force this cross-version
+cold-open condition; extend that same case, no new suite.
+
+Root cause: application-owned WAL database opens with mode=ro across SQLite
+versions when auxiliary sidecars are absent; Fix site: database connection helper;
+Why not upstream/downstream: captures and renderer succeed; changing schedule,
+keeping a permanent connection or forcing one Python installation would conceal
+the connection contract rather than repair it.
+
+Smallest reviewed plan: use mode=rw for existing CLIO application DB connections,
+retain query_only for every reader, set it before validation reads. rw never
+creates a missing main DB. No immutable mode (live WAL data would be unsafe),
+no broad retries, WAL copying, timer/service or collector edits. External source
+metadata readers retain their mode=ro contract. Blast: helper queries/projection/
+backup/export now allow SQLite auxiliary bookkeeping; event mutations remain
+forbidden for readers and schema/owner checks remain. Easy code rollback; local
+installation still preserves helper/config/note/DB backups and existing schedule.
+
+1. Codex plan QA of this precise scope and proofs -> Approved before code edits.
+2. Extend existing readonly acceptance case for a fresh Homebrew-created DB,
+   absent sidecars and Apple helper query, nonempty record, preserved payload;
+   retain DELETE rejection/missing-DB check -> red on old helper, green with fix.
+3. Change only connection mode/query_only order -> both SQLite runtimes query
+   fresh WAL state; no missing DB creation or DML permitted.
+4. Codex final review with focused receipts -> Approved; final existing suites
+   once in disposable full clone, including16cases under both installedPython
+   runtimes, actual scheduled-shaped PATH -> pass and Git identity unchanged.
+5. Update PR5/issue3 and prepare current-authorized local runtime repair with
+   verified backups; observe real launchd invocation without priming sidecars ->
+   success, newcapture rendered, exact seven-day ID/payload membership.
+
+Fleet remains dependent on unmerged CLIO PR5 and native Rebalance#282; do not
+merge either just to continue. Same-note fleet transport/exact-file exclusion is
+unresolved; manual permanent Studio hub is explicitly rejected. No new fleet
+pusher, Sync change, remote capture re-enablement or private-history upload in
+this writer repair. Record blocked dependencies without calling issue3 complete.
+
+2026-10-01 PT closure of local repair scope: Codex plan/final/incremental approvals, witnessed cold-WAL and explicit-db red controls, final four shell suites plus16cases under both runtimes, and backed-up installed launchd/cold-open/normal-schedule/explicit-db success recorded in TESTS-RESULTS/2026-10-01-gh3-wal-repair/. Collector scripts and schedule unchanged. This completes the local writer repair, not fleet issue3; dependencies and note transport remain as above.

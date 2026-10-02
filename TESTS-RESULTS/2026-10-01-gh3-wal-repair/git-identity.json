@@ -1,0 +1,15 @@
+{
+  "before": {
+    "head": "2a64aa84586c27c8329ae7f63fe885978bebcafd\n",
+    "remotes": "origin\t/Users/noelsaw/task-clones/clio-gh3-sqlite/. (fetch)\norigin\t/Users/noelsaw/task-clones/clio-gh3-sqlite/. (push)\n",
+    "bare": "false\n",
+    "email": ""
+  },
+  "after": {
+    "head": "2a64aa84586c27c8329ae7f63fe885978bebcafd\n",
+    "remotes": "origin\t/Users/noelsaw/task-clones/clio-gh3-sqlite/. (fetch)\norigin\t/Users/noelsaw/task-clones/clio-gh3-sqlite/. (push)\n",
+    "bare": "false\n",
+    "email": ""
+  },
+  "unchanged": true
+}

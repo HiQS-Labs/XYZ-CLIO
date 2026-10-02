@@ -1,0 +1,20 @@
+{
+  "stage": "installed",
+  "integrity": "ok",
+  "history_rows": 3935,
+  "recent_rows": 299,
+  "exact_note_id_set": true,
+  "rendered_payloads_preserved": true,
+  "compatibility_full_history": true,
+  "personal_header_preserved": true,
+  "original_backup_verified": true,
+  "launchd_exit": 0,
+  "cutoff": "2026-10-02T05:29:37.863886Z",
+  "helper_sha256": "441c21905b21239271328538debd8af1ec8a72b53cf1b0b152294cb7171ca2b6",
+  "cold_sidecars_before_launchd": [
+    false,
+    false
+  ],
+  "diagnostic_hook_exit": 0,
+  "diagnostic_in_database_and_note": true
+}

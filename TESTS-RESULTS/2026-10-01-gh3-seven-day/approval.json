@@ -1,0 +1,10 @@
+{
+  "reviewer": "claude",
+  "model": "claude-fable-5-1",
+  "effort": "medium",
+  "status": "Approved",
+  "reviewed_head": "abfc004fbc92a2d7d06ca93ddba98ae9eb37b7b9",
+  "added_sha256": "7b2c987f00c57c50dfb7f0b91a8e9ce7623d61c869b9076d1562a014840a2b68",
+  "at": "2026-10-01T22:09:16Z",
+  "post_review_changes": "Rendering wording clarified per reviewer nit, trailing whitespace removed; all 16 SQLite cases rerun successfully."
+}

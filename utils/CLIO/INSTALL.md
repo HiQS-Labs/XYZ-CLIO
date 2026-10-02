@@ -841,6 +841,8 @@ Obsidian Sync can merge Markdown. Compare-before-replace cannot fence an edit ar
 
 ### Studio activation milestone — 2026-10-02
 
+This supersedes the pre-landing wording above for the Studio only.
+
 CLIO #5 and Rebalance #303 are merged. The Studio has the canonical helper installed and
 its three known preserved origins bootstrapped once into the private Git Pulse checkout.
 Normal exports carry only its own origin; imported history remains in the full local SQLite

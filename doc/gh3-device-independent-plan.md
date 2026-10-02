@@ -169,6 +169,6 @@ H1 implemented: scheduled destination accepts either the canonical registered fi
 
 Agy plan, Fable5.1 HIGH plan and final Fable5.1 HIGH implementation relays are attested Approved; exact reviewed heads and hashes are in TESTS-RESULTS/2026-10-02-gh3-auto-recovery/qa-receipts.json. Existing four shell suites and16 SQLite cases under both runtimes cover the unchanged reviewed helper, with identity and source hashes recorded. No installation/Sync changes, merge or clone cleanup occurred. Native Rebalance#282 wiring/landing and the >=3-Pulse-interval disconnected fleet pilot remain open deployment gates. Installed Studio continues its earlier verified local pipeline; other devices remain disabled. Retain this clone until origin landing is verified.
 
-## Local landing milestone
+## Local landing milestone (supersedes the source delivery handoff above)
 
 CLIO #5 landed at 6a53a38 and Rebalance #303 at bb84cd0. Studio activation preserves the known full SQLite history, all verified backup records/payloads, the exact personal header and same seven-day note path. The installed schedules and IDE collectors remain unchanged. Other Macs remain disabled; actual offline/rejoin and source/archive-capacity qualification remains required before their per-case installation. See INSTALL.md and Rebalance #282 for deployment lessons and receipts.

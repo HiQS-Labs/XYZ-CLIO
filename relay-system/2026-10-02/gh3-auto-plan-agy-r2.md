@@ -99,4 +99,12 @@ Basis: The automatic-recovery plan is sound, correctly bounded, explicitly separ
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-10-02T06:08:00Z
+task: CLIO-GH3-AUTO-PLAN-AGY-R2
+reviewer: agy
+status: Approved
+reviewed-head: 781538c61d9b0e664ec43fc1cf509fc8303934ef
+added-range: 6699+1944
+added-sha256: fa0efc43a583306cbdab13a7041b369c60cf44c1490ded870b251193d87aa757
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

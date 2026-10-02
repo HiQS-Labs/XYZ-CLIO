@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,23 @@ Committed candidate ready for independent review; no installed changes.
 
 VERDICT: PASS
 Basis: Ready for QA.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Reconfirming the plan approval as instructed. The automatic-recovery revision correctly scopes the mechanism without adding new services or multi-writer database conflicts.
+
+- [Pass] Trusted committed snapshot imports, no echo/bootstrap old origins. Citation: `doc/gh3-device-independent-plan.md:111` ("read ONLY `devices/<UUID>/clio.jsonl` committed blobs... Skip own-origin insertion").
+- [Pass] Eventual generated-note convergence under Obsidian Sync with exact byte reproduction and protected personal header/content. Citation: `doc/gh3-device-independent-plan.md:117` ("exact byte equality to rendering those records... human/unsupported body or header edits remain untouched").
+- [Pass] Honest unknown/human race limits. Citation: `doc/gh3-device-independent-plan.md:119` ("Unexpected human-content races remain a limitation requiring pilot observation").
+- [Pass] Scheduled path reuse, no new publisher/service/store. Citation: `doc/gh3-device-independent-plan.md:113` ("No new schema/version/store or ledger writer") and `:115` ("No extra scheduler/pusher").
+- [Pass] Bounds/rollback/proofs. Citation: `doc/gh3-device-independent-plan.md:111` ("Bound Git calls") and `:79` ("Rollback stops the new adapter/projectors").
+- [Pass] CLIO-only source PR5 and native Rebalance282 wiring/deployment boundary explicitly separate; no claim existing GPS already invokes CLIO. Citation: `doc/gh3-device-independent-plan.md:115` ("Collector wiring stays native Rebalance#282... This PR provides callable CLIO seams and executable simulated proof") and `:89` ("This handles Git publication transport; it does not implement CLIO replica import").
+
+VERDICT: PASS
+Basis: The automatic-recovery plan is sound, correctly bounded, explicitly separated from Rebalance#282, and relies on exact byte parity over eventual sync rather than unstable shared-file locks.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

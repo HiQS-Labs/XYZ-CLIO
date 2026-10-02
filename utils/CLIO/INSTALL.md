@@ -494,8 +494,10 @@ python3 ~/.claude/hooks/clio-store.py query \
   --reference https://github.com/HiQS-Labs/XYZ-CLIO/issues/3 --explain
 ```
 
-Queries use SQLite `mode=ro` and `query_only`, never initialize a missing DB, and use
-bound parameters. Text is a literal, case-sensitive substring. Results include
+Queries open the existing CLIO DB with SQLite `mode=rw` and enforce SQL
+`query_only` before reading. This permits WAL/SHM bookkeeping across SQLite
+runtimes while refusing changes to event data. Queries never initialize a missing
+DB and use bound parameters. Text is a literal, case-sensitive substring. Results include
 prompt, time, device (`machine`), agent, session, branch, checkout, canonical repo
 when supplied, identity, references and extras. `--origin` filters the stable store
 owner rather than a mutable human device label. Tailers include `source_event_id`

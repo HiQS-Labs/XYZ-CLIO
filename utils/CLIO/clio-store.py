@@ -88,17 +88,19 @@ def config():
 
 def database(path, writable=False):
     path = Path(path).expanduser().absolute()
-    mode = 'rw' if writable else 'ro'
+    # Existing-file rw permits WAL housekeeping across SQLite runtimes.
+    # query_only below protects event data; rw never creates a missing DB.
+    mode = 'rw'
     conn = sqlite3.connect('file:' + quote(str(path), safe='/') + '?mode=' + mode,
                            uri=True, timeout=0.5)
     conn.row_factory = sqlite3.Row
     try:
+        if not writable:
+            conn.execute('PRAGMA query_only=ON')
         if conn.execute('PRAGMA application_id').fetchone()[0] != APP_ID:
             raise ValueError('not a CLIO database')
         if conn.execute('PRAGMA user_version').fetchone()[0] != VERSION:
             raise ValueError('unsupported CLIO schema version')
-        if not writable:
-            conn.execute('PRAGMA query_only=ON')
         return conn
     except Exception:
         conn.close()

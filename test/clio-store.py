@@ -386,6 +386,29 @@ class History(unittest.TestCase):
         with self.assertRaises(sqlite3.OperationalError):
             store.database(missing)
         self.assertFalse(missing.exists())
+        # Exercise the launchd interpreter against a cold database made by this
+        # interpreter. On macOS these can use different SQLite versions.
+        if sys.platform == 'darwin' and Path('/usr/bin/python3').exists():
+            cold = self.home / 'cross-runtime.sqlite3'
+            helper = ROOT / 'utils/CLIO/clio-store.py'
+            source = self.source([self.row(prompt='Synthetic cold WAL Unicode: 日本語')])
+            for command in (['init'], ['import-jsonl', str(source)]):
+                subprocess.run([sys.executable, str(helper), '--db', str(cold), *command],
+                               check=True, capture_output=True, text=True)
+            # The creator has exited and checkpointed its committed data. A
+            # separate main-file copy forces absent sidecars on either runtime.
+            cold_copy = self.home / 'cold-copy.sqlite3'
+            shutil.copyfile(cold, cold_copy)
+            cold = cold_copy
+            for suffix in ('-wal', '-shm'):
+                self.assertFalse(Path(str(cold) + suffix).exists())
+            result = subprocess.run(['/usr/bin/python3', str(helper), '--db', str(cold),
+                                     'query', '--limit', '1'],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            records = json.loads(result.stdout)['records']
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]['prompt'], 'Synthetic cold WAL Unicode: 日本語')
 
     def test_device_roundtrip_preserves_owner_extras_and_no_echo(self):
         path = self.source([self.row(machine='', agent='', client_extension={'version': 2})])

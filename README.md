@@ -3,8 +3,8 @@
 > [INSTALL.md](utils/CLIO/INSTALL.md#sqlite-history-and-seven-day-view-opt-in-pilot).
 > Migration keeps the existing Obsidian path and exporter schedule, with a verified
 > backup and complete old-note coverage before switching. Existing installations
-> stay on JSONL until explicit migration/activation. Fleet
-> publishing and Rebalance's provenance upgrade remain dependent rollout work.
+> stay on JSONL until explicit migration/activation. Studio fleet delivery is locally deployed through Rebalance #303;
+> the four-Mac/offline qualification and provenance upgrade remain tracked rollout work.
 > The helper now supports committed origin reconciliation and opt-in recovery of
 > the same combined fleet note; see the device-independent integration section
 > in INSTALL.md. No new Git push loop or task-status writer is introduced.

@@ -530,7 +530,7 @@ python3 ~/.claude/hooks/clio-store.py import-device /private/received/clio.jsonl
 A snapshot is one atomic file: versioned first-line manifest (owner UUID, generation
 UTC, count and content hash), followed by source records. The caller can stage it at
 `devices/<owner-uuid>/clio.jsonl` for the existing Git Pulse Sync publisher. CLIO never
-commits, pushes or creates a timer. That integration is blocked on Rebalance #282's
+commits, pushes or creates a timer. That integration uses Rebalance #282's
 file ownership/publisher work; a local query is **not** proof of complete fleet coverage.
 Read accepted snapshot receipts from `device_imports` to see the source generation and
 receipt time. Expected/missing device reporting belongs in the downstream consumer.
@@ -838,3 +838,26 @@ Use real canonical UUIDs, not the placeholders above. The checkout must have a c
 `--repair-generated-note` explicitly makes the content below `<!-- CLIO:ENTRIES -->` machine-owned. Keep personal edits above that marker. Exact header and verified original backup remain protected. Unknown or merged bodies are archived completely and verified before replacement; unknown record IDs defer replacement for at most two hours while capture, imports and compatibility JSONL continue. Archives are private, deduplicated, limited to 128 files/256 MiB total (64 MiB each), and never automatically deleted. Capacity exhaustion refuses replacement and appears in status. A missing derived note can rebuild in this mode. Without opt-in, the original foreign-edit refusal remains.
 
 Obsidian Sync can merge Markdown. Compare-before-replace cannot fence an edit arriving after its final comparison; archive protects observed bytes, not an unseen concurrent write. Before enabling a second Mac, native #282 must land and a disconnected/rejoin pilot must cover at least three existing Pulse intervals, expiry, source parity, header preservation and conflict archival. Record archive growth and stop rollout if projected capacity is below 180 days. No fleet runtime or Sync setting is changed by this PR.
+
+### Studio activation milestone — 2026-10-02
+
+CLIO #5 and Rebalance #303 are merged. The Studio has the canonical helper installed and
+its three known preserved origins bootstrapped once into the private Git Pulse checkout.
+Normal exports carry only its own origin; imported history remains in the full local SQLite
+replica. Actual render, collector delivery, committed-history reconcile and the SAME seven-day
+Obsidian note/header passed. Existing capture hooks and the five-minute exporter were left
+running; five delivery jobs were briefly unloaded and restored with identical plist hashes.
+The verified database/note/script/config backups remain private. Historical gaps stay accepted.
+
+Lessons: update a copied collector separately from its source checkout; use the metadata owner
+UUID rather than a hostname; bootstrap known preserved origins explicitly once, then prevent
+normal foreign-origin echo; check exact backup record payloads as well as counts. An old heartbeat
+uses legacy health until the upgraded collector first advertises fleet mode. Verify queued output
+becomes delivered output after that first check-in. Keep SQLite/WAL private and local.
+
+Other Macs remain disabled. This local milestone does not qualify complete four-Mac source
+coverage, actual disconnected/rejoin behavior over three scheduled Pulse intervals, observed
+Sync conflicts/archive capacity or seven-day delivery rates. The final filesystem comparison
+cannot fence an unseen concurrent Obsidian Sync edit. Track those gates in native
+[Rebalance #282](https://github.com/HiQS-Labs/rebalanceOS/issues/282), alongside the committed
+local deployment receipt and configuration-error hardening. No further history collection is required.

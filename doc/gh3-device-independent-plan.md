@@ -1,6 +1,6 @@
 # CLIO without a required Mac — replicated SQLite through Git Pulse
 
-Date: 2026-10-01. Status: earlier Agy-approved staged plan superseded for automatic note recovery; revised mechanism below awaits Agy then Claude Fable high plan QA. No fleet deployment readiness claimed. Canonical issue: https://github.com/HiQS-Labs/XYZ-CLIO/issues/3 . Recon: [recon-gh3-device-independent.md](recon-gh3-device-independent.md).
+Date: 2026-10-02. Status: revised plan and implementation independently approved; CLIO #5 merged and Studio fleet integration deployed through Rebalance #303. Four-Mac/offline/shared-note qualification remains open. Canonical issue: https://github.com/HiQS-Labs/XYZ-CLIO/issues/3 . Recon: [recon-gh3-device-independent.md](recon-gh3-device-independent.md).
 
 This supersedes the permanent Studio-hub assumption in gh3-plan.md and gh3-same-path-plan.md. Their shipped capture, verified backup, same-path header and accepted-gap contracts remain. This is a plan, not authorization to upload private history, restart other Macs, change Sync settings, or modify installed jobs during this turn.
 
@@ -168,3 +168,7 @@ H1 implemented: scheduled destination accepts either the canonical registered fi
 ### Source delivery handoff — 2026-10-02
 
 Agy plan, Fable5.1 HIGH plan and final Fable5.1 HIGH implementation relays are attested Approved; exact reviewed heads and hashes are in TESTS-RESULTS/2026-10-02-gh3-auto-recovery/qa-receipts.json. Existing four shell suites and16 SQLite cases under both runtimes cover the unchanged reviewed helper, with identity and source hashes recorded. No installation/Sync changes, merge or clone cleanup occurred. Native Rebalance#282 wiring/landing and the >=3-Pulse-interval disconnected fleet pilot remain open deployment gates. Installed Studio continues its earlier verified local pipeline; other devices remain disabled. Retain this clone until origin landing is verified.
+
+## Local landing milestone
+
+CLIO #5 landed at 6a53a38 and Rebalance #303 at bb84cd0. Studio activation preserves the known full SQLite history, all verified backup records/payloads, the exact personal header and same seven-day note path. The installed schedules and IDE collectors remain unchanged. Other Macs remain disabled; actual offline/rejoin and source/archive-capacity qualification remains required before their per-case installation. See INSTALL.md and Rebalance #282 for deployment lessons and receipts.

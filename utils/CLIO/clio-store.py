@@ -597,6 +597,8 @@ def checked_view(conn, path, target):
         raise ValueError('note exceeds fleet repair size bound; preserved in place')
     original = target.read_bytes()
     current = digest(original)
+    if current in view['accepted_hashes']:
+        view.pop('waiting_since', None)
     if current not in view['accepted_hashes']:
         if not repair:
             raise ValueError('note changed outside this publisher; preserve and reconcile edits before exporting')
@@ -918,7 +920,7 @@ def git_read(checkout, args, deadline):
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise TimeoutError('fleet reconciliation budget exhausted')
-    env = dict(os.environ)
+    env = dict(os.environ, GIT_NO_LAZY_FETCH='1')
     for key in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_NAMESPACE'):
         env.pop(key, None)
     try:
@@ -1001,7 +1003,7 @@ def reconcile_fleet(path):
                 if owner == cfg['owner'] and (result['added'] or result['label_restored']):
                     result['warning'] = 'own history restored; verify no duplicate live owner'
                 status['origins'].append(result)
-            except (ValueError, KeyError, TypeError, OSError, sqlite3.Error, TimeoutError) as error:
+            except (ValueError, KeyError, TypeError, AttributeError, OverflowError, OSError, sqlite3.Error) as error:
                 status['origins'].append({'owner': owner, 'state': 'error', 'error': type(error).__name__})
         status['partial'] = any(item['state'] != 'accepted' for item in status['origins'])
         status['archives'] = recovery_metrics(path)
@@ -1103,6 +1105,8 @@ def main():
                     existing_destination(args.markdown)
                 elif not activated.get('view'):
                     raise ValueError('register the existing note before scheduled publication')
+                elif Path(args.markdown).expanduser().resolve() != Path(activated['view']['path']):
+                    raise ValueError('scheduled destination differs from registered note')
             if activated.get('fleet'):
                 errors = []
                 try:
@@ -1112,7 +1116,7 @@ def main():
                     errors.append(type(error).__name__)
                 try:
                     fleet_result = reconcile_fleet(path)
-                except (ValueError, OSError, sqlite3.Error) as error:
+                except (ValueError, TypeError, KeyError, AttributeError, OverflowError, OSError, sqlite3.Error) as error:
                     fleet_result = {'configured': True, 'partial': True, 'error': type(error).__name__}
                 # Compatibility output is independent of every note refusal.
                 result = project(path, jsonl=Path.home() / '.claude/prompt-log-compat.jsonl', jsonl_only=True)
@@ -1129,7 +1133,7 @@ def main():
                     with contextlib.closing(database(path)) as conn:
                         latest = active_config(conn, path)
                         latest.get('view', {})['last_note_status'] = note_status
-                        latest['fleet'].setdefault('last_result', fleet_result)['archives'] = recovery_metrics(path)
+                        latest['fleet']['last_result'] = dict(fleet_result, archives=recovery_metrics(path))
                         atomic(CONFIG, (encode(latest) + '\n').encode())
                 result.update(fleet=fleet_result, note_publication=note_status['state'], note_status=note_status, drain_errors=errors)
             else:

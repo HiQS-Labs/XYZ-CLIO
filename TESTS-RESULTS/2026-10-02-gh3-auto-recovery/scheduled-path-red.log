@@ -1,0 +1,14 @@
+test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History) ... FAIL
+
+======================================================================
+FAIL: test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/task-clones/clio-gh3-sqlite/temp/gh3-review-verification/test/clio-store.py", line 614, in test_device_roundtrip_preserves_owner_extras_and_no_echo
+    self.assertNotEqual(scheduled(node, unrelated).returncode, 0)
+AssertionError: 0 == 0
+
+----------------------------------------------------------------------
+Ran 1 test in 6.846s
+
+FAILED (failures=1)

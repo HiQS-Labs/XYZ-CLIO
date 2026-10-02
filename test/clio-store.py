@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """SQLite acceptance cases using only synthetic data and temporary homes."""
 import argparse
+import contextlib
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import importlib.util
@@ -520,6 +521,10 @@ class History(unittest.TestCase):
         owners = [node[3] for node in nodes]
         def context(node):
             return patch.object(store, 'CONFIG', node[0] / 'config.json')
+        def scheduled(node, destination):
+            return subprocess.run([sys.executable, str(ROOT / 'utils/CLIO/clio-store.py'), '--db', str(node[2]),
+                                   'scheduled-export', str(destination)], capture_output=True, text=True,
+                                  env=dict(os.environ, HOME=str(node[0]), CLIO_CONFIG=str(node[0] / 'config.json')))
         for node in nodes:
             with context(node):
                 store.activate(node[2], node[0] / 'absent.jsonl', fresh=True)
@@ -551,7 +556,7 @@ class History(unittest.TestCase):
                     self.assertFalse(result['partial'], result)
                     store.project(node[2], node[0] / '0. Claude Prompts.md', cutoff=cutoff)
                     bodies.append((node[0] / '0. Claude Prompts.md').read_bytes())
-                    with store.database(node[2]) as conn:
+                    with contextlib.closing(store.database(node[2])) as conn:
                         payloads.append(dict(conn.execute('SELECT record_id,payload FROM events')))
             self.assertTrue(payloads[0])
             self.assertTrue(all(p == payloads[0] for p in payloads))
@@ -577,7 +582,7 @@ class History(unittest.TestCase):
                 store.capture(offline[2], offline[3], self.row(timestamp=store.utc(), source_event_id='restore-' + str(number), repo='original'))
         publish(offline)
         converge()
-        with store.database(offline[2], True) as conn:
+        with contextlib.closing(store.database(offline[2], True)) as conn:
             old = list(conn.execute('SELECT record_id,payload FROM events WHERE origin_id=?', (offline[3],)))
             for record_id, payload in old:
                 row = json.loads(payload)
@@ -588,11 +593,11 @@ class History(unittest.TestCase):
             out = offline[0] / 'restored.jsonl'
             store.export_device(offline[2], out)
             self.assertEqual(store.recovery_metrics(offline[2])['count'], 1)
-            with store.database(offline[2], True) as conn:
+            with contextlib.closing(store.database(offline[2], True)) as conn:
                 self.assertEqual(conn.execute("SELECT count(*) FROM events WHERE repo='replayed'").fetchone()[0], 0)
             self.assertEqual(store.import_device(nodes[1][2], out)['added'], 0)
             # Restore missing committed own history without deleting unsent events.
-            with store.database(offline[2], True) as conn:
+            with contextlib.closing(store.database(offline[2], True)) as conn:
                 conn.execute('DELETE FROM events WHERE record_id=?', (old[0][0],))
                 conn.commit()
             store.capture(offline[2], offline[3], self.row(timestamp=store.utc(), source_event_id='unsent'))
@@ -602,6 +607,59 @@ class History(unittest.TestCase):
             self.assertEqual(own['unsent'], 1)
             with self.assertRaisesRegex(ValueError, 'refuse self-import'):
                 store.import_device(offline[2], out)
+        # Scheduled destination guard, both opt-in fleet and default mode.
+        node = nodes[1]
+        unrelated = node[0] / 'personal.md'
+        unrelated.write_bytes(b'Unrelated personal note\n')
+        self.assertNotEqual(scheduled(node, unrelated).returncode, 0)
+        self.assertEqual(unrelated.read_bytes(), b'Unrelated personal note\n')
+        with context(node):
+            cfg = store.config()
+            fleet_config = cfg.pop('fleet')
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+            self.assertNotEqual(scheduled(node, unrelated).returncode, 0)
+            self.assertEqual(unrelated.read_bytes(), b'Unrelated personal note\n')
+            cfg['fleet'] = fleet_config
+            store.atomic(store.CONFIG, (store.encode(cfg) + '\n').encode())
+        # Peer rendering is regenerable without archive, even at another cutoff.
+        with context(nodes[0]):
+            store.project(nodes[0][2], cutoff=store.utc())
+        peer_bytes = (nodes[0][0] / '0. Claude Prompts.md').read_bytes()
+        # Node0 still has an unsent event: deliver its snapshot before peer note.
+        publish(nodes[0])
+        git(node[1], 'pull', '-q', '--ff-only')
+        with context(node):
+            store.reconcile_fleet(node[2])
+            count = store.recovery_metrics(node[2])['count']
+            note = node[0] / '0. Claude Prompts.md'
+            note.write_bytes(peer_bytes)
+            store.project(node[2])
+            self.assertEqual(store.config()['view']['last_note_repair']['state'], 'peer_generated')
+            self.assertEqual(store.recovery_metrics(node[2])['count'], count)
+        # Bad and missing origins are isolated; note refusal still refreshes compatibility.
+        checkout = node[1]
+        malformed = checkout / 'devices' / owners[2] / 'clio.jsonl'
+        manifest = {'clio_snapshot':1, 'owner':owners[2], 'generated_at':None,
+                    'rows':0, 'sha256':store.digest(b'')}
+        malformed.write_bytes((store.encode(manifest) + '\n').encode())
+        (checkout / 'devices' / owners[3] / 'clio.jsonl').unlink()
+        git(checkout, 'add', '-A', 'devices')
+        git(checkout, 'commit', '-q', '-m', 'fixture bad and missing origins')
+        note.write_bytes(b'Edited header\n' + peer_bytes)
+        before = note.read_bytes()
+        result = scheduled(node, note)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        status = json.loads(result.stdout)
+        states = {item['owner']:item['state'] for item in status['fleet']['origins']}
+        self.assertEqual(states[owners[2]], 'error')
+        self.assertEqual(states[owners[3]], 'missing')
+        self.assertEqual(states[owners[0]], 'accepted')
+        self.assertEqual(status['note_status']['state'], 'refused')
+        self.assertEqual(note.read_bytes(), before)
+        compatibility = node[0] / '.claude/prompt-log-compat.jsonl'
+        self.assertGreater(len(compatibility.read_bytes()), 0)
+        with context(node):
+            self.assertTrue(store.config()['fleet']['last_result']['partial'])
         # Foreign cumulative regression is rejected transactionally.
         raw = out.read_bytes()
         manifest, rows = store.snapshot_records(raw)

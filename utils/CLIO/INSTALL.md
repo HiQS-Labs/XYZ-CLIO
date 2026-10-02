@@ -863,3 +863,6 @@ Sync conflicts/archive capacity or seven-day delivery rates. The final filesyste
 cannot fence an unseen concurrent Obsidian Sync edit. Track those gates in native
 [Rebalance #282](https://github.com/HiQS-Labs/rebalanceOS/issues/282), alongside the committed
 local deployment receipt and configuration-error hardening. No further history collection is required.
+
+Rebalance #304 configuration-error hardening is also merged and deployed as 0.97.1. The
+[final local recheck](https://github.com/HiQS-Labs/rebalanceOS/blob/535bb7a/TESTS-RESULTS/2026-10-02%2BGH-282/deployment-recheck.json) records committed-origin reconcile, the enabled capture hook with natural arrivals after the helper upgrade, owner-only delivery, preserved backup payloads and the same note/header. These are local observations, not four-device qualification.

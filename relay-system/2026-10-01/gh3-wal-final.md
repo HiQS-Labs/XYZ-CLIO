@@ -96,4 +96,12 @@ Evidence limitation: list_projects returned all 77 entries with has_more=false; 
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-only commit; Producer/harness may perform the pending gates.
 
+
+### Attestation · relay-drive — 2026-10-02T05:27:59Z
+task: CLIO-GH3-WAL-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: e6898f394ec17fc1575de43afded2e27f0be6652
+added-range: 6102+4829
+added-sha256: a3be1edca43665f4dd29395720291f79d319b3008cc7053798ee156575085b2e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

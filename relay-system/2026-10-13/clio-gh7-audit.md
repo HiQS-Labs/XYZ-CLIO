@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: codex-supervisor
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -106,5 +106,41 @@ Questions:
 ### Producer · Claude budget exhaustion
 
 Native Claude subscription preflight succeeded and claude -p ran nine turns, then returned error_max_budget_usd / Reached maximum budget ($0.5), CLI exit1 and driver exit5. No verdict or approval; no artifact change. Token inspected open after automatic claim release. The default allowance was insufficient for the user-directed whole-PR sweep. Retry the same independent Claude review with a bounded CLAUDE_MAX_BUDGET=1.50 and CLAUDE_MAX_TURNS=20; keep the model default, isolated worktree, relay-only writes and 900-second ceiling. No user-specified budget or round cap is overridden.
+
+### Reviewer · Round 1 · claude
+
+swept file: yes — read all eight artifact files in full (SKILL.md, clio-query.py, clio-store.py, INSTALL.md, test/clio-store.py, doc/gh7-clio-forensics.md, TESTS-RESULTS/2026-10-13-clio-readonly/SUMMARY.md, README.md).
+
+**Q1 — Adapter reuse and no new writers**
+
+- [Pass] `clio-query.py` imports `clio-store.py` via `importlib` and calls `store.config()`, `store.database()`, `store.query()` directly. No independent SQLite connection; `writable=True` never passed; no `INSERT`/`UPDATE`/`DELETE`. The optional `configuration` parameter added to `store.query()` passes already-resolved config so explicit-DB mode bypasses a broken unrelated config. Existing callers unaffected (default `configuration=None` re-reads config as before). Citation: `clio-query.py:127-145`, `clio-store.py:463`.
+
+**Q2 — Stable result shape, UTC normalization, IDE/unknown/metadata**
+
+- [Pass] `record()` at `clio-query.py:91-101` derives `date`/`time` as UTC slices of the normalized timestamp, hardcodes `timezone='UTC'`, populates `ide` only from an explicit `str` in extras, maps `device` from `machine`, and preserves `extras` unchanged as `metadata`. `AttributeError`/`OverflowError` added to the content-free adapter error boundary (`clio-query.py:173`). The two previously-observed malformed-receipt and oversized-offset failures are covered by `focused-errors-fixed.log` per doc/gh7-clio-forensics.md. Test `test_forensic_journey_and_contract` at `test/clio-store.py:901` validates UTC normalization of a +02:00 timestamp, explicit-string IDE population, null IDE for a non-IDE row, and full fixed key set.
+
+**Q3 — Journey oldest match, then identity-only session follow-up**
+
+- [Pass] `clio-query.py:152-163`: journey requires `--text`, oldest order, offset 0. The session follow-up constructs a fresh `identity` dict with all FILTERS set to `None`, then overwrites only `origin`, `agent`, `session`. Probe confirmed: 8 filters cleared (`device`, `record_id`, `reference`, `repo`, `repo_slug`, `since`, `text`, `until`); 3 identity keys set. This ensures date/text/repo filters do not carry over, so the session's earliest captured prompt can precede the keyword or the `--since` window. `basis='missing_session_identity'` is set when any of `origin_id`/`agent`/`session_id` is absent (`clio-query.py:157`). Tested at `test/clio-store.py:907-928` (reused session ID across origins/agents, `--since` filter, correct first-record recall) and `test/clio-store.py:944-945` (missing identity basis).
+
+**Q4 — Resolver precedence, ambiguity, missing-file rejection**
+
+- [Pass] `resolve()` at `clio-query.py:42-88`: explicit → config → default (`~/.claude/prompt-log.sqlite3`) → bounded pulse discovery (≤100 entries per dir, only `.db/.sqlite/.sqlite3`, validated through `store.database()`). Multiple valid candidates → `ambiguous_database`. Missing/invalid path → `invalid_database` (no DB created, confirmed by `test/clio-store.py:955`). Broken explicit path never silently falls through to config. `test_forensic_database_resolution` at `test/clio-store.py:953-983` covers all five resolution paths plus broken config with explicit-DB bypass, ambiguous pulse, and missing-file non-creation.
+
+**Q5 — Audit guidance accuracy: rw+query_only, WAL/SHM, immutable, backups, locks, Rebalance scope**
+
+- [Pass] INSTALL.md Cold-WAL audit section (`INSTALL.md:517-541`) correctly documents `mode=rw` + `query_only=ON` as the safe read pattern; warns `immutable=1` is only for a verified stable backup/snapshot, not live history; warns against copying only the main file while WAL is active; scopes `query_only` as a connection setting, not an OS access-control boundary; directs reporting actual sandbox constraints before considering WAL changes. Audit link at `INSTALL.md:543` resolves correctly (`../../TESTS-RESULTS/2026-10-13-clio-readonly/SUMMARY.md` from `utils/CLIO/` — link-check probe: LINK OK). SUMMARY.md Consumer map labels all Rebalance entries as "Does not open canonical SQLite" or "Separate projection database" — no new CLIO subsystem claimed. Private backup path omitted: "retained in a private backup directory outside Git; its machine-specific location is omitted here." Before/after failure receipts (before.json mode=ro success with WAL; checks.jsonl backup rw+query_only success; after mode=ro fails without WAL) are present in TESTS-RESULTS/2026-10-13-clio-readonly/. Observations correctly scoped to historical audit revisions (`d17e521`, `e46150a`), not a fresh qualification of later revisions.
+
+**Q6 — Prior evidence supports unchanged runtime; no false approval claim**
+
+- [Pass] `doc/gh7-clio-forensics.md:9` marks follow-up QA open with "draft while documentation-review services are quota-limited; prior implementation approval retained, not deployed." Relay log explicitly records each failed service invocation as "no verdict or approval." SUMMARY.md: "The audit changed no code or installed runtime; this PR publishes its evidence and documentation only." No false approval is attributed to Codex or Agy quota failures.
+
+**Pre-existing defects in touched files**
+
+No pre-existing defects found. Key checks: (a) `drain()` reads back versioned rows (`clio_version=VERSION` set by `capture()`'s `normalize()`) so `normalize(json.loads(...))` without `owner` correctly uses the versioned path — no missing-origin risk. (b) `legacy_coverage()` uppercase translation is ASCII-only (`str.maketrans` covers only a–z), matching legacy renderer behavior for non-ASCII repo names (e.g., café → CAFé, confirmed by test fixture). (c) `checked_view()` future-timestamp expiry logic is correct: `0 <= (now - waiting).total_seconds()` is false for future `waiting_since`, causing immediate expiry. (d) `record()` `prompt or None` on an already-validated non-empty prompt field is harmless.
+
+**VERDICT: PASS**
+
+**Basis:** All six review questions pass on cited evidence. The adapter is a pure read-only forensic wrapper over the canonical helper with no new writers. The forensic contract, journey identity follow-up, resolver precedence, and audit guidance are all correctly implemented and tested with synthetic data. No private payload, credential, machine-specific path, or application fix is claimed. Prior quota-limited service failures are correctly not treated as approval. No pre-existing defects found in scope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

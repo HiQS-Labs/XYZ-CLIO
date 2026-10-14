@@ -1,0 +1,16 @@
+Existing test executions (console output captured from this session):
+
+Command, isolated full XYZ-CLIO task clone:
+python3 test/clio-store.py History.test_readonly_queries_refs_pagination_and_large_prompt
+
+test_readonly_queries_refs_pagination_and_large_prompt (__main__.History.test_readonly_queries_refs_pagination_and_large_prompt) ... ok
+----------------------------------------------------------------------
+Ran 1 test in 0.684s
+OK
+
+Command, Rebalance checkout:
+.venv/bin/python -m pytest tests/test_clio.py tests/test_pulse_health.py tests/test_git_pulse_health_check.py -q
+..........................                                            [100%]
+26 passed, 3 subtests passed in 1.82s
+
+No new suite or gate. CLIO case covers absent-sidecar cross-runtime read, nonempty payload, write rejection and missing DB noncreation using synthetic temporary HOME. Tests executed against the existing implementations; no consumer edits.

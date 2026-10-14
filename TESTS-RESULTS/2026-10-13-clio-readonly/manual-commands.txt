@@ -1,0 +1,11 @@
+Installed-helper live read probe (run under /usr/bin/python3 and python3):
+import sys,importlib.util,contextlib,json
+from pathlib import Path
+sys.dont_write_bytecode=True
+helper=Path.home()/'.claude/hooks/clio-store.py'
+spec=importlib.util.spec_from_file_location('clio_store',helper)
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+with contextlib.closing(m.database(Path.home()/'.claude/prompt-log.sqlite3')) as c:
+ print(json.dumps({'events':c.execute('SELECT count(*) FROM events').fetchone()[0], 'query_only':c.execute('PRAGMA query_only').fetchone()[0], 'journal_mode':c.execute('PRAGMA journal_mode').fetchone()[0], 'sqlite':m.sqlite3.sqlite_version}))
+
+Before/after: sqlite3 "file:$HOME/.claude/prompt-log.sqlite3?mode=ro" "select count(*) from events"

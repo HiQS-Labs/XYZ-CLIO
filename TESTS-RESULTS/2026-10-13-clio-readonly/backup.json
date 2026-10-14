@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "run_id": "clio-readonly-backup",
+  "method": "SQLite online backup via mode=ro source; backup verified mode=rw + query_only",
+  "cold_backup_readonly_validation": {
+    "exit": 14,
+    "stderr": "unable to open database file"
+  },
+  "verification": {
+    "exit": 0,
+    "stdout": "ok\n4492\n",
+    "stderr": ""
+  },
+  "sha256": "4898534a05dd07273f9ed8db4525684b05d1750eedba320a2a30682e1e9ead0e",
+  "backup_location": "Private backup directory outside Git (machine-specific path omitted)"
+}

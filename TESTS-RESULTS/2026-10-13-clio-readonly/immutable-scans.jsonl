@@ -1,0 +1,4 @@
+{"schema_version": 1, "run_id": "immutable-scan-rebalance-production", "scope": "rebalance-production", "pattern": "immutable[[:space:]]*=", "file_types": ["py", "sh"], "exit": 1, "stdout": "", "stderr": ""}
+{"schema_version": 1, "run_id": "immutable-scan-canonical-clio", "scope": "canonical-clio", "pattern": "immutable[[:space:]]*=", "file_types": ["py", "sh"], "exit": 1, "stdout": "", "stderr": ""}
+{"schema_version": 1, "run_id": "immutable-scan-installed-clio", "scope": "installed-clio", "pattern": "immutable[[:space:]]*=", "file_types": ["py", "sh"], "exit": 1, "stdout": "", "stderr": ""}
+{"schema_version": 1, "run_id": "immutable-scan-pulse-distribution", "scope": "pulse-distribution", "pattern": "immutable[[:space:]]*=", "file_types": ["py", "sh"], "exit": 1, "stdout": "", "stderr": ""}

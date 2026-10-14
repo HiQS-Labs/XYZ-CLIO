@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-14T05:51:27.410693+00:00",
+  "header": "0202",
+  "sidecars": {
+    "-wal": true,
+    "-shm": true,
+    ".project.lock": true,
+    ".drain.lock": false
+  },
+  "command": "sqlite3 \"file:$HOME/.claude/prompt-log.sqlite3?mode=ro\" \"select count(*) from events\"",
+  "exit": 0,
+  "stdout": "4491\n",
+  "stderr": ""
+}

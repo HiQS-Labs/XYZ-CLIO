@@ -1,0 +1,4 @@
+{"schema_version": 1, "run_id": "installed-helper-python3", "interpreter": "/usr/bin/python3", "exit": 0, "stdout": "{\"events\": 4492, \"query_only\": 1, \"journal_mode\": \"wal\", \"sqlite\": \"3.43.2\"}\n", "stderr": ""}
+{"schema_version": 1, "run_id": "installed-helper-python3", "interpreter": "python3", "exit": 0, "stdout": "{\"events\": 4492, \"query_only\": 1, \"journal_mode\": \"wal\", \"sqlite\": \"3.53.4\"}\n", "stderr": ""}
+{"schema_version": 1, "run_id": "after", "exit": 14, "stdout": "", "stderr": "Error: in prepare, unable to open database file (14)\n", "sidecars": {"-wal": false, "-shm": false, ".project.lock": true, ".drain.lock": false}}
+{"schema_version": 1, "run_id": "safe-manual-query", "exit": 0, "stdout": "4492\n", "stderr": ""}

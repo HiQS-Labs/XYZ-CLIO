@@ -46,3 +46,7 @@ Final relay round1 exit5: accepted R1. Witnessed both reported malformed-receipt
 
 ## Final handoff evidence
 Final relay round2 Approved with attested exit0 (reviewed31965d20f4cb). Full five-suite gate passed once at0f54589, with HEAD unchanged; see TESTS-RESULTS/2026-10-13-gh7/final-gate.json and gate-1..5.log. All19 SQLite cases pass. Existing ResourceWarnings and interpreter duplicate skips remain disclosed in logs; no assertion failures. Frontdoor read-only checks retain only FD-05/FD-06, both pre-existing and outside scope. No repository pre-push hook or hosted workflow is configured; local suite evidence is the gate. Skill is validated in the source checkout; app deployment/discovery is not claimed. Retain this task clone until merge is verified, then retire via merge-cleanup under the operator cleanup preference.
+
+## Read-only audit publication follow-up (2026-10-13)
+
+Operator requested inclusion of the Rebalance audit in PR #8. Moved its seven evidence files into TESTS-RESULTS/2026-10-13-clio-readonly, omitted the private backup location, and adapted the SOP procedure into the existing CLIO installation guide. The original audit required no consumer or writer changes; raw mode-ro failure and safe-reader success are retained. No new code, tests, gates, runtime or database edits. Documentation follow-up relay QA pending; prior implementation approval and five-suite gate remain the runtime evidence.

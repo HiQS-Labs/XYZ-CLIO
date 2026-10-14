@@ -103,4 +103,8 @@ Questions:
 5. Is the audit guidance accurate about rw+query_only, absent WAL/SHM, immutable live reads, backups, locks and separate Rebalance projections? Are observations historical and bounded, with receipts supporting the before/after output and no private payload/configuration/backup path published?
 6. Does the prior deterministic evidence support the unchanged runtime, without claiming that failed service reviews approved the follow-up? Flag substantive issues with exact source citations and a concrete falsifier. Report the whole-file sweep, verdict and basis; on approval complete the tick token using the exact native command in your runner prompt.
 
+### Producer · Claude budget exhaustion
+
+Native Claude subscription preflight succeeded and claude -p ran nine turns, then returned error_max_budget_usd / Reached maximum budget ($0.5), CLI exit1 and driver exit5. No verdict or approval; no artifact change. Token inspected open after automatic claim release. The default allowance was insufficient for the user-directed whole-PR sweep. Retry the same independent Claude review with a bounded CLAUDE_MAX_BUDGET=1.50 and CLAUDE_MAX_TURNS=20; keep the model default, isolated worktree, relay-only writes and 900-second ceiling. No user-specified budget or round cap is overridden.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -162,4 +162,12 @@ Decisive output: bad-fleet and large-offset each exit=2, status=error, errors=[{
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) / harness proceeds with the required disposable-clone gate.
 
+
+### Attestation · relay-drive — 2026-10-14T05:48:13Z
+task: RELAY-clio-gh7-final
+reviewer: codex
+status: Approved
+reviewed-head: 31965d20f4cb2cdbe674c523c55fda12a41af5c6
+added-range: 12201+5026
+added-sha256: 604205776c465abd9e938a5ef2e09f88d45c6e7cc7c96f816387edeb11a0cadc
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

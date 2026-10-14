@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -52,10 +52,10 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `utils/CLIO/INSTALL.md`, `TESTS-RESULTS/2026-10-13-clio-readonly/`, `doc/gh7-clio-forensics.md`
-- Reviewer: agy   ·   Producer: codex-supervisor
+- Artifact under review: `utils/CLIO/SKILL.md`, `utils/CLIO/clio-query.py`, `utils/CLIO/clio-store.py`, `utils/CLIO/INSTALL.md`, `test/clio-store.py`, `README.md`, `TESTS-RESULTS/2026-10-13-clio-readonly/`, `doc/gh7-clio-forensics.md`
+- Reviewer: claude   ·   Producer: codex-supervisor
 - Started: 2026-10-13
-- Definition of Done: Review the documentation-only changes since 4900235d02e820bc473be5aeb876b0f33c3adf71. Preserve the prior approved implementation and existing suite evidence; publish portable, truthful cold-WAL guidance and audit evidence with no private history/configuration or false application-fix claim.
+- Definition of Done: User explicitly selected Claude Code CLI headless. Review the whole current PR against origin/main and doc/gh7-clio-forensics.md, including the original skill and the audit follow-up. Prior Codex approvals and five-suite gate are evidence, not a substitute for this independent whole-PR review. No private history/configuration, false application-fix claim, live runtime or database changes.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -88,5 +88,19 @@ The initial runner rejected a wildcard artifact path before starting a reviewer;
 Agy CLI exit3 reported RESOURCE_EXHAUSTED / HTTP429 individual quota. Driver exit5; no reviewer verdict or approval. Its claim was released. Both Codex and Agy documentation-review attempts were unavailable; do not treat these as successful reviews. No retry loop or alternative paid reviewer is introduced. Publish the requested evidence in the existing PR as draft, retain prior implementation QA/gate as historical evidence, and resume this documentation relay when a reviewer is available.
 
 Producer checks: all seven transferred evidence files accounted for; five remain byte-identical to the original audit, summary ownership/scope clarified and backup location omitted. JSON/JSONL parses, audit link resolves, and removing the new INSTALL.md section restores the earlier file byte-for-byte. No production code/capture heredoc changes. These checks are not independent approval.
+
+### Producer · User-directed Claude Code CLI whole-PR QA
+
+The user now explicitly requests Claude Code CLI headless. This latest packet expands review to the entire PR #8, with particular attention to the transferred audit. Use the existing native CLI reviewer route, inherited model defaults and normal containment; no nested model calls. No successful review round has occurred in this follow-up yet. Preserve the recorded Codex/Agy quota failures rather than replacing them with approval.
+
+Operational envelope: stdlib local developer forensic CLI; small adapter over the existing canonical CLIO query/config/database gateway. Read the listed files in full, inspect the diff against origin/main, and use the plan's v1 contract and requirements as acceptance criteria. Keep complexity commensurate: no new search index, writer, services, enterprise threat model, test suite or gate. Reviewer writes only this thread. Do not run tests, install/activate capture, open live history, read external secrets or modify source files.
+
+Questions:
+1. Does the adapter reuse the canonical helper and preserve existing query defaults/configuration behavior? Are no additional writers or live DB mutations introduced?
+2. Are success, empty and error shapes stable with UTC time/date, session/device/agent/explicit IDE, unknown values and preserved metadata? Check the concrete previously fixed malformed-receipt and oversized-offset cases.
+3. Does journey find the oldest captured match with stable ties, then the identity-only origin+agent+session earliest record? Are session ambiguity and the distinction from a proven true task start clear?
+4. Are explicit/config/default/bounded-discovery precedence, ambiguity handling and missing-file rejection supported by the existing acceptance cases?
+5. Is the audit guidance accurate about rw+query_only, absent WAL/SHM, immutable live reads, backups, locks and separate Rebalance projections? Are observations historical and bounded, with receipts supporting the before/after output and no private payload/configuration/backup path published?
+6. Does the prior deterministic evidence support the unchanged runtime, without claiming that failed service reviews approved the follow-up? Flag substantive issues with exact source citations and a concrete falsifier. Report the whole-file sweep, verdict and basis; on approval complete the tick token using the exact native command in your runner prompt.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

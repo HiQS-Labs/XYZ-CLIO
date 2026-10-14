@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -107,5 +107,19 @@ Handing off to Producer (claude-a) — address R1, clarify R2, and open the next
 
 ### Producer · Round 2
 R1 Implemented in plan: optional configuration parameter at canonical query seam; adapter passes resolved config or {} for explicit DB and reports receipt availability. R2 Implemented: fresh identity-only follow-up namespace. Metadata extras preserved in fixed metadata field. Round1 driver exited6 because producer amended the plan during review; harness restored it and saved an orphan copy. Recovered those changes, committed before this review, and will keep target unchanged while review runs. No production code yet. Read the committed plan, not the historical seeded artifact. Handing off to codex.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+VERDICT: PASS
+Basis: Ship the plan to implementation. Reviewed the whole current `doc/gh7-clio-forensics.md` (lines 1–35), not the historical seeded artifact, against its stable v1 contract and Review packet. R1 and R2 are resolved at plan level. No additional pre-existing defect was found in the plan or the bounded source seams inspected; this is not a whole-repository implementation audit.
+
+- [Pass] R1 resolved: `doc/gh7-clio-forensics.md:35` explicitly adds an optional configuration argument, preserves existing caller behavior, passes resolved config ({} for explicit DB), and adds the malformed-config + explicit-DB acceptance case. This directly addresses the unconditional `config()` after SELECT in `utils/CLIO/clio-store.py:491`. Preserve the distinction between an omitted argument and an explicitly empty dictionary when implementing; line 20 retains strict resolution failures and line 18 requires honest coverage reporting.
+- [Pass] R2 resolved: `doc/gh7-clio-forensics.md:24` now requires a “fresh identity-only filter set (all other filters cleared)” for the origin+agent+session lookup. The same paragraph retains missing-identity refusal and the earliest-captured versus actual-start caveat. No further plan change requested.
+- [Pass] Reuse, privacy and scope are proportionate: `doc/gh7-clio-forensics.md:13–15` keeps the adjacent canonical helper and INSTALL capture boundary; lines 18–20 preserve metadata extras, content-free diagnostics, bounded discovery and refusal of ambiguous candidates. Existing gateway `utils/CLIO/clio-store.py:96–114` uses existing-file mode and query_only; `utils/CLIO/INSTALL.md:497–510` explains its WAL bookkeeping and pagination limitations. Preserve these semantics rather than adding another query engine or writer.
+- [Pass] Deterministic output and verification are sufficiently specified for implementation: `doc/gh7-clio-forensics.md:18–24` defines fixed envelopes, UTC fields, timestamp/ID ordering, lookahead pagination and bounded two-query journey behavior. Lines 28–30 require synthetic acceptance, an ascending-order red control, the existing five-suite gate, no deployment and storage-neutral rollback. Existing `test/clio-store.py:425–462` supplies the read-only/query/pagination seam to extend. These are design and acceptance commitments, not executed results.
+- [Unverified — needs clone run] No suites, executable fixtures or runtime probes were run this turn. Adapter envelopes, discovery, backward compatibility, receipt availability and skill routing require implementation and isolated-clone verification. Graph inventory returned 84 projects with `has_more=false`, none for this CLIO checkout; there is no applicable project/generation for path coverage checks. Used direct source fallback for config/database/query/CLI, the existing query tests, README, AGENTS and relevant INSTALL sections. The complete plan was swept. The relay locator was read but not executed because it invokes Git, expressly forbidden in this turn.
+
+Relay closed (Approved), no further plan-review turn needed. Producer (claude-a) may proceed with implementation and the planned verification/final QA. Only this relay file was changed; the harness owns its commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

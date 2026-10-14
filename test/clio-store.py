@@ -827,7 +827,7 @@ class History(unittest.TestCase):
         self.assertEqual(len(self.rows()), 2)
 
     def test_activation_import_gate_and_source_preservation(self):
-        path = self.source([self.row()], name='original.jsonl')
+        path = self.source([self.row(timestamp=store.utc())], name='original.jsonl')
         before = path.read_bytes()
         store.import_jsonl(self.db, path)
         with patch.object(store, 'check_deadline', side_effect=TimeoutError('cutover budget')):
@@ -888,6 +888,99 @@ class History(unittest.TestCase):
         note.write_bytes(note.read_bytes() + b'foreign publisher edit')
         with self.assertRaisesRegex(ValueError, 'outside this publisher'):
             store.project(self.db)
+
+    def forensic(self, *arguments):
+        result = subprocess.run([sys.executable, str(ROOT / 'utils/CLIO/clio-query.py'),
+                                 *arguments], cwd=self.home, capture_output=True, text=True)
+        payload = json.loads(result.stdout)
+        self.assertEqual(set(payload), {'schema_version', 'status', 'operation', 'source',
+                         'filters', 'records', 'page', 'journey', 'coverage', 'errors'})
+        self.assertEqual(result.returncode, 2 if payload['status'] == 'error' else 0)
+        return payload
+
+    def test_forensic_journey_and_contract(self):
+        first = self.row(timestamp='2026-09-28T12:00:00Z', session_id='shared', prompt='Set up workspace')
+        matched = self.row(timestamp='2026-09-29T14:00:00+02:00', session_id='shared',
+                           prompt='Investigate checkout timeout', ide='VS Code', custom={'keep': True})
+        self.add(first)
+        self.add(matched)
+        self.add(self.row(timestamp='2026-09-27T12:00:00Z', session_id='shared', agent='agy', prompt='Other agent'))
+        store.capture(self.db, 'other-origin', self.row(timestamp='2026-09-26T12:00:00Z',
+                       session_id='shared', prompt='Other device'))
+        before = self.db.read_bytes()
+        result = self.forensic('journey', '--db', str(self.db), '--text', 'checkout',
+                               '--since', '2026-09-29T00:00:00Z')
+        self.assertEqual(result['journey']['session_first_record']['prompt'], 'Set up workspace')
+        row = result['journey']['earliest_match']
+        self.assertEqual(set(row), {'record_id', 'timestamp', 'date', 'time', 'timezone',
+                         'session_id', 'device', 'agent', 'ide', 'repo', 'repo_slug', 'branch',
+                         'checkout', 'origin_id', 'source_event_id', 'prompt', 'references', 'metadata'})
+        self.assertEqual(row['timestamp'], '2026-09-29T12:00:00.000000Z')
+        self.assertEqual((row['date'], row['time'], row['timezone']), ('2026-09-29', '12:00:00.000000', 'UTC'))
+        self.assertEqual((row['session_id'], row['device'], row['agent'], row['ide']),
+                         ('shared', 'fixture-mbp14', 'codex', 'VS Code'))
+        self.assertEqual(row['metadata']['custom'], {'keep': True})
+        self.assertEqual(self.db.read_bytes(), before)
+        self.assertEqual(result, self.forensic('journey', '--db', str(self.db), '--text', 'checkout',
+                                             '--since', '2026-09-29T00:00:00Z'))
+        narrowed = self.forensic('journey', '--db', str(self.db), '--text', 'checkout',
+                                '--record-id', row['record_id'])
+        self.assertEqual(narrowed['journey']['session_first_record']['prompt'], 'Set up workspace')
+        self.assertIsNone(self.forensic('search', '--db', str(self.db), '--text', 'workspace')['records'][0]['ide'])
+        empty = self.forensic('search', '--db', str(self.db), '--text', 'NOT PRESENT')
+        self.assertEqual(empty['status'], 'empty')
+        self.assertEqual(empty['records'], [])
+        self.assertIsNone(empty['journey']['earliest_match'])
+
+    def test_forensic_pagination_and_missing_identity(self):
+        for n in range(4):
+            self.add(self.row(session_id='', agent='', prompt='keyword ' + str(n)))
+        all_rows = self.forensic('search', '--db', str(self.db), '--order', 'oldest')['records']
+        first = self.forensic('search', '--db', str(self.db), '--order', 'oldest', '--limit', '2')
+        second = self.forensic('search', '--db', str(self.db), '--order', 'oldest', '--limit', '2', '--offset', '2')
+        self.assertEqual(first['records'] + second['records'], all_rows)
+        self.assertEqual(first['page']['next_offset'], 2)
+        self.assertFalse(second['page']['has_more'])
+        journey = self.forensic('journey', '--db', str(self.db), '--text', 'keyword')
+        self.assertIsNone(journey['journey']['session_first_record'])
+        self.assertEqual(journey['journey']['basis'], 'missing_session_identity')
+        for flags in [('search', '--text', ' '), ('session',), ('journey', '--text', 'x', '--offset', '1'),
+                      ('search', '--since', 'yesterday'), ('search', '--limit', '0'),
+                      ('search', '--limit', 'bad'), ('search', '--unknown'),
+                      ('search', '--offset', '9223372036854775808')]:
+            self.assertEqual(self.forensic(*flags, '--db', str(self.db))['status'], 'error')
+
+    def test_forensic_database_resolution(self):
+        missing = self.home / 'absent.sqlite3'
+        self.assertEqual(self.forensic('locate', '--db', str(missing))['status'], 'error')
+        self.assertFalse(missing.exists())
+        self.assertEqual(self.forensic('locate', '--db', str(self.db))['source']['resolution'], 'explicit')
+        self.activate()
+        cfg_before = store.CONFIG.read_bytes()
+        configured = self.forensic('locate')
+        self.assertEqual(configured['source']['resolution'], 'config')
+        self.assertEqual(store.CONFIG.read_bytes(), cfg_before)
+        cfg = json.loads(cfg_before)
+        cfg['fleet'] = True
+        store.CONFIG.write_text(json.dumps(cfg))
+        self.assertEqual(self.forensic('search')['status'], 'error')
+        self.assertEqual(self.forensic('search', '--db', str(self.db))['status'], 'empty')
+        store.CONFIG.write_text('{broken')
+        self.assertEqual(self.forensic('locate')['errors'][0]['code'], 'invalid_config')
+        self.assertEqual(self.forensic('search', '--db', str(self.db))['status'], 'empty')
+        store.CONFIG.unlink()
+        default = self.home / '.claude/prompt-log.sqlite3'
+        shutil.copyfile(self.db, default)
+        self.assertEqual(self.forensic('locate')['source']['resolution'], 'default')
+        default.unlink()
+        pulse = self.home / 'git-pulse-sync/CLIO'
+        pulse.mkdir(parents=True)
+        shutil.copyfile(self.db, pulse / 'history.sqlite3')
+        self.assertEqual(self.forensic('locate')['source']['resolution'], 'pulse')
+        shutil.copyfile(self.db, pulse / 'other.db')
+        result = self.forensic('locate')
+        self.assertEqual(result['errors'][0]['code'], 'ambiguous_database')
+        self.assertEqual(len(result['source']['candidates']), 2)
 
 
 if __name__ == '__main__':

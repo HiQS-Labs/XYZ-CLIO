@@ -5,6 +5,9 @@ description: Install, verify, or uninstall prompt capture for Claude Code, ZCode
 
 # CLIO
 
+For read-only forensic lookup, start with [SKILL.md](SKILL.md). This document
+remains the capture installation and maintenance procedure.
+
 CLIO installs a shared capture writer and per-agent registrations that append every
 submitted prompt — from Claude Code, ZCode, Codex (VS Code / CLI), and Agy — to one
 centralized JSONL: `~/.claude/prompt-log.jsonl` (the `~/.claude` name is historical;
@@ -506,6 +509,39 @@ identity excludes repo/branch/device/checkout labels resolved at poll time; the
 first committed labels remain stored even if those labels change before a retry.
 Imports reject conflicting payloads; they do not silently rewrite provenance. Pagination is timestamp/ID descending;
 concurrent new arrivals can shift offsets, so fix a time range for stable paging.
+
+#### Cold-WAL audit queries
+
+Resolve the live database from this device's existing CLIO configuration. Prefer
+this skill or the canonical helper for lookup; both reuse the existing gateway.
+For a count-only audit, set `CLIO_DB` to that resolved existing absolute path:
+
+```bash
+sqlite3 "file:${CLIO_DB}?mode=rw" 'PRAGMA query_only=ON; SELECT count(*) FROM events;'
+```
+
+This CLI example assumes no URI-reserved characters in the path; use the helper
+for arbitrary paths because it URI-encodes them. A successful `mode=ro` check
+while WAL/SHM sidecars exist does not qualify cold-WAL access. Retain the
+before/after sidecar state and SQLite version. Never use `immutable=1` against
+live history; reserve it for a verified stable, consistent backup or snapshot.
+Never copy only the main file of an active WAL database.
+
+`query_only` is a connection setting, not an OS access-control boundary against
+a caller that deliberately disables it. If a reader cannot open `mode=rw` because
+of directory permissions or a sandbox, report that actual constraint before
+considering persistent WAL or a writer change. Preserve `.project.lock` and
+`.drain.lock`; do not delete locks or change the live journal mode. Before any
+live database modification, obtain and verify a fresh SQLite online backup.
+
+Canonical CLIO `events` and Rebalance's `clio_prompts` projection are separate
+stores. Rebalance ingest reads the compatibility JSONL export; its journey and
+semantic consumers read that export or the projection. Fleet exports call the
+canonical helper. Do not widen unrelated read-only gateways globally.
+
+The [2026-10-13 audit](../../TESTS-RESULTS/2026-10-13-clio-readonly/SUMMARY.md)
+records raw `mode=ro` failure with absent sidecars and successful installed
+helper reads. No native-history consumer or writer fix was needed.
 
 References are **explicit producer metadata**, not inferred task status. A capture
 record can include `repo_slug`, `checkout` (or a tailer's `cwd`), `extras`, and:

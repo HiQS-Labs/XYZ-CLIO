@@ -1,0 +1,18 @@
+test_forensic_journey_and_contract (__main__.History.test_forensic_journey_and_contract) ... FAIL
+
+======================================================================
+FAIL: test_forensic_journey_and_contract (__main__.History.test_forensic_journey_and_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<task-checkout>/test/clio-store.py", line 913, in test_forensic_journey_and_contract
+    self.assertEqual(result['journey']['session_first_record']['prompt'], 'Set up workspace')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Investigate checkout timeout' != 'Set up workspace'
+- Investigate checkout timeout
++ Set up workspace
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.094s
+
+FAILED (failures=1)

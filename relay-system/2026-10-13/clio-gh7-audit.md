@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,11 @@ Report cited findings, verdict and swept-file declaration in this thread only. D
 ### Producer · Reviewer availability correction
 
 The initial runner rejected a wildcard artifact path before starting a reviewer; the setup now names the directory directly. Codex then failed before review with HTTP 429 Too Many Requests (CLI exit1, driver exit5, no verdict). Its claim was released and token inspected open. The user named Agy in the prior QA request, so the same scoped documentation packet is now handed to Agy. No approval or implementation change is inferred from either failed invocation.
+
+### Producer · Agy availability and publication disposition
+
+Agy CLI exit3 reported RESOURCE_EXHAUSTED / HTTP429 individual quota. Driver exit5; no reviewer verdict or approval. Its claim was released. Both Codex and Agy documentation-review attempts were unavailable; do not treat these as successful reviews. No retry loop or alternative paid reviewer is introduced. Publish the requested evidence in the existing PR as draft, retain prior implementation QA/gate as historical evidence, and resume this documentation relay when a reviewer is available.
+
+Producer checks: all seven transferred evidence files accounted for; five remain byte-identical to the original audit, summary ownership/scope clarified and backup location omitted. JSON/JSONL parses, audit link resolves, and removing the new INSTALL.md section restores the earlier file byte-for-byte. No production code/capture heredoc changes. These checks are not independent approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1,0 +1,8 @@
+test_forensic_journey_and_contract (__main__.History.test_forensic_journey_and_contract) ... ok
+test_forensic_pagination_and_missing_identity (__main__.History.test_forensic_pagination_and_missing_identity) ... ok
+test_forensic_database_resolution (__main__.History.test_forensic_database_resolution) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.677s
+
+OK

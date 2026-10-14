@@ -946,7 +946,8 @@ class History(unittest.TestCase):
         self.assertEqual(journey['journey']['basis'], 'missing_session_identity')
         for flags in [('search', '--text', ' '), ('session',), ('journey', '--text', 'x', '--offset', '1'),
                       ('search', '--since', 'yesterday'), ('search', '--limit', '0'),
-                      ('search', '--limit', 'bad'), ('search', '--unknown')]:
+                      ('search', '--limit', 'bad'), ('search', '--unknown'),
+                      ('search', '--offset', '9223372036854775808')]:
             self.assertEqual(self.forensic(*flags, '--db', str(self.db))['status'], 'error')
 
     def test_forensic_database_resolution(self):
@@ -959,6 +960,11 @@ class History(unittest.TestCase):
         configured = self.forensic('locate')
         self.assertEqual(configured['source']['resolution'], 'config')
         self.assertEqual(store.CONFIG.read_bytes(), cfg_before)
+        cfg = json.loads(cfg_before)
+        cfg['fleet'] = True
+        store.CONFIG.write_text(json.dumps(cfg))
+        self.assertEqual(self.forensic('search')['status'], 'error')
+        self.assertEqual(self.forensic('search', '--db', str(self.db))['status'], 'empty')
         store.CONFIG.write_text('{broken')
         self.assertEqual(self.forensic('locate')['errors'][0]['code'], 'invalid_config')
         self.assertEqual(self.forensic('search', '--db', str(self.db))['status'], 'empty')

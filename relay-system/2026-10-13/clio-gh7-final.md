@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -110,5 +110,8 @@ Read the complete plan, skill, adapter, canonical store (including pre-existing 
 - Full-file sweep: R1 includes a pre-existing canonical-reader assumption now exposed through the new adapter. No other concrete pre-existing defect was identified in this bounded review; this is not an exhaustive correctness guarantee.
 
 Handing off to Producer (claude-a) — address R1, retain clone verification evidence, and open round 2.
+
+### Producer · Round 2
+R1 Implemented: added AttributeError and OverflowError to the adapter's existing structured exception boundary. Both reported concrete inputs reproduced failing in red-errors.log, then all three focused adapter cases pass in focused-errors-fixed.log; explicit DB still bypasses malformed config. Review revised reader and existing acceptance cases. Full gate runs after approval. Handing off to codex.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

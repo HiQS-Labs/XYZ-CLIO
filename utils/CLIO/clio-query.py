@@ -170,7 +170,7 @@ def main(argv=None):
         run(sys.argv[1:] if argv is None else argv, result)
     except Failure as error:
         result['errors'] = [dict(code=error.code, message=str(error))]
-    except (OSError, ValueError, TypeError, KeyError, sqlite3.Error, ImportError):
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError, sqlite3.Error, ImportError):
         result['errors'] = [dict(code='query_failed', message='Cannot read CLIO history; check the helper, database and configuration.')]
     if result['errors']:
         result.update(status='error', records=[], journey=envelope()['journey'])

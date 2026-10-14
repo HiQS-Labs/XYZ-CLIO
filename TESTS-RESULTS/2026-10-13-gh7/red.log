@@ -1,0 +1,25 @@
+test_forensic_journey_and_contract (__main__.History.test_forensic_journey_and_contract) ... ERROR
+
+======================================================================
+ERROR: test_forensic_journey_and_contract (__main__.History.test_forensic_journey_and_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<task-checkout>/test/clio-store.py", line 911, in test_forensic_journey_and_contract
+    result = self.forensic('journey', '--db', str(self.db), '--text', 'checkout',
+                           '--since', '2026-09-29T00:00:00Z')
+  File "<task-checkout>/test/clio-store.py", line 895, in forensic
+    payload = json.loads(result.stdout)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+----------------------------------------------------------------------
+Ran 1 test in 0.041s
+
+FAILED (errors=1)

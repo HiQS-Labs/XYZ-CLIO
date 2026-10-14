@@ -77,10 +77,21 @@ one file you can grep, sync to notes, or keep as an audit trail.
 
 ## Install
 
-Full install, verify, export, auto-sync, and uninstall instructions are in
-[`utils/CLIO/INSTALL.md`](utils/CLIO/INSTALL.md). That file is also the skill
-definition (it carries the `name: clio` frontmatter), so a Claude Code install
-can invoke it directly.
+The multipurpose [`clio` skill](utils/CLIO/SKILL.md) locates history, searches prompts,
+inspects sessions and returns task-origin evidence in a stable JSON shape:
+
+```bash
+python3 utils/CLIO/clio-query.py locate
+python3 utils/CLIO/clio-query.py journey --text 'checkout timeout'
+```
+
+It wraps the canonical SQLite reader. Results distinguish earliest captured evidence
+from a proven task start; unknown agent/IDE provenance stays null. Database configuration
+wins over shallow Git Pulse Sync discovery; `--db` selects a specific existing file.
+
+Full install, verify, export, auto-sync, and uninstall instructions remain in
+[`utils/CLIO/INSTALL.md`](utils/CLIO/INSTALL.md). The skill routes explicit management
+requests there; a lookup never installs or activates capture.
 
 Run the install steps once, from either the root of this checkout or an installed
 `clio` skill directory — the install block resolves CLIO's source files in both
@@ -90,7 +101,9 @@ layouts, and honors a `CLIO_SRC` you set yourself.
 
 ```
 utils/CLIO/
-  INSTALL.md            # the skill: install / verify / uninstall procedure,
+  SKILL.md              # multipurpose clio skill and forensic result contract
+  clio-query.py         # normalized read-only lookup over clio-store.py
+  INSTALL.md            # install / verify / uninstall procedure,
                         # and the source of truth for the capture writer and
                         # the Claude + ZCode shims (embedded as heredocs)
   clio-codex-tail.sh    # Codex rollout tailer

@@ -53,7 +53,7 @@ ROUND: 2 / 3
 
 ## Setup
 - Artifact under review: **doc/gh7-clio-forensics.md** — the read-only path that
-  `relay-drive.sh --artifact-file /Users/noelsaw/Documents/GH Repos/XYZ-CLIO-gh7-clio-forensics-2026-10-13/doc/gh7-clio-forensics.md` seeds into the isolated worktree (read it there; do NOT edit it).
+  `relay-drive.sh --artifact-file <task-checkout>/doc/gh7-clio-forensics.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-13
 - Definition of Done: The current committed doc/gh7-clio-forensics.md contract and Review packet; inspect that path, not the old seeded artifact.

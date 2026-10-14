@@ -5,6 +5,9 @@ description: Install, verify, or uninstall prompt capture for Claude Code, ZCode
 
 # CLIO
 
+For read-only forensic lookup, start with [SKILL.md](SKILL.md). This document
+remains the capture installation and maintenance procedure.
+
 CLIO installs a shared capture writer and per-agent registrations that append every
 submitted prompt — from Claude Code, ZCode, Codex (VS Code / CLI), and Agy — to one
 centralized JSONL: `~/.claude/prompt-log.jsonl` (the `~/.claude` name is historical;

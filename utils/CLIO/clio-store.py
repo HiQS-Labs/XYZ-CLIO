@@ -460,7 +460,7 @@ def activate(path, source_path, fresh=False, capture_only=False):
     return {'activated': True, 'config': str(CONFIG), 'owner': owner}
 
 
-def query(path, args):
+def query(path, args, configuration=None):
     conditions, values = [], []
     for key, column in [('repo', 'repo'), ('device', 'machine'), ('agent', 'agent'),
                         ('session', 'session_id'), ('record_id', 'record_id'),
@@ -481,14 +481,15 @@ def query(path, args):
         conditions.append("EXISTS (SELECT 1 FROM json_each(events.payload,'$.references') r WHERE json_extract(r.value,'$.url')=? OR (json_extract(r.value,'$.repo_slug')||':'||json_extract(r.value,'$.row_id'))=?)")
         values.extend([args.reference, args.reference])
     sql = 'SELECT payload FROM events' + (' WHERE ' + ' AND '.join(conditions) if conditions else '')
-    sql += ' ORDER BY timestamp DESC,record_id DESC LIMIT ? OFFSET ?'
+    direction = 'ASC' if getattr(args, 'order', 'newest') == 'oldest' else 'DESC'
+    sql += f' ORDER BY timestamp {direction},record_id {direction} LIMIT ? OFFSET ?'
     values.extend([args.limit, args.offset])
     with contextlib.closing(database(path)) as conn:
         rows = [json.loads(row[0]) for row in conn.execute(sql, values)]
         plan = [list(row) for row in conn.execute('EXPLAIN QUERY PLAN ' + sql, values)] if args.explain else None
     result = {'records': rows, 'limit': args.limit, 'offset': args.offset,
               'pending': len(list(pending_dir(path).glob('clio1-*.json')))}
-    cfg = config()
+    cfg = config() if configuration is None else configuration
     if cfg.get('fleet') and Path(cfg['db']).resolve() == Path(path).expanduser().resolve():
         result['fleet'] = cfg['fleet'].get('last_result', {'configured': True, 'state': 'not_reconciled'})
         result['note_status'] = cfg.get('view', {}).get('last_note_status')
@@ -1054,6 +1055,7 @@ def main():
     reader.add_argument('--limit', type=int, default=20)
     reader.add_argument('--offset', type=int, default=0)
     reader.add_argument('--explain', action='store_true')
+    reader.add_argument('--order', choices=('oldest', 'newest'), default='newest')
     projection = commands.add_parser('project')
     projection.add_argument('--markdown')
     projection.add_argument('--jsonl')

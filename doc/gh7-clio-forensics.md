@@ -5,7 +5,8 @@ Contents: Scope · Recon · Contract · Delivery · Review/evidence
 ## Status and scope
 - [x] Intake https://github.com/HiQS-Labs/XYZ-CLIO/issues/7; base d17e521f3ed2b51a9158ea15fdc954959341b3d3 (origin/main).
 - [x] Phase 0 bounded source spike: existing query/config/gateway and package inspected; no external service dependency.
-- [ ] Codex plan QA, implementation, focused checks, final QA, five-suite gate, ready PR.
+- [x] Codex plan QA, implementation, focused checks, final QA and five-suite gate.
+- [ ] Ready PR publication; awaiting merge (no deployment).
 
 Outcome: users/agents can find captured task intent and its session/device/agent without writing ad-hoc SQL or scripts. User requests name `clio`, multipurpose skill, DRY existing helper, deterministic shape including date/time and provenance. Local stdlib CLI envelope. No runtime deployment, capture changes, migration, new index, semantic search, fleet mutation or task-status writer. No PDDA/RELEASES infrastructure exists in this repo; existing doc/ and GitHub issue are its task record. Rating 65/40/50/75 (priority/severity/appeal/cheapness), dated 2026-10-13: lookup friction, no observed loss, neutral appeal, narrow stdlib extension. Last 14 days vs previous 14 days incident trend unknown; issue/PR scan found storage #3/#4/#5, not separate search incidents. User approved extending that prior art.
 
@@ -42,3 +43,6 @@ SANITY-CHECK: fix the existing fixture now; required compatibility gate blocks r
 Corrected storage suite: all19 cases pass (storage-fixed.log); final skill validator passes. Final review should compare origin/main..HEAD, review adapter and stable schema, existing-reader compatibility, identity-only journey follow-up, structured failures, path discovery, docs and synthetic evidence. The one-line aged-fixture correction preserves existing export coverage.
 
 Final relay round1 exit5: accepted R1. Witnessed both reported malformed-receipt/oversized-offset failures in existing tests (red-errors.log); added AttributeError/OverflowError to the content-free adapter boundary. Three focused cases pass (focused-errors-fixed.log), including explicit-DB bypass. No canonical writer behavior changed.
+
+## Final handoff evidence
+Final relay round2 Approved with attested exit0 (reviewed31965d20f4cb). Full five-suite gate passed once at0f54589, with HEAD unchanged; see TESTS-RESULTS/2026-10-13-gh7/final-gate.json and gate-1..5.log. All19 SQLite cases pass. Existing ResourceWarnings and interpreter duplicate skips remain disclosed in logs; no assertion failures. Frontdoor read-only checks retain only FD-05/FD-06, both pre-existing and outside scope. No repository pre-push hook or hosted workflow is configured; local suite evidence is the gate. Skill is validated in the source checkout; app deployment/discovery is not claimed. Retain this task clone until merge is verified, then retire via merge-cleanup under the operator cleanup preference.

@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-13",
+  "base": "d17e521f3ed2b51a9158ea15fdc954959341b3d3",
+  "tested_commit": "0f54589b14bb1044279285bbe340362bad45f0f1",
+  "head_unchanged": true,
+  "python": "3.14.7",
+  "suites": [
+    {
+      "command": [
+        "bash",
+        "test/clio-capture.sh"
+      ],
+      "exit_code": 0,
+      "log": "gate-1.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/clio-exporter.sh"
+      ],
+      "exit_code": 0,
+      "log": "gate-2.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/clio-codex-tail.sh"
+      ],
+      "exit_code": 0,
+      "log": "gate-3.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/clio-agy-tail.sh"
+      ],
+      "exit_code": 0,
+      "log": "gate-4.log"
+    },
+    {
+      "command": [
+        "python3",
+        "test/clio-store.py"
+      ],
+      "exit_code": 0,
+      "log": "gate-5.log"
+    }
+  ]
+}

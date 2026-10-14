@@ -8,7 +8,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 
 | | |
 | --- | --- |
-| **Last audited** | 2026-09-30 — GH-3 opt-in SQLite; same-path revision: plan/final reviews approved; revised five-suite gate passed |
+| **Last audited** | 2026-10-13 — GH-7 forensic skill: plan/final reviews approved; five-suite gate passed; FD-05/FD-06 remain |
 | **Method** | `/frontdoor` walk (7 dimensions) + `/shakedown` static audit and live harness |
 | **Verdict** | ⚠️ **Bumpy** — a newcomer with an AI agent reaches a captured prompt in ~10 minutes with no account, key, or payment required; two low-severity gaps remain, none blocking |
 | **Remediation plan** | [`SHAKEDOWN/2026-09-01/clio-1652.md`](SHAKEDOWN/2026-09-01/clio-1652.md) — the path-resolution audit and its patch |
@@ -46,10 +46,11 @@ checks block from the repo root and flip any finding whose check has gone silent
 | BL-03 | Both tailers reach the writer by absolute path | `$HOME/.claude/hooks/clio-capture.sh`, not a relative path — this is what makes them CWD-robust wherever `launchd` starts them. |
 | BL-04 | Five test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
 
-**Recorded suite state (updated by hand, never auto-derived):** 2026-09-30 final
-gate passed after relay approval: four shell suites and 16 SQLite cases. Evidence:
-`TESTS-RESULTS/2026-09-30-gh3-same-path/final-gate.json`. Python fixture ResourceWarnings and
-same-interpreter duplicate skips remain in logs; no failed assertions.
+**Recorded suite state (updated by hand, never auto-derived):** 2026-10-13 final
+gate passed after relay approval: four shell suites and 19 SQLite cases. Evidence:
+`TESTS-RESULTS/2026-10-13-gh7/final-gate.json`. Python fixture ResourceWarnings and
+same-interpreter duplicate skips remain in logs; no failed assertions. Read-only
+frontdoor checks retain only the existing FD-05 and FD-06 findings.
 Re-run them yourself after changes; this board does not execute them.
 
 ## Deterministic checks — re-run to refresh

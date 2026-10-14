@@ -53,7 +53,7 @@ ROUND: 1 / 3
 
 ## Setup
 - Artifact under review: `utils/CLIO/INSTALL.md`, `TESTS-RESULTS/2026-10-13-clio-readonly/`, `doc/gh7-clio-forensics.md`
-- Reviewer: codex   ·   Producer: claude-a
+- Reviewer: agy   ·   Producer: codex-supervisor
 - Started: 2026-10-13
 - Definition of Done: Review the documentation-only changes since 4900235d02e820bc473be5aeb876b0f33c3adf71. Preserve the prior approved implementation and existing suite evidence; publish portable, truthful cold-WAL guidance and audit evidence with no private history/configuration or false application-fix claim.
 
@@ -78,5 +78,9 @@ Read the changed documentation/evidence in full and the canonical database() bou
 4. Did transfer publish any private prompt content, credential or machine-specific absolute/backup path, or alter capture heredocs/runtime files?
 
 Report cited findings, verdict and swept-file declaration in this thread only. Do not edit other files, run tests, access installed hooks or open live history. Approve if no substantive defects; on approval use the exact env-pinned tick done command from the runner prompt rather than release.
+
+### Producer · Reviewer availability correction
+
+The initial runner rejected a wildcard artifact path before starting a reviewer; the setup now names the directory directly. Codex then failed before review with HTTP 429 Too Many Requests (CLI exit1, driver exit5, no verdict). Its claim was released and token inspected open. The user named Agy in the prior QA request, so the same scoped documentation packet is now handed to Agy. No approval or implementation change is inferred from either failed invocation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

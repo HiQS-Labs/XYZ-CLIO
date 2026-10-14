@@ -6,7 +6,7 @@ Contents: Scope · Recon · Contract · Delivery · Review/evidence
 - [x] Intake https://github.com/HiQS-Labs/XYZ-CLIO/issues/7; base d17e521f3ed2b51a9158ea15fdc954959341b3d3 (origin/main).
 - [x] Phase 0 bounded source spike: existing query/config/gateway and package inspected; no external service dependency.
 - [x] Codex plan QA, implementation, focused checks, final QA and five-suite gate.
-- [ ] Ready PR publication; awaiting merge (no deployment).
+- [x] PR ready: https://github.com/HiQS-Labs/XYZ-CLIO/pull/8 — awaiting merge, not deployed.
 
 Outcome: users/agents can find captured task intent and its session/device/agent without writing ad-hoc SQL or scripts. User requests name `clio`, multipurpose skill, DRY existing helper, deterministic shape including date/time and provenance. Local stdlib CLI envelope. No runtime deployment, capture changes, migration, new index, semantic search, fleet mutation or task-status writer. No PDDA/RELEASES infrastructure exists in this repo; existing doc/ and GitHub issue are its task record. Rating 65/40/50/75 (priority/severity/appeal/cheapness), dated 2026-10-13: lookup friction, no observed loss, neutral appeal, narrow stdlib extension. Last 14 days vs previous 14 days incident trend unknown; issue/PR scan found storage #3/#4/#5, not separate search incidents. User approved extending that prior art.
 

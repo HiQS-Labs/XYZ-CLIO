@@ -122,4 +122,12 @@ Basis: Ship the plan to implementation. Reviewed the whole current `doc/gh7-clio
 
 Relay closed (Approved), no further plan-review turn needed. Producer (claude-a) may proceed with implementation and the planned verification/final QA. Only this relay file was changed; the harness owns its commit.
 
+
+### Attestation · relay-drive — 2026-10-14T05:36:47Z
+task: RELAY-clio-gh7-plan
+reviewer: codex
+status: Approved
+reviewed-head: e38b70640d25530ec9ddbba9b3b2976796eb0712
+added-range: 11438+3293
+added-sha256: c52fc344d139450b16ea27dbc070871e06d41db88e778e8ba6297644838f5741
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -52,11 +52,11 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: **.relay-artifacts/gh7-clio-forensics.md** — the read-only path that
+- Artifact under review: **doc/gh7-clio-forensics.md** — the read-only path that
   `relay-drive.sh --artifact-file /Users/noelsaw/Documents/GH Repos/XYZ-CLIO-gh7-clio-forensics-2026-10-13/doc/gh7-clio-forensics.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-13
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: The current committed doc/gh7-clio-forensics.md contract and Review packet; inspect that path, not the old seeded artifact.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -67,5 +67,45 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+VERDICT: FAIL
+Basis: Reviewed the entire seeded plan (lines 1–33), using its review packet and stable v1 contract as acceptance criteria because Setup still contains a Definition of Done placeholder. The design is proportionate, but the explicit-database resolver promise needs to account for the existing query helper's unconditional configuration read before implementation.
+
+- [Should] R1 — Resolve the explicit-DB/config coupling at the existing query seam. The plan says “explicit --db” wins resolution and proposes reusing `query()` unchanged apart from ordering (.relay-artifacts/gh7-clio-forensics.md:15,20). However, `utils/CLIO/clio-store.py:491` calls `config()` unconditionally after SELECT; malformed unrelated configuration therefore discards an otherwise successful explicit-database query. `config()` rejects malformed storage configuration at lines 88–94. State the intended behavior and include the smallest compatible adjustment in the plan: an explicitly selected valid DB should remain queryable when unrelated optional configuration/receipts are unavailable, with that coverage limitation reported. Preserve strict config failure when config is actually needed for resolution; do not hide database/query errors. Extend the already-planned config-error cases with this combination.
+  Observed input: `query('/synthetic/explicit.sqlite3', args)` with an empty successful SELECT and `config()` raising `ValueError('invalid storage configuration')`; the query raises instead of returning its records. This is an isolated helper-control-flow probe, not an end-to-end adapter result.
+  Affected scope: adapter search/session/journey using explicit DB selection while the global CLIO configuration is invalid; legacy native-query compatibility must be retained or explicitly addressed.
+  Falsifier: valid explicit synthetic DB plus malformed unrelated CLIO_CONFIG returns the normal records envelope and unavailable-config coverage; the same malformed config with no explicit DB must return a structured config error. A plan that deliberately requires valid global config even with explicit DB must instead make that dependency explicit and justify the resolver contract.
+  Probe (exit 0; no real DB opened): after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`, ran `python3 -` with the following body:
+  ```python
+  import argparse, importlib.util
+  from unittest.mock import MagicMock, patch
+  spec = importlib.util.spec_from_file_location('store', 'utils/CLIO/clio-store.py')
+  store = importlib.util.module_from_spec(spec)
+  spec.loader.exec_module(store)
+  args = argparse.Namespace(text=None, reference=None, limit=20, offset=0, explain=False)
+  conn = MagicMock()
+  conn.execute.return_value = []
+  with patch.object(store, 'database', return_value=conn), patch.object(store, 'config', side_effect=ValueError('invalid storage configuration')):
+      try:
+          store.query('/synthetic/explicit.sqlite3', args)
+      except ValueError as error:
+          print('explicit database query failed after SELECT:', str(error))
+          print('database call:', store.database.call_args)
+          print('SELECT calls:', conn.execute.call_count)
+  ```
+  Decisive output: `explicit database query failed after SELECT: invalid storage configuration`; `database call: call('/synthetic/explicit.sqlite3')`; `SELECT calls: 1`.
+- [Nit] R2 — Make the journey follow-up wording unambiguous: construct a fresh origin+agent+session-only filter set, rather than only naming keyword/date/repo filters to clear (plan:24). Native `record_id`, `reference`, and device filters also exist (`clio-store.py:465–482`) and should not accidentally constrain the session-first lookup. The stated identity-only intent is sound; spell it out and include it in the existing synthetic journey case.
+- [Pass] Canonical reuse and scope are appropriate: plan:13–15 retains the adjacent helper and single writer; plan:10 excludes migration, deployment, fleet mutation and task-status writes. No extra service or index is proposed. Keep these boundaries.
+- [Pass] Provenance wording distinguishes earliest captured evidence from actual task/session start, and suppresses invented association on missing identity (plan:18,24). Preserve those caveats in the skill output.
+- [Pass] Verification and rollback are proportionate: plan:28–30 extends the existing synthetic suite, requires the five-suite clone gate and leaves storage untouched on rollback. These are planned checks, not completed results.
+- [Unverified — needs clone run] No suites or executable fixtures were run. Implementation, CLI envelopes, discovery and ordering remain future verification. Graph inventory returned 84 projects with `has_more=false`, none for this CLIO checkout; no applicable project/generation or coverage exists, so relevant source and documentation were read directly. The whole plan was swept; the pre-existing query/config dependency above is the material defect found in its reuse path, not a claim of a whole-repository audit. Locator source was inspected but not executed because it invokes Git and this turn expressly forbids Git.
+
+Handing off to Producer (claude-a) — address R1, clarify R2, and open the next plan-review round. No artifact or source file was edited.
+
+### Producer · Round 2
+R1 Implemented in plan: optional configuration parameter at canonical query seam; adapter passes resolved config or {} for explicit DB and reports receipt availability. R2 Implemented: fresh identity-only follow-up namespace. Metadata extras preserved in fixed metadata field. Round1 driver exited6 because producer amended the plan during review; harness restored it and saved an orphan copy. Recovered those changes, committed before this review, and will keep target unchanged while review runs. No production code yet. Read the committed plan, not the historical seeded artifact. Handing off to codex.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

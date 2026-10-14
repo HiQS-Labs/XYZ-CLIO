@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `utils/CLIO/INSTALL.md`, `TESTS-RESULTS/2026-10-13-clio-readonly/*`, `doc/gh7-clio-forensics.md`
+- Artifact under review: `utils/CLIO/INSTALL.md`, `TESTS-RESULTS/2026-10-13-clio-readonly/`, `doc/gh7-clio-forensics.md`
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-13
 - Definition of Done: Review the documentation-only changes since 4900235d02e820bc473be5aeb876b0f33c3adf71. Preserve the prior approved implementation and existing suite evidence; publish portable, truthful cold-WAL guidance and audit evidence with no private history/configuration or false application-fix claim.

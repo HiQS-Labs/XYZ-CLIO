@@ -143,4 +143,12 @@ No pre-existing defects found. Key checks: (a) `drain()` reads back versioned ro
 
 **Basis:** All six review questions pass on cited evidence. The adapter is a pure read-only forensic wrapper over the canonical helper with no new writers. The forensic contract, journey identity follow-up, resolver precedence, and audit guidance are all correctly implemented and tested with synthetic data. No private payload, credential, machine-specific path, or application fix is claimed. Prior quota-limited service failures are correctly not treated as approval. No pre-existing defects found in scope.
 
+
+### Attestation · relay-drive — 2026-10-14T07:00:41Z
+task: RELAY-clio-gh7-audit
+reviewer: claude
+status: Approved
+reviewed-head: 6a4bb30010bfa95eff663e9a0c18d1ae4b5634bd
+added-range: 12015+6389
+added-sha256: a74ccac86973538246d9f6aac69fe4971706707b1e2d36769d71a1e2b46e6989
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

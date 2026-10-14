@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,5 +113,53 @@ Handing off to Producer (claude-a) — address R1, retain clone verification evi
 
 ### Producer · Round 2
 R1 Implemented: added AttributeError and OverflowError to the adapter's existing structured exception boundary. Both reported concrete inputs reproduced failing in red-errors.log, then all three focused adapter cases pass in focused-errors-fixed.log; explicit DB still bypasses malformed config. Review revised reader and existing acceptance cases. Full gate runs after approval. Handing off to codex.
+
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: R1 is resolved by the existing structured exception boundary, with both observed failures and the explicit-DB control measured independently. The full-source sweep found no additional concrete defect. Review approval leaves the stipulated post-review five-suite clone gate pending.
+swept file: yes
+
+Read the complete plan, skill, adapter, canonical store (including writer/export/recovery paths), storage suite, README, INSTALL and all eight GH7 evidence logs. Tier 2 source fallback: list_projects returned 84 projects, has_more=false, with no matching CLIO checkout; check_index_coverage for the review files/evidence scope returned "project not found or not indexed". No graph generation/coverage assurance is available. No git commands, test suites, executable fixtures or live-history reads were run. Historical diff comparison remains unavailable under the no-git instruction.
+
+- [Pass] R1 closed: utils/CLIO/clio-query.py:173 now catches AttributeError and OverflowError; :175–179 clears records/journey evidence, retains the v1 envelope and exits 2. Existing acceptance cases at test/clio-store.py:950 and :964–967 cover oversized offset, malformed fleet metadata and explicit-DB bypass. The narrow synthetic probe below independently returned the requested outcomes, with database/config bytes unchanged.
+- [Pass] Canonical reader reuse and chronology remain intact: utils/CLIO/clio-query.py:145 and :158–163 call the existing reader, with a fresh origin/agent/session-only follow-up; utils/CLIO/clio-store.py:484–492 retains newest default and stable timestamp/record-ID ordering. Adapter normalization at :89–99 retains extras and only reports explicit IDE metadata. No new writer or dependency is introduced by this adapter.
+- [Pass] Interpretation and authorization remain bounded: SKILL.md says "A session's first captured prompt is not proof of actual session creation" and "Lookup alone never authorizes activation, import, drain, projection, repair, config changes or launchd changes." Resolver precedence and ambiguity refusal are implemented at utils/CLIO/clio-query.py:41–86.
+- [Unverified — needs clone run] Producer evidence focused-errors-fixed.log reports "Ran 3 tests in 1.677s" / "OK"; storage-fixed.log reports "Ran 19 tests in 17.298s" / "OK" before this final boundary correction. These are supplied logs, not reviewer suite executions. Run the required five-suite gate in the disposable full clone after approval; approval is not a claim that gate has passed.
+- Full-file sweep: no additional concrete pre-existing defect identified in the bounded reviewed files. This is not an exhaustive correctness guarantee.
+
+Narrow probe command (driver exit 0; scratch-only synthetic fixture creation, then read-only adapter calls):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import json, os, sqlite3, subprocess, sys
+from pathlib import Path
+root = Path.cwd()
+scratch = Path(os.environ['TMPDIR'])
+db = scratch / 'review-r2.sqlite3'
+with sqlite3.connect(db) as conn:
+    conn.executescript("PRAGMA application_id=1129072975; PRAGMA user_version=1; CREATE TABLE IF NOT EXISTS events(record_id TEXT, timestamp TEXT, payload TEXT);")
+cfg = scratch / 'review-r2-config.json'
+cfg.write_text(json.dumps(dict(db=str(db), owner='fixture', fleet=True)))
+before = (db.read_bytes(), cfg.read_bytes())
+for name, flags in [('bad-fleet', []), ('explicit-control', ['--db',str(db)]), ('large-offset', ['--db',str(db),'--offset','9223372036854775808'])]:
+    command = [sys.executable,str(root/'utils/CLIO/clio-query.py'),'search',*flags]
+    result = subprocess.run(command,env=dict(os.environ,CLIO_CONFIG=str(cfg)),text=True,capture_output=True)
+    value = json.loads(result.stdout)
+    print(name, 'exit=',result.returncode,'status=',value['status'],'errors=',value['errors'],'records=',value['records'],'journey=',value['journey'],'receipts=',value['coverage']['config_receipts'],'stderr=',repr(result.stderr))
+    assert result.returncode == (0 if name == 'explicit-control' else 2)
+    assert value['records'] == [] and value['journey']['earliest_match'] is None and value['journey']['session_first_record'] is None
+    assert not result.stderr
+assert before == (db.read_bytes(), cfg.read_bytes())
+print('database/config bytes unchanged')
+PYPROBE
+```
+
+Decisive output: bad-fleet and large-offset each exit=2, status=error, errors=[{'code': 'query_failed', 'message': 'Cannot read CLIO history; check the helper, database and configuration.'}], records=[], journey={'basis': 'not_requested', 'earliest_match': None, 'session_first_record': None}, stderr=''. Explicit-control exit=0, status=empty, errors=[], records=[], null journey records, receipts=not_loaded_explicit_db, stderr=''. Final output: "database/config bytes unchanged".
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) / harness proceeds with the required disposable-clone gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

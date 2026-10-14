@@ -1,0 +1,19 @@
+{
+  "added_len": 6389,
+  "added_sha256": "a74ccac86973538246d9f6aac69fe4971706707b1e2d36769d71a1e2b46e6989",
+  "added_start": 12015,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-14T07:00:41Z",
+  "isolated": true,
+  "relay_file_rel": "relay-system/2026-10-13/clio-gh7-audit.md",
+  "reviewed_head": "6a4bb30010bfa95eff663e9a0c18d1ae4b5634bd",
+  "reviewer": "claude",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "task": "RELAY-clio-gh7-audit",
+  "trailer_sha256": "de1fe3765b20386e4d26cf939000ce21e573fe341942e87ac0b13bc19d824e90",
+  "driver_exit": 0,
+  "review_route": "Claude Code CLI headless through relay-xyz; native subscription authentication",
+  "scope": "Whole PR including skill implementation and transferred read-only audit",
+  "telemetry_note": "Optional harness telemetry row was not recorded: cli-default reasoning-effort is not accepted by its logger. Review attestation succeeded independently."
+}

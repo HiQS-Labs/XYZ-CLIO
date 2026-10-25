@@ -24,16 +24,23 @@ This is the last change authored directly in XYZ-CLIO (operator decision D, noel
 - Separate finding: current Codex no longer writes `event_msg/user_message`, so Codex capture is silent. Filed as #14; it is to be authored upstream in Rebalance after the flip and is **not** part of this change.
 
 ## Changes (surgical; no new files except this plan and a TESTS-RESULTS receipt)
-1. `utils/CLIO/clio-agy-tail.sh`, `utils/CLIO/clio-codex-tail.sh`: replace `mkdir "$TAIL_LOCK" 2>/dev/null || exit 0` with the same reaper block in both:
+1. `utils/CLIO/clio-agy-tail.sh`, `utils/CLIO/clio-codex-tail.sh`: replace `mkdir "$TAIL_LOCK" 2>/dev/null || exit 0` with the same reaper block in both. Reaping is serialized behind an atomic `mkdir "$TAIL_LOCK.reap"`, and the age is re-checked after acquiring it, so a contender that saw the old lock can never delete a lock another contender just took (plan QA R2):
    ```bash
-   if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
+   lock_stale() { # the held lock is older than 300 s (born stamp, else dir mtime); empty/non-numeric = not stale
      born=$(cat "$TAIL_LOCK/born" 2>/dev/null || stat -f %m "$TAIL_LOCK" 2>/dev/null || stat -c %Y "$TAIL_LOCK" 2>/dev/null || echo "")
-     case "$born" in ''|*[!0-9]*) exit 0 ;; esac
-     [ $(( $(date +%s) - born )) -gt 300 ] || exit 0
-     diag "reaped stale tail lock born at $born"
-     rm -rf "$TAIL_LOCK"; mkdir "$TAIL_LOCK" 2>/dev/null || exit 0
+     case "$born" in ''|*[!0-9]*) return 1 ;; esac
+     [ $(( $(date +%s) - born )) -gt 300 ]
+   }
+   if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
+     lock_stale || exit 0
+     mkdir "$TAIL_LOCK.reap" 2>/dev/null || exit 0          # one reaper at a time
+     lock_stale && { rm -rf "$TAIL_LOCK"; diag "reaped stale tail lock born at $born"; }
+     mkdir "$TAIL_LOCK" 2>/dev/null; got=$?
+     rmdir "$TAIL_LOCK.reap"
+     [ "$got" = 0 ] || exit 0
    fi
    ```
+   Residual (accepted): only SIGKILL inside the millisecond reap section leaves `.reap` behind. That disables reaping, not normal locking, so it degrades to today's behaviour and a diag-free `rmdir` clears it.
    Update the header `overlap =` comment to mention the 300 s reap.
 2. Idle write (Agy): `[ "$cached" = "$inode $offset" ] || state_update …`. (Codex): build the would-be record `inode\toffset\tsid\tcwd\teligibility` with the same tab sanitizing `state_update` uses, and write only if it differs from `$cached`. A legacy 5-field row (empty eligibility) is therefore rewritten once as `legacy`, then stays stable.
 3. Codex `extract_rows`: after the timestamp and `since` checks, when `text.lstrip().startswith("# Context from my IDE setup:")`, take the text after the first line-anchored `## My request( for Codex)?:` header, strip it, and `continue` if it is empty. Keep `source_event_id` on the original line.
@@ -43,7 +50,7 @@ This is the last change authored directly in XYZ-CLIO (operator decision D, noel
 ## Non-goals
 - No Codex format fix (#14), no Rebalance edits (0b), no publisher (0c), no installer.
 - No new suites (repo contract: extend existing suites only if an acceptance check cannot be shown manually; this plan uses manual checks).
-- No reaper-race protocol (plan QA R1 Blocker, declined): launchd never starts a second instance of a job while one is running, so two contenders reach the reaper only when a manual run overlaps launchd. A rename-to-quarantine has the same window (a loser's `mv` after the winner's `mkdir` still takes the fresh lock), so it buys nothing.
+- Reaper race: R1 declined it as outside launchd's cadence. R2 showed it with a two-process interleaving on the manual-invocation surface, so it is now **Implemented** as the `.reap` handoff in change 1 (a rename-to-quarantine alone would not close it).
 - No PID-liveness lock protocol. The age rule matches Rebalance's production behaviour; overlap after a reap is tolerated because the writer's ID suppression and the shared append lock prevent duplicate rows.
 
 ## Risks / rollback
@@ -56,6 +63,7 @@ This is the last change authored directly in XYZ-CLIO (operator decision D, noel
   - a. Lock with `born` = now−600: the tailer reaps it, captures a pending row, and leaves a diag line. **Red control:** the base revision exits 0 and captures nothing.
   - b. Lock with `born` = now: silent no-op, lock untouched.
   - b2. Lock dir with no `born` file and mtime set 10 min back: reaped, falling back to the dir mtime. **Red control:** the base revision makes no capture.
+  - b4. Concurrent reapers (plan QA R2 falsifier): the R2 barrier probe, run against the exact `lock_stale` + `.reap` block (A and B both pass the first `lock_stale`, then race). Expected: exactly one `reaped` line, and the final `$TAIL_LOCK/born` belongs to the winner. **Red control:** the same probe against the unserialized `rm -rf; mkdir` block shows B deleting A's lock (R2 output `fresh-lock-owner=B`).
   - b3. Lock with an empty or non-numeric `born` (`abc`): silent no-op, lock untouched (fail-safe; the dir mtime is not consulted after a successful read).
   - c. Two idle ticks: state file bytes and mtime unchanged after the second. **Red control:** the base revision changes the mtime.
   - d. A Codex `user_message` with the IDE context and `## My request for Codex:` → stored prompt is only the request. A prompt that merely quotes `## My request:` with no IDE header → stored unchanged. An IDE prompt with an empty request → no row.

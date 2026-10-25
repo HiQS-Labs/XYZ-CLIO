@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -121,5 +121,10 @@ VERDICT: FAIL
 Basis: The complete drift ledger and all non-reaper ports meet the Definition of Done, but the direct concurrent-reaper case deletes a fresh lock under the plan's exact remove/recreate sequence. The plan cannot be Approved until it has a bounded serialized recovery scheme and a falsifiable interleaving control.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+- [Blocker] concurrent reaper → **Implemented**. Your barrier probe is a genuine two-process interleaving on the manual/direct invocation surface, so my R1 "no observed input" disposition was wrong. Change 1 now serializes reaping behind an atomic `mkdir "$TAIL_LOCK.reap"` and re-checks `lock_stale` after acquiring it. A loser either fails the `.reap` mkdir (exit 0), or acquires it after the winner and sees a fresh `born`/mtime (no reap). The `.reap` is removed before the tailer proceeds. Residual: a SIGKILL inside the reap section only disables reaping (today's behaviour). Falsifier added as manual check b4, with your R2 output as the red control.
+- [Pass] items acknowledged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -103,5 +103,23 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 - [Should] reaper branch coverage → **Implemented**: manual checks b2 (no `born`, stale dir mtime → reap, with a base red control) and b3 (empty or non-numeric `born` → no-op).
 - [Should] writer-comment row → **Implemented**: the table row is added as Reject.
 - Producer addition: change 4 moves the existing `skips_short_prompt` 100/99 boundary case to 20/19. A draft run in a disposable clone showed it is the only suite assertion that breaks under the default-20 port. (`test/clio-store.py` `test_activation_import_gate_and_source_preservation` also fails on the base revision d17e521; it is date-dependent and pre-existing, unrelated.)
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Blocker] The raw `rm -rf "$TAIL_LOCK"; mkdir "$TAIL_LOCK"` reaper remains unsafe against concurrent direct invocations. The producer's launchd assumption does not make the advertised lock operation safe for the documented/manual invocation surface, and the earlier disposition incorrectly says there was no observed input. Probe command: `zsh -c 'p="$1/reaper-race"; rm -rf "$p"; mkdir -p "$p/ready"; mkdir "$p/lock"; print 1 > "$p/lock/born"; reaper() { tag=$1; [ "$(cat "$p/lock/born")" -lt 2 ] || exit 4; : > "$p/ready/$tag"; while [ ! -f "$p/go" ]; do sleep 0.01; done; if [ "$tag" = A ]; then rm -rf "$p/lock"; mkdir "$p/lock"; print A > "$p/lock/born"; else sleep 0.05; rm -rf "$p/lock"; mkdir "$p/lock"; print B > "$p/lock/born"; fi; }; reaper A & a=$!; reaper B & b=$!; while [ ! -f "$p/ready/A" ] || [ ! -f "$p/ready/B" ]; do sleep 0.01; done; : > "$p/go"; wait "$a"; aa=$?; wait "$b"; bb=$?; print "a=$aa b=$bb fresh-lock-owner=$(cat "$p/lock/born")"' zsh "$TMPDIR"`; exit status: `0`; decisive output: `a=0 b=0 fresh-lock-owner=B`. This exacts the failure: B deletes A's new lock. Replace the unguarded deletion with a mutually exclusive reaper handoff that serializes stale-lock decisions and rechecks `born` after acquiring that handoff; keep the short critical section/trap cleanup and cover its recovery behavior. A fixed quarantine rename alone is insufficient, as the producer correctly notes.
+  Observed input: two concurrent direct tailer invocations both fail `mkdir "$TAIL_LOCK"` while its numeric `born` is older than 300 seconds.
+  Affected scope: every stale-lock recovery path in both tailers when an operator/manual invocation overlaps a scheduled invocation or another direct run.
+  Falsifier: an interleaved two-contender manual check against the revised reaper where both initially see the stale lock, only one owns the recovery handoff, and after both exit its new `$TAIL_LOCK/born` is still owned by that winner; expected result: no contender deletes a newly acquired lock.
+- [Pass] The reconciliation table now covers every behavior-changing hunk in the supplied diff: reaper/idle changes, Agy read-write DB and `source_event_id` removals, Codex guard/IDE/IFS/state changes, writer SQLite removal/comment/default, plus the README/LICENSE addition ([plan L15-L22](../../doc/gh13-plan.md#L15-L22); [diff L9-L22](../../doc/gh13-rebalance-drift.diff#L9-L22), [L28-L70](../../doc/gh13-rebalance-drift.diff#L28-L70), [L81-L160](../../doc/gh13-rebalance-drift.diff#L81-L160), [L168-L224](../../doc/gh13-rebalance-drift.diff#L168-L224)). No additional pre-existing plan defects were found in the full-file sweep.
+- [Pass] The plan correctly rejects `IFS=$'\\t' read`: with the concrete empty-middle-field record `9<TAB>123<TAB><TAB>/work<TAB>legacy`, `read` produces `sid=/work cwd=legacy eligibility=` rather than preserving the empty sid. Probe command: `zsh -c 'row=$'"'"'9\\t123\\t\\t/work\\tlegacy'"'"'; IFS=$'"'"'\\t'"'"' read -r inode offset sid cwd eligibility <<< "$row"; print -r -- "inode=$inode offset=$offset sid=${sid:-<empty>} cwd=$cwd eligibility=$eligibility"'`; exit status: `0`; decisive output: `inode=9 offset=123 sid=/work cwd=legacy eligibility=`. The stated reject rationale is therefore correct ([plan L19](../../doc/gh13-plan.md#L19); [diff L139-L146](../../doc/gh13-rebalance-drift.diff#L139-L146)).
+- [Pass] Apart from the reaper race, the planned idle comparison, narrowed/anchored IDE stripping, macOS/Linux `stat` fallback with fail-safe nonnumeric `born`, 300-second threshold, and 20/19 existing capture boundary are proportionate and correctly specified ([plan L30-L41](../../doc/gh13-plan.md#L30-L41), [L54-L63](../../doc/gh13-plan.md#L54-L63)).
+
+VERDICT: FAIL
+
+Basis: The complete drift ledger and all non-reaper ports meet the Definition of Done, but the direct concurrent-reaper case deletes a fresh lock under the plan's exact remove/recreate sequence. The plan cannot be Approved until it has a bounded serialized recovery scheme and a falsifiable interleaving control.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

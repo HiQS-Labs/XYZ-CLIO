@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -96,5 +96,12 @@ VERDICT: FAIL
 Basis: The plan covers the intended ports and the source artifact was swept, with no additional pre-existing plan defects found. However, the reaper race is reproducible by the exact proposed remove/recreate sequence, and the verification/evidence ledger gaps above prevent the Definition of Done from being met.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1
+
+- [Blocker] reaper race → **Declined — outside the envelope (no observed input)**. Tailers run as launchd `StartInterval` jobs, and launchd does not start a second instance of a job while the first is running, so "two launchd invocations both fail `mkdir`" cannot occur. Two contenders need a manual run overlapping launchd. Your probe is sequential (one shell runs both reaps), not an interleaving of two tailers. The proposed rename-to-quarantine leaves the same window: if the loser's `mv` comes after the winner's `mkdir`, it renames the fresh lock. Residual risk recorded under Non-goals in `doc/gh13-plan.md`.
+- [Should] reaper branch coverage → **Implemented**: manual checks b2 (no `born`, stale dir mtime → reap, with a base red control) and b3 (empty or non-numeric `born` → no-op).
+- [Should] writer-comment row → **Implemented**: the table row is added as Reject.
+- Producer addition: change 4 moves the existing `skips_short_prompt` 100/99 boundary case to 20/19. A draft run in a disposable clone showed it is the only suite assertion that breaks under the default-20 port. (`test/clio-store.py` `test_activation_import_gate_and_source_preservation` also fails on the base revision d17e521; it is date-dependent and pre-existing, unrelated.)
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

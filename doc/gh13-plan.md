@@ -19,6 +19,7 @@ This is the last change authored directly in XYZ-CLIO (operator decision D, noel
 | – | Dropped the `not session_id` / non-string guard; `IFS=$'\t' read` of the state line | Codex tailer | **Reject**: tab is IFS whitespace, so an empty sid field shifts cwd and eligibility. |
 | – | Dropped `source_event_id`; read-write Agy DB open; removed the SQLite branches | both tailers, exporter, writer | **Reject** (Rebalance is just behind) |
 | – | Rebalance's own `README.md`/`LICENSE` under `utils/CLIO` | – | Out of scope; 0b decides (this repo keeps them at the root). |
+| – | Writer header comment `Legacy contract (SQLite mode returns nonzero …)` → `Contract:` | INSTALL.md writer | **Reject**: it would drop the SQLite receipt caveat while this branch keeps SQLite mode. |
 
 - Separate finding: current Codex no longer writes `event_msg/user_message`, so Codex capture is silent. Filed as #14; it is to be authored upstream in Rebalance after the flip and is **not** part of this change.
 
@@ -36,11 +37,13 @@ This is the last change authored directly in XYZ-CLIO (operator decision D, noel
    Update the header `overlap =` comment to mention the 300 s reap.
 2. Idle write (Agy): `[ "$cached" = "$inode $offset" ] || state_update …`. (Codex): build the would-be record `inode\toffset\tsid\tcwd\teligibility` with the same tab sanitizing `state_update` uses, and write only if it differs from `$cached`. A legacy 5-field row (empty eligibility) is therefore rewritten once as `legacy`, then stays stable.
 3. Codex `extract_rows`: after the timestamp and `since` checks, when `text.lstrip().startswith("# Context from my IDE setup:")`, take the text after the first line-anchored `## My request( for Codex)?:` header, strip it, and `continue` if it is empty. Keep `source_event_id` on the original line.
-4. INSTALL.md: the writer default becomes `${CLIO_MIN_PROMPT_CHARS:-20}`, the docs line says default **20**, and short-prompt examples stay valid (`yes`/`push it` are still dropped).
+4. `test/clio-capture.sh` `skips_short_prompt` boundary case: move the pinned boundary from 100/99 to 20/19 characters. This edits an existing case, not a new suite; it is the only existing assertion of the old default (it fails against the draft until updated, and a draft run proved it).
+5. INSTALL.md: the writer default becomes `${CLIO_MIN_PROMPT_CHARS:-20}`, the docs line says default **20**, and short-prompt examples stay valid (`yes`/`push it` are still dropped).
 
 ## Non-goals
 - No Codex format fix (#14), no Rebalance edits (0b), no publisher (0c), no installer.
 - No new suites (repo contract: extend existing suites only if an acceptance check cannot be shown manually; this plan uses manual checks).
+- No reaper-race protocol (plan QA R1 Blocker, declined): launchd never starts a second instance of a job while one is running, so two contenders reach the reaper only when a manual run overlaps launchd. A rename-to-quarantine has the same window (a loser's `mv` after the winner's `mkdir` still takes the fresh lock), so it buys nothing.
 - No PID-liveness lock protocol. The age rule matches Rebalance's production behaviour; overlap after a reap is tolerated because the writer's ID suppression and the shared append lock prevent duplicate rows.
 
 ## Risks / rollback
@@ -52,6 +55,8 @@ This is the last change authored directly in XYZ-CLIO (operator decision D, noel
 - Manual checks, recorded under `TESTS-RESULTS/2026-10-24-gh13/`:
   - a. Lock with `born` = now−600: the tailer reaps it, captures a pending row, and leaves a diag line. **Red control:** the base revision exits 0 and captures nothing.
   - b. Lock with `born` = now: silent no-op, lock untouched.
+  - b2. Lock dir with no `born` file and mtime set 10 min back: reaped, falling back to the dir mtime. **Red control:** the base revision makes no capture.
+  - b3. Lock with an empty or non-numeric `born` (`abc`): silent no-op, lock untouched (fail-safe; the dir mtime is not consulted after a successful read).
   - c. Two idle ticks: state file bytes and mtime unchanged after the second. **Red control:** the base revision changes the mtime.
   - d. A Codex `user_message` with the IDE context and `## My request for Codex:` → stored prompt is only the request. A prompt that merely quotes `## My request:` with no IDE header → stored unchanged. An IDE prompt with an empty request → no row.
   - e. A 30-character prompt via the hook with the env unset → captured. `push it` → dropped.

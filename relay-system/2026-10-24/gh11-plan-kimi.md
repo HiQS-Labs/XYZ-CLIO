@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -114,5 +114,31 @@ All four findings accepted; plan revised in `doc/gh11-plan.md`.
 - Nit 3 — Accepted. The parser is described as a NUL split with a full-path match plus `valid_origin`. Nested and newline-named decoys are added to case 3.
 - Nit 4 — Accepted. B renders at an explicit later cutoff, so A's check takes the repair branch and records `peer_generated`.
 Please re-review the revised plan; if no Blocker/Should remains, set STATUS: Approved.
+
+### Reviewer · Round 2
+_Recovered by the Producer: the reviewer wrote this block, but its aider whole-file edit did not land, and the harness salvage failed structural validation (exit 8). The text below is the reviewer's own Round 2 block, taken from `.xyz/aider-plan-r2.log` lines 720-798 with only terminal line-wrapping and diff `+` prefixes removed. The reviewer's intended header change was "STATUS: Approved. ROUND: 2 / 3 unchanged." (log line 657)._
+
+
+VERDICT: PASS
+Basis: The revised plan resolves both Round 1 Should findings and both nits without expanding the architecture. Its discovery, note-join, compatibility, retirement, and rollback steps remain grounded in the existing helper seams, and the planned controls now distinguish the failure modes they intend to exercise. No Blocker or Should remains.
+swept file: yes
+
+Pre-existing sweep: I found no additional pre-existing defect in the supplied helper, test, or installation seams that needs to enter GH-11 scope. This was a static source review; no suites or executable probes were run, and this verdict makes no test-execution claim.
+
+- [Pass] **The upgrade instructions now preserve an existing publisher's repair mode.** The plan explicitly requires an existing note-writing device to retain `--repair-generated-note` and desired origin pins when adding discovery, and test 8 checks `repair_generated_note`, `header_sha256`, and `coverage` (`doc/gh11-plan.md`, “Docs” and test case 8). This matches the fresh-mapping behavior in `configure_fleet` (`utils/CLIO/clio-store.py:935-961`).
+- [Pass] **The join body-integrity control is now isolated from unknown history.** Test 6 places the one-byte body edit after B reconciles and all note IDs are known, requires the specific byte-reproduction refusal with no registered view, then restores pristine bytes for the successful join; case 7 covers both forbidden flag pairs (`doc/gh11-plan.md`, test cases 6–7).
+- [Pass] **The parser and peer-repair assertions are deterministic.** Discovery now specifies NUL splitting, full-path matching, canonical UUID validation, and nested/newline decoys (`doc/gh11-plan.md`, discovery steps and test case 3). The final note check uses B's explicitly later cutoff so its bytes are absent from A's accepted hashes before asserting `peer_generated` and no new archive (`doc/gh11-plan.md`, test case 6; `utils/CLIO/clio-store.py:578-635`).
+
+Definition-of-done recheck:
+
+1. **Yes.** `legacy_coverage` only recognizes legacy `clio:id` entries and rejects unaccounted generated content (`utils/CLIO/clio-store.py:531-576`), whereas `render_markdown` emits `clio:record` entries and a different generated body (`utils/CLIO/clio-store.py:712-756`). The stated need for a separate join path is correct.
+2. **Yes.** The planned pinned-HEAD `ls-tree` read uses the existing `git_read` deadline/timeout seam, and discovered snapshots still pass per-origin size, owner, digest, row-count, identity, cumulative-regression, and self-import checks (`utils/CLIO/clio-store.py:912-1020`, `:820-880`). NUL splitting plus full-path/canonical-UUID matching closes the newline and nested-path ambiguities; `cat-file blob` supplies committed bytes rather than dereferencing a worktree symlink, with malformed bytes rejected by snapshot validation.
+3. **Yes.** Discovery remains opt-in, existing mappings without `discover` keep their explicit inventory, and enabling it unions discovered origins with pins rather than weakening pinned-`missing` reporting (`doc/gh11-plan.md`, steps 1–2 and test cases 1, 2, and 5). The revised upgrade command also avoids the repair regression identified in Round 1.
+4. **Yes.** A stopped origin's committed snapshot and imported rows remain history; reconciliation has no deletion-on-missing behavior (`utils/CLIO/clio-store.py:843-880`). Zero committed retirement changes therefore satisfies “at most one,” and no marker is needed.
+5. **Yes, with the planned factoring preserving the existing guards.** The helper must retain unique IDs, canonical cutoff validation, and the future-cutoff bound from `checked_view` (`utils/CLIO/clio-store.py:612-630`). Known IDs plus exact reproduction checks the generated body against local records, while the existing migration path supplies the exclusive backup, backup digest, header, accepted hashes, and coverage (`utils/CLIO/clio-store.py:638-690`). Join correctly precedes repair configuration because repair requires a registered view and intact backup (`utils/CLIO/clio-store.py:949-957`).
+6. **No further requirement gap or excess mechanism is evident.** The plan uses the existing helper, scheduler, snapshot transport, and note renderer; its non-goals properly leave delivery to Rebalance and add no lease, election, service, or second writer (`doc/gh11-plan.md`, “Non-goals”).
+7. **Yes.** The single extended test method has genuine discovery-off and unknown-ID/body-edit red controls, covers malformed-origin isolation and pinned-missing behavior, exercises join through scheduled publication and peer repair, and checks upgrade flag retention (`doc/gh11-plan.md`, test cases 1–8). The separate disposable-clone suite and real-CLI smoke steps remain appropriately bounded; their results are not being presumed here.
+
+Handoff: relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

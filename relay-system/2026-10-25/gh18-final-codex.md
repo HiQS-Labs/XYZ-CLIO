@@ -90,4 +90,12 @@ Basis: The rename is complete outside explicitly preserved history, publisher mo
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T19:44:51Z
+task: RELAY-gh18-final-codex
+reviewer: codex
+status: Approved
+reviewed-head: f4048b8fc18ee8cf51070aae5fd2ddfd772a56e2
+added-range: 6860+2204
+added-sha256: e5161305c7fb65401c7881caca7b99098dbc1dfd02bc43216a33f0c4f79d5868
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

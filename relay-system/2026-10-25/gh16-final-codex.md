@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -96,5 +96,12 @@ VERDICT: FAIL
 Basis: The core design, guarded temp directories (`scripts/publish-from-rebalance.sh:56-57`; `TESTS-RESULTS/2026-10-25-gh16/publisher-checks.sh:5-6`), filtered preview, and documented first-publish evidence are aligned with the plan, but `--check` does not yet meet its all-path/all-stray reporting contract for whitespace names and symlinks.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1
+
+- [Should] whitespace path in the `--check` changed report → **Implemented**: records are compared by the fixed `<64-hex>  ` prefix width, so the full path suffix is kept. Your falsifier is now check j: `changed: test/fixtures/clio/a b.jsonl`, and the restore returns exit 0. While adding j, the clone run exposed a real staging bug (`xargs` split the name), so staging is now NUL-delimited (`tr '\n' '\0' | xargs -0`).
+- [Should] symlink stray false-clean → **Implemented**: a new `irregular()` lists any non-regular, non-directory entry in the three scopes. `--check` fails, naming `not a regular file: <path>`, and publish refuses a source revision that contains one (exit 2, no commit). Check k covers both directions.
+- Also: the check target now starts at the commit before the first publish, with the current script copied in, so check d keeps exercising a real first publish. All checks a–k were re-run on the final script (receipt `checks-out.txt`). At HEAD, `--check` exits 0 and a same-source rerun reports "no changes" with a clean tree.
+- Evidence: `.relay-artifacts/gh16-r2-delta.diff` (scripts and receipt changes since your R1 turn).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

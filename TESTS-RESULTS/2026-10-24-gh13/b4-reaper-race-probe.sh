@@ -9,13 +9,14 @@ if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
   lock_stale || exit 0
   diag "reaped"; rm -rf "$TAIL_LOCK"; mkdir "$TAIL_LOCK" 2>/dev/null || exit 0
 fi'
-P=$(mktemp -d "${TMPDIR:-/tmp}/b4.XXXXXX"); ok=0
+# Refuse to run without a real scratch dir: an empty $P would turn the cleanup below into rm -rf /*.
+P=$(mktemp -d "${TMPDIR:-/tmp}/b4.XXXXXX") && [ -d "$P" ] || { echo "b4: mktemp failed" >&2; exit 1; }; ok=0
 for i in $(seq 1 30); do
-  rm -rf "$P"/*; mkdir "$P/lock"; echo 1 > "$P/lock/born"
+  rm -rf "${P:?}/lock" "${P:?}/diag" "${P:?}/owners" "${P:?}/go"; mkdir "$P/lock"; echo 1 > "$P/lock/born"
   for tag in A B; do ( TAIL_LOCK="$P/lock"; diag(){ echo "$tag $*" >> "$P/diag"; }
     eval "$(printf '%s' "$blk" | sed 's/^  lock_stale || exit 0$/  lock_stale || exit 0; while [ ! -f "$P\/go" ]; do :; done/')"
     echo $tag > "$TAIL_LOCK/born"; echo $tag >> "$P/owners" ) & done
   sleep 0.2; : > "$P/go"; wait
   [ "$(grep -c reaped "$P/diag")" = 1 ] && [ "$(wc -l < "$P/owners" | tr -d ' ')" = 1 ] && ok=$((ok+1))
 done
-rm -rf "$P"; echo "iterations-with-single-reap-and-single-owner=$ok/30"
+rm -rf "${P:?}"; echo "iterations-with-single-reap-and-single-owner=$ok/30"

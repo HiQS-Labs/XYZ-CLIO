@@ -1,7 +1,7 @@
 #!/bin/bash
 # GH-13 manual checks. Usage: manual-checks.sh <repo root>. Synthetic data, throwaway HOME.
 set -uo pipefail
-ROOT=$1; DOC="$ROOT/utils/CLIO/INSTALL.md"; T=$(mktemp -d "${TMPDIR:-/tmp}/gh13mc.XXXXXX"); trap 'rm -rf "$T"' EXIT
+ROOT=$1; DOC="$ROOT/utils/CLIO/INSTALL.md"; T=$(mktemp -d "${TMPDIR:-/tmp}/gh13mc.XXXXXX") && [ -d "$T" ] || { echo "manual-checks: mktemp failed" >&2; exit 1; }; trap 'rm -rf "${T:?}"' EXIT
 unset CLIO_MIN_PROMPT_CHARS CLIO_CONFIG
 home_for() { h="$T/$1/home"; mkdir -p "$h/.claude/hooks"; awk '/^cat > ~\/\.claude\/hooks\/clio-capture\.sh << .EOF.$/{f=1;next} f&&/^EOF$/{exit} f' "$DOC" > "$h/.claude/hooks/clio-capture.sh"; chmod +x "$h/.claude/hooks/clio-capture.sh"; echo "$h"; }
 rows() { [ -f "$1/.claude/prompt-log.jsonl" ] && wc -l < "$1/.claude/prompt-log.jsonl" | tr -d ' ' || echo 0; }

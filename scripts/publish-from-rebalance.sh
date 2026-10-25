@@ -21,6 +21,13 @@ published_files() { # $1 = tree root; prints the published set, sorted, one rela
       find test/fixtures/clio -type f 2>/dev/null
     } | LC_ALL=C sort )
 }
+irregular() { # $1 = tree root; prints any non-regular, non-directory entry (e.g. a symlink) in the published scopes
+  ( cd "$1" && {
+      find utils/CLIO -maxdepth 1 ! -type f ! -type d 2>/dev/null
+      find test -maxdepth 1 -name 'clio-*' ! -type f ! -type d 2>/dev/null
+      find test/fixtures/clio ! -type f ! -type d 2>/dev/null
+    } | LC_ALL=C sort )
+}
 manifest() { # $1 = tree root; "<sha256>  <path>" per published file
   published_files "$1" | while IFS= read -r f; do (cd "$1" && shasum -a 256 "$f"); done
 }
@@ -28,11 +35,19 @@ manifest() { # $1 = tree root; "<sha256>  <path>" per published file
 if [ "${1:-}" = --check ]; then
   [ -f "$ROOT/$RECORD" ] || { echo "publish-from-rebalance: no $RECORD; nothing has been published yet" >&2; exit 1; }
   rev=$(awk '$1 == "revision:" {print substr($2, 1, 12)}' "$ROOT/$RECORD")
+  odd=$(irregular "$ROOT")
+  if [ -n "$odd" ]; then
+    printf '%s\n' "$odd" | sed 's/^/  not a regular file: /' >&2
+    echo "publish-from-rebalance: CLIO differs from HiQS-Labs/rebalanceOS@$rev; edit upstream, then publish" >&2; exit 1
+  fi
   diff <(grep -E '^[0-9a-f]{64}  ' "$ROOT/$RECORD") <(manifest "$ROOT") > /dev/null && {
     echo "CLIO matches HiQS-Labs/rebalanceOS@$rev ($(grep -cE '^[0-9a-f]{64}  ' "$ROOT/$RECORD") files)"; exit 0; }
   echo "publish-from-rebalance: CLIO differs from HiQS-Labs/rebalanceOS@$rev; edit upstream, then publish:" >&2
   diff <(grep -E '^[0-9a-f]{64}  ' "$ROOT/$RECORD" | sed 's/^[0-9a-f]*  //') <(published_files "$ROOT") | sed -n 's/^< /  missing: /p; s/^> /  not published: /p' >&2 || true
-  join -j 2 <(grep -E '^[0-9a-f]{64}  ' "$ROOT/$RECORD" | sort -k2) <(manifest "$ROOT" | sort -k2) | awk '$2 != $3 {print "  changed: " $1}' >&2
+  # Records are "<64-hex>  <path>": compare by the full path suffix, so names with spaces stay whole.
+  awk 'NR == FNR { h[substr($0, 67)] = substr($0, 1, 64); next }
+       (substr($0, 67) in h) && h[substr($0, 67)] != substr($0, 1, 64) { print "  changed: " substr($0, 67) }' \
+    <(grep -E '^[0-9a-f]{64}  ' "$ROOT/$RECORD") <(manifest "$ROOT") >&2
   exit 1
 fi
 
@@ -57,6 +72,8 @@ EXP=$(mktemp -d "${TMPDIR:-/tmp}/clio-publish.XXXXXX") && [ -d "$EXP" ] || die "
 trap 'rm -rf "${EXP:?}"' EXIT
 git -C "$SRC" archive "$srev" utils/CLIO test | tar -x -C "$EXP" || die "could not export $srev"
 mkdir -p "$EXP/test/fixtures/clio" "$ROOT/test/fixtures/clio"
+odd=$(irregular "$EXP")
+[ -z "$odd" ] || die "source revision has non-regular files in the published set: $odd"
 
 # The same rsync drives preview and apply: three scopes, mirror within them, content (checksum) and
 # modes compared, never mtimes, so a preview lists only real changes.

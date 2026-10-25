@@ -93,4 +93,12 @@ swept file: yes
 
 Whole-file sweep covered the complete helper, test file, and INSTALL.md, not only the supplied diff. I found no additional pre-existing defects in those touched files.
 
+
+### Attestation · relay-drive — 2026-10-25T04:42:01Z
+task: RELAY-gh11-final-kimi
+reviewer: aider
+status: Approved
+reviewed-head: 073d827f7413da4a355353e310f45322dcce405d
+added-range: 7943+4189
+added-sha256: 2b2991492603e76eb574305535bca8f02ae96e6356b9710fadb4ff30b0d83c80
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1,0 +1,11 @@
+## suites at ac499fc (disposable clone), /bin/bash 3.2, CLIO_MIN_PROMPT_CHARS unset
+bash test/clio-runtime.sh -> exit 0 (PASS: clio-runtime)
+bash test/clio-capture.sh -> exit 0 (PASS: all capture cases (bash))
+bash test/clio-exporter.sh -> exit 0 (      a second run would repeat the first, not widen coverag)
+bash test/clio-codex-tail.sh -> exit 0 (PASS: codex tailer)
+bash test/clio-agy-tail.sh -> exit 0 (PASS: agy tailer)
+python3 test/clio-store.py -> exit 1 (FAILED (failures=1)) test_activation_import_gate_and_source_preservation
+CLIO matches HiQS-Labs/rebalanceOS@f10764f6db90 (15 files)
+--check exit=0
+## byte parity vs rebalanceOS 918244a+ (utils/clio-capture minus README/LICENSE, test/clio-*)
+differences: 0

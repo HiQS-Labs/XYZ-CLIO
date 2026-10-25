@@ -1,0 +1,12 @@
+$ scripts/publish-from-rebalance.sh <rebalanceOS checkout> --apply
+committed on chore/XYZ-CLIO-gh18-clio-capture-path-2026-10-25: CLIO from HiQS-Labs/rebalanceOS@f10764f6db90 (not pushed)
+exit=0
+commit: ac499fc publish: CLIO from HiQS-Labs/rebalanceOS@f10764f6db90
+files: test/clio-agy-tail.sh test/clio-capture.sh test/clio-codex-tail.sh test/clio-exporter.sh test/clio-runtime.sh test/clio-store.py utils/clio-capture/INSTALL.md utils/clio-capture/SKILL.md utils/clio-capture/UPSTREAM utils/clio-capture/clio-runtime.sh 
+status lines: 0
+$ scripts/publish-from-rebalance.sh --check
+CLIO matches HiQS-Labs/rebalanceOS@f10764f6db90 (15 files)
+exit=0
+$ rerun --apply
+no changes: already published from HiQS-Labs/rebalanceOS@f10764f6db90
+exit=0

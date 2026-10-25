@@ -1,7 +1,16 @@
 diff --git a/test/clio-capture.sh b/test/clio-capture.sh
-index 1ff562d..53e6118 100755
+index 1ff562d..57c3802 100755
 --- a/test/clio-capture.sh
 +++ b/test/clio-capture.sh
+@@ -25,7 +25,7 @@ chmod +x "$WRITER" "$HOOK"
+ 
+ fail() { echo "FAIL: $*" >&2; exit 1; }
+ 
+-long_prompt="This is a substantive session-opening prompt that comfortably exceeds the one hundred character minimum threshold."
++long_prompt="This is a substantive session-opening prompt that comfortably exceeds the twenty character minimum threshold."
+ 
+ # Feed stdin to a script under a fresh $HOME; echo the resulting line count.
+ # Usage: run_case <script> <case> <input-json> [env assignments...]
 @@ -90,11 +90,11 @@ skips_short_prompt() {
  }
  
@@ -20,7 +29,7 @@ index 1ff562d..53e6118 100755
  
  skips_task_notification() {
 diff --git a/utils/CLIO/INSTALL.md b/utils/CLIO/INSTALL.md
-index 8c4971c..8d1af89 100644
+index 8c4971c..12f1a5f 100644
 --- a/utils/CLIO/INSTALL.md
 +++ b/utils/CLIO/INSTALL.md
 @@ -75,7 +75,7 @@ LOG="$HOME/.claude/prompt-log.jsonl"
@@ -32,7 +41,30 @@ index 8c4971c..8d1af89 100644
  
  AGENT=""; RECORD=0
  while [ "$#" -gt 0 ]; do
-@@ -812,7 +812,7 @@ rm -f ~/.claude/hooks/clio-capture.sh ~/.claude/hooks/clio-store.py ~/.claude/ho
+@@ -279,7 +279,7 @@ install -m 0755 "$CLIO_SRC/clio-store.py" ~/.claude/hooks/clio-store.py
+ install -m 0755 "$CLIO_SRC/prompt-log-to-md.sh" ~/.claude/hooks/prompt-log-to-md.sh
+ 
+ echo "✅ Installed. Smoke test (uses the Claude shim; expects agent=claude-code):"
+-echo '{"prompt":"a substantive session-opening prompt that runs well past the one hundred character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
++echo '{"prompt":"a substantive session-opening prompt that runs well past the twenty character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
+ tail -1 ~/.claude/prompt-log.jsonl
+ ```
+ 
+@@ -701,8 +701,11 @@ Upgrading preserves legacy pending records on their original file. Replacement o
+ truncation switches those legacy files to the capture boundary, so previously
+ skipped history is not imported; older pending records cannot be recovered
+ automatically once that file provenance is lost. Clean polling delays retain the
+-boundary. An abandoned tailer lock after a forced kill still requires operator
+-recovery after verifying no tailer is running; this update adds no lock supervisor.
++boundary. An abandoned tailer lock (a run killed mid-tick) is reaped by the next
++tick once it is older than 300 seconds; reaping is serialized behind
++`<lock>.reap` and rechecked, so a live lock is never taken. Only a kill inside that
++millisecond reap step can leave `<lock>.reap` behind, which disables reaping (not
++capture of a healthy lock); remove it after verifying no tailer is running.
+ 
+ Schedule it every minute:
+ 
+@@ -812,7 +815,7 @@ rm -f ~/.claude/hooks/clio-capture.sh ~/.claude/hooks/clio-store.py ~/.claude/ho
  - **Legacy timestamps:** the raw JSONL and every `clio:id` stay **UTC** — the ID is `session_id:timestamp`, so localizing it would change all IDs, break dedup, and re-emit the note as duplicates. Only the *displayed* line is localized (`2026-07-19 14:27:50 PDT`). Conversion uses `python3` (`datetime.astimezone()`), **not** jq. Without `python3` the display falls back to UTC.
  - **Capture filtering (permanent):** the writer skips two classes of prompt outright, for every agent:
    - *Automated turns* — anything containing `<task-notification>` or the `[SYSTEM NOTIFICATION - NOT USER INPUT]` preamble (background-task and monitor events). Matched on the raw prompt before tag stripping.
@@ -42,10 +74,19 @@ index 8c4971c..8d1af89 100644
    This is a **drop, not a hide** — unlike `PROMPT_LOG_EXCLUDE` below, a skipped prompt is unrecoverable. Prefer the render-side filter if you might want the text back later. Covered by `test/clio-capture.sh`.
  - **Legacy same-second collisions:** two substantive prompts in the same session within one second share an ID; the second is suppressed and traced to the error log (content-free) rather than written as a duplicate.
 diff --git a/utils/CLIO/clio-agy-tail.sh b/utils/CLIO/clio-agy-tail.sh
-index 30d12ee..5305c1a 100755
+index 30d12ee..6b5792d 100755
 --- a/utils/CLIO/clio-agy-tail.sh
 +++ b/utils/CLIO/clio-agy-tail.sh
-@@ -37,7 +37,22 @@ else
+@@ -16,6 +16,8 @@
+ # newlines and only after the writer accepted the chunk, rescan on inode
+ # change or size regression, no history import on first sighting unless
+ # CLIO_TAIL_BACKFILL=1, and a busy append lock aborts without advancing.
++# A busy tailer lock is a silent no-op; a lock older than 300 s is reaped by
++# one serialized reaper.
+ set -euo pipefail
+ AGY_ROOT="${CLIO_AGY_ROOT:-$HOME/.gemini/antigravity-cli}"
+ STATE="$HOME/.claude/prompt-log-agy-tail.state"
+@@ -37,7 +39,22 @@ else
  fi
  
  # Overlapping invocations: busy tailer lock is a silent no-op, never a failure.
@@ -69,7 +110,7 @@ index 30d12ee..5305c1a 100755
  trap 'rm -rf "$TAIL_LOCK"' EXIT
  date +%s > "$TAIL_LOCK/born" 2>/dev/null || true
  
-@@ -179,7 +194,11 @@ while IFS= read -r file; do
+@@ -179,7 +196,11 @@ while IFS= read -r file; do
      continue
    fi
  

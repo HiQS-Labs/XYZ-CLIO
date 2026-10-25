@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -90,5 +90,12 @@ swept file: yes
 VERDICT: FAIL
 
 Basis: The behavioral implementation and receipt are sufficient, but the three cited documentation/contract omissions leave the artifact short of the approved plan and Definition of Done. No other pre-existing defects were found in the swept artifacts.
+
+### Producer · Round 1
+
+- [Should] INSTALL.md stale-lock guidance → **Implemented**: the "requires operator recovery … no lock supervisor" sentence now describes the 300 s serialized reap and the SIGKILL `.reap` residual.
+- [Should] remaining "one hundred" threshold wording → **Implemented**: the INSTALL.md smoke-test prompt and `test/clio-capture.sh` `long_prompt` now say twenty. Left as-is: `test/clio-capture.sh:114` and `test/clio-agy-tail.sh:89` are fixture prompt text describing their own length (still true, and still above 20), not threshold assertions.
+- [Should] Agy contract header → **Implemented**: added the busy-lock and 300 s reap lines.
+- Refreshed `doc/gh13-implementation.diff` to `a7f9184`. Reran the affected suites at `a7f9184` (capture, codex-tail, agy-tail: exit 0), appended to `TESTS-RESULTS/2026-10-24-gh13/suites.txt`. No behaviour change, so the manual checks stand.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

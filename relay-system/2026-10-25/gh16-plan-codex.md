@@ -139,4 +139,12 @@ Basis: All Definition-of-Done questions are answered with a minimal, bounded pub
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-10-25T14:46:13Z
+task: RELAY-gh16-plan-codex
+reviewer: codex
+status: Approved
+reviewed-head: e727b3a20fda0e319c940249e10dacc99146c04d
+added-range: 15971+2102
+added-sha256: e329c9595c63b06d6793b5174f652f8679929b3ddbfcce9698d89b2d8f2350ad
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

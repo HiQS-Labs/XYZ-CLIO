@@ -1,6 +1,6 @@
 test_activation_four_agent_routes_and_rollback_export (__main__.History.test_activation_four_agent_routes_and_rollback_export) ... ok
 test_activation_import_gate_and_source_preservation (__main__.History.test_activation_import_gate_and_source_preservation) ... FAIL
-test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History.test_device_roundtrip_preserves_owner_extras_and_no_echo) ... /Users/noelsaw/Documents/GitHub Repos/XYZ-CLIO-gh11-fleet-peer-discovery-2026-10-24-verify/utils/CLIO/clio-store.py:429: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x105a8c6d0>
+test_device_roundtrip_preserves_owner_extras_and_no_echo (__main__.History.test_device_roundtrip_preserves_owner_extras_and_no_echo) ... <clone>/utils/CLIO/clio-store.py:429: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x105a8c6d0>
   if conn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ok
@@ -41,7 +41,7 @@ test_write_failures_never_acknowledge_without_receipt (__main__.History.test_wri
 FAIL: test_activation_import_gate_and_source_preservation (__main__.History.test_activation_import_gate_and_source_preservation)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-CLIO-gh11-fleet-peer-discovery-2026-10-24-verify/test/clio-store.py", line 1027, in test_activation_import_gate_and_source_preservation
+  File "<clone>/test/clio-store.py", line 1027, in test_activation_import_gate_and_source_preservation
     self.assertEqual(result['rows'], 5)
     ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
 AssertionError: 4 != 5

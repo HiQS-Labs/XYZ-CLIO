@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -76,5 +76,35 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+VERDICT: FAIL
+Basis: The architecture is appropriately small and the central code claims are grounded, but the proposed upgrade command can disable an existing publisher's note repair, and one join test can pass its refusal step for the wrong reason. Both are narrow plan fixes; no architectural rework is needed.
+swept file: yes
+
+Pre-existing sweep: I found no unrelated pre-existing defect in the supplied helper/test seams that needs to be added to this GH-11 scope. No suites or executable probes were run; the findings below use concrete source and plan inputs, not claims of test execution.
+
+- [Should] **The one-time upgrade instruction must preserve an existing publisher's repair configuration.** The plan says each existing device runs literally `configure-fleet --discover-origins` once. `configure_fleet` constructs a fresh fleet mapping with `repair_generated_note: repair`, and carries `header_sha256`/`coverage` only inside `if repair` (`utils/CLIO/clio-store.py:935-961`). Thus an existing repair-enabled publisher following that instruction with the default `repair=False` loses those settings; a later valid peer render can then hit the repair-off foreign-edit refusal instead of converging.
+  - Observed input: an existing config produced by `configure_fleet(..., repair=True)`, followed by the plan's upgrade invocation without `--repair-generated-note`.
+  - Affected scope: the documented one-time upgrade of existing repair-enabled publishers, not the initial configuration of a capture-only device.
+  - Falsifier: apply the exact documented upgrade to a synthetic repair-enabled config; if repair remains enabled and its header/coverage pins remain intact, this finding is unnecessary. With the current constructor and omitted flag, the expected result is `repair_generated_note: False`.
+  - Concrete fix: make the upgrade documentation distinguish capture-only devices from existing repair-enabled publishers, and show the latter retaining `--repair-generated-note` and any desired pinned `--origin` arguments. Add a focused assertion for the resulting configuration; no new helper mechanism is required.
+- [Should] **Isolate the body-edit join refusal from the unknown-ID refusal.** Test 6 currently orders the unknown-ID red control before B reconciles, then tries a body-edit refusal, and only afterward reconciles B. While B still lacks A's record, both a pristine note and an edited note fail at the “every record ID known” gate, so the body-edit step does not prove byte-reproduction validation.
+  - Observed input: a fleet-rendered note containing a record absent from B, followed by the same note with a body edit before B reconciles.
+  - Affected scope: the planned red control for `migrate-view --join-fleet-note` body integrity.
+  - Falsifier: after B reconciles, joining pristine bytes with all IDs known should succeed; changing one body byte should then fail specifically at byte reproduction, leave the note unchanged, and register no view. The current ordering cannot distinguish that failure from the earlier unknown-ID failure.
+  - Concrete fix: reconcile B (or use a note containing only B-known IDs) before the body-edit control, restore the exact pristine peer bytes afterward, and then perform the successful join. Also test both forbidden flag combinations, not only `--join-fleet-note` with `--publishers-paused`.
+- [Nit] **Make the discovery parser explicit.** State that `-z` output is split on NUL, not lines, and that the complete path must full-match `devices/<canonical-uuid>/clio.jsonl`. Add a nested-path and newline-named decoy to test 3. This closes the parsing ambiguity without another Git read, service, or threat-model work.
+- [Nit] **Make the final `peer_generated` assertion reach that branch.** If B's render is already byte-identical to one of A's `accepted_hashes`, `checked_view` takes the accepted-hash path and does not record `last_note_repair` (`utils/CLIO/clio-store.py:578-635`). Give A a different currently accepted note/cutoff before presenting B's valid render, then assert `peer_generated` and no archive growth.
+
+Definition-of-done answers:
+
+1. **Yes.** `legacy_coverage` recognizes only `<!-- clio:id:... -->` entries and rejects unrecognized body content when that list is empty (`utils/CLIO/clio-store.py:531-576`). A SQLite-rendered note instead starts its generated body with `# CLIO — recent 168 hours` and uses `clio:record` IDs (`render_markdown`, `utils/CLIO/clio-store.py:712-756`), so normal `migrate_view` registration cannot reconcile it (`utils/CLIO/clio-store.py:638-690`).
+2. **Yes, with the parsing clarification above.** The pinned-HEAD read remains within `git_read`'s timeout/deadline seam; the union is bounded before per-origin snapshot reads, and each snapshot retains the existing size, owner, digest, count, identity, and regression checks (`git_read`/`reconcile_fleet`, `utils/CLIO/clio-store.py:912-1020`; `snapshot_records`/`import_snapshot`, `:820-880`). Exact NUL/full-path matching rejects newline and nested decoys. `cat-file blob` reads the committed blob rather than dereferencing a worktree symlink, and its bytes still face snapshot validation. Given the operator-only private repository, no additional trust mechanism is warranted.
+3. **Yes.** Opt-in discovery preserves existing configurations by default, while unioning discovered origins with explicit pins retains the deliberate `missing` status for a pinned origin without a snapshot. The upgrade documentation needs finding 1's correction so enabling discovery does not inadvertently change note-repair behavior.
+4. **Yes.** Stopping delivery is sufficient under the stated append-only history model: reconciliation imports/updates through the existing snapshot seam and never treats a missing or stopped origin as a deletion instruction (`utils/CLIO/clio-store.py:843-880`). Zero committed changes is within “at most one”; no retirement marker is needed for this requirement.
+5. **Yes.** Factoring the existing reproduction check is sound provided it retains unique IDs, canonical cutoff validation, and the existing future-cutoff guard. Known IDs plus exact byte reproduction authenticates the generated body against local SQLite records, while the existing migration path still supplies the private backup, exact header, accepted hashes, and coverage registration. Join must precede repair configuration because repair requires a registered, verified view; the plan has that order right.  [Unverified — no citation]
+6. **No architectural requirement is missing and nothing needs cutting.** The only missed operational case is the repair-setting upgrade in finding 1. Discovery, joining, scheduled reconciliation, and rollback all reuse existing seams without a parallel publisher or delivery mechanism.
+7. **They are bounded and otherwise well targeted.** Discovery-off is a genuine red control, and bad-origin isolation, pinned-missing behavior, replay, and scheduled publication cover the main risks. Apply finding 2 so the join body control is falsifiable, and the two nits so its parsing and peer-repair assertions are deterministic.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

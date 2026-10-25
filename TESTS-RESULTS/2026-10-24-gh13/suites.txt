@@ -1,0 +1,5 @@
+bash test/clio-capture.sh -> exit 0
+bash test/clio-exporter.sh -> exit 0
+bash test/clio-codex-tail.sh -> exit 0
+bash test/clio-agy-tail.sh -> exit 0
+python3 test/clio-store.py -> exit 1 (1 failure: test_activation_import_gate_and_source_preservation, also fails on base d17e521 — pre-existing, date-dependent)

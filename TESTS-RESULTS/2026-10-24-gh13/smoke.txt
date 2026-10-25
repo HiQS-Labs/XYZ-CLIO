@@ -1,0 +1,5 @@
+codex main: clio-codex-tail: delivered=2 deferred_files=0
+agy main: clio-agy-tail: delivered=2 deferred_files=0
+codex rerun: clio-codex-tail: delivered=0 deferred_files=0
+agy rerun: clio-agy-tail: delivered=0 deferred_files=0
+rows=4 leftover_locks=0

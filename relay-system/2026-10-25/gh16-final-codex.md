@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -74,5 +74,27 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Should] `--check` detects a changed whitespace-containing filename through the whole-manifest `diff`, but its required changed-path report truncates it at the first space. `scripts/publish-from-rebalance.sh:35` uses whitespace-field `join`/`awk`, although the manifest path is the entire suffix after the two-space hash delimiter. Observed probe (exit 0): `old=000…001  test/fixtures/clio/a b.jsonl`, `new=000…002  test/fixtures/clio/a b.jsonl`; the exact line-35 pipeline printed `changed: test/fixtures/clio/a`, not the real path. Fix the changed-record comparison to preserve the full path suffix (rather than whitespace splitting) and add this red control to the disposable-clone receipt.
+  Observed input: two manifest records for `test/fixtures/clio/a b.jsonl` with distinct 64-hex checksums (probe command: `join -j 2 <(sort -k2 old) <(sort -k2 new) | awk '$2 != $3 {print "  changed: " $1}'`; exit 0; decisive output: `changed: test/fixtures/clio/a`).
+  Affected scope: any published pathname containing whitespace whose bytes differ from `UPSTREAM`.
+  Falsifier: a clone check that changes `test/fixtures/clio/a b.jsonl` must exit 1 and report the complete literal pathname; a corrected report means this finding is unnecessary.
+
+- [Should] A symlink stray in a published scope has a false-clean `--check`: `published_files` admits only `-type f` (`scripts/publish-from-rebalance.sh:19-21`), so it neither appears in the recomputed manifest nor is called `not published`; meanwhile `sync` explicitly preserves links with `-l` (`scripts/publish-from-rebalance.sh:65-68`). Reject non-regular entries in every published scope (both source and target) or otherwise account for them consistently, and add a symlink red control.
+  Observed input: a target-only `test/fixtures/clio/stray-link -> /dev/null` alongside an unchanged manifest.
+  Affected scope: symlinks in `utils/CLIO/`, top-level `test/clio-*`, or `test/fixtures/clio/`.
+  Falsifier: with that lone stray link present, `--check` must exit 1 and name it; if current code does so, the finding is wrong. Narrow probe: `find "$TMPDIR/symlink-probe/test/fixtures/clio" -type f -exec basename {} \;` returned `regular-files=<>; find_exit=0; symlink_test=0`, proving the exact `-type f` predicate omits the extant link.
+
+- [Pass] The direction is stated consistently without a second local README: `AGENTS.md:3`, `README.md:12-14`, and `FRONTDOOR.md:26` identify rebalanceOS as upstream and point maintainers to the publisher/check. The diff’s receipt also records the required clean first publish (`TESTS-RESULTS/2026-10-25-gh16/first-publish.txt:2-13`). I swept the complete changed script and all changed documentation/receipt files; apart from the two findings above, no pre-existing defect was found in those touched files. The receipt’s executable-clone claims were not rerun here, per relay containment rules.
+
+VERDICT: FAIL
+
+Basis: The core design, guarded temp directories (`scripts/publish-from-rebalance.sh:56-57`; `TESTS-RESULTS/2026-10-25-gh16/publisher-checks.sh:5-6`), filtered preview, and documented first-publish evidence are aligned with the plan, but `--check` does not yet meet its all-path/all-stray reporting contract for whitespace names and symlinks.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

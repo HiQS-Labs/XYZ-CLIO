@@ -1,0 +1,11 @@
+a-stale-born: out='<none>' rows=0 reaped=0 lock_after=present
+b-fresh-born: out='<none>' rows=0 reaped=0 lock_after=present
+b2-no-born-old-mtime: out='<none>' rows=0 reaped=0 lock_after=present
+b3-nonnumeric-born: out='<none>' rows=0 reaped=0 lock_after=present
+c-codex-idle: mtime 1792910538->1792910539 sha 85fad7a5637a->85fad7a5637a REWRITTEN
+c-agy-idle: mtime 1792910539->1792910540 sha 723896e2efb5->723896e2efb5 REWRITTEN
+d-ide: rows=2
+  stored: # Context from my IDE setup:\n\n## Active file: a.md\n\n## My request for Codex:\nPlease refactor the exporter loop so it handles rotation cleanly.
+  stored: # Context from my IDE setup:\n\n## Open tabs:\n- b.md\n\n## My request:\nExplain why the tailer cursor only lands after a newline character.
+e-threshold: 'Run the CLIO suites again now' (29 chars) rows=0
+e-threshold: 'push it' (7 chars) rows=0

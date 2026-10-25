@@ -1,0 +1,204 @@
+diff --git a/test/clio-capture.sh b/test/clio-capture.sh
+index 1ff562d..57c3802 100755
+--- a/test/clio-capture.sh
++++ b/test/clio-capture.sh
+@@ -25,7 +25,7 @@ chmod +x "$WRITER" "$HOOK"
+ 
+ fail() { echo "FAIL: $*" >&2; exit 1; }
+ 
+-long_prompt="This is a substantive session-opening prompt that comfortably exceeds the one hundred character minimum threshold."
++long_prompt="This is a substantive session-opening prompt that comfortably exceeds the twenty character minimum threshold."
+ 
+ # Feed stdin to a script under a fresh $HOME; echo the resulting line count.
+ # Usage: run_case <script> <case> <input-json> [env assignments...]
+@@ -90,11 +90,11 @@ skips_short_prompt() {
+ }
+ 
+ boundary_is_inclusive() {
+-  exactly100=$(printf 'x%.0s' $(seq 1 100))
+-  n=$(run_hook "boundary" "$(json_input "$exactly100")")
+-  [ "$n" = "1" ] || fail "expected exactly-100-char prompt to be captured, got $n line(s)"
+-  n=$(run_hook "boundary99" "$(json_input "$(printf 'x%.0s' $(seq 1 99))")")
+-  [ "$n" = "0" ] || fail "expected 99-char prompt to be skipped, got $n line(s)"
++  exactly20=$(printf 'x%.0s' $(seq 1 20))
++  n=$(run_hook "boundary" "$(json_input "$exactly20")")
++  [ "$n" = "1" ] || fail "expected exactly-20-char prompt to be captured, got $n line(s)"
++  n=$(run_hook "boundary19" "$(json_input "$(printf 'x%.0s' $(seq 1 19))")")
++  [ "$n" = "0" ] || fail "expected 19-char prompt to be skipped, got $n line(s)"
+ }
+ 
+ skips_task_notification() {
+diff --git a/utils/CLIO/INSTALL.md b/utils/CLIO/INSTALL.md
+index 8c4971c..12f1a5f 100644
+--- a/utils/CLIO/INSTALL.md
++++ b/utils/CLIO/INSTALL.md
+@@ -75,7 +75,7 @@ LOG="$HOME/.claude/prompt-log.jsonl"
+ LOCK="$HOME/.claude/prompt-log.lock"
+ mkdir -p "$HOME/.claude" 2>/dev/null || true
+ ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+-minchars="${CLIO_MIN_PROMPT_CHARS:-100}"
++minchars="${CLIO_MIN_PROMPT_CHARS:-20}"
+ 
+ AGENT=""; RECORD=0
+ while [ "$#" -gt 0 ]; do
+@@ -279,7 +279,7 @@ install -m 0755 "$CLIO_SRC/clio-store.py" ~/.claude/hooks/clio-store.py
+ install -m 0755 "$CLIO_SRC/prompt-log-to-md.sh" ~/.claude/hooks/prompt-log-to-md.sh
+ 
+ echo "✅ Installed. Smoke test (uses the Claude shim; expects agent=claude-code):"
+-echo '{"prompt":"a substantive session-opening prompt that runs well past the one hundred character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
++echo '{"prompt":"a substantive session-opening prompt that runs well past the twenty character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
+ tail -1 ~/.claude/prompt-log.jsonl
+ ```
+ 
+@@ -701,8 +701,11 @@ Upgrading preserves legacy pending records on their original file. Replacement o
+ truncation switches those legacy files to the capture boundary, so previously
+ skipped history is not imported; older pending records cannot be recovered
+ automatically once that file provenance is lost. Clean polling delays retain the
+-boundary. An abandoned tailer lock after a forced kill still requires operator
+-recovery after verifying no tailer is running; this update adds no lock supervisor.
++boundary. An abandoned tailer lock (a run killed mid-tick) is reaped by the next
++tick once it is older than 300 seconds; reaping is serialized behind
++`<lock>.reap` and rechecked, so a live lock is never taken. Only a kill inside that
++millisecond reap step can leave `<lock>.reap` behind, which disables reaping (not
++capture of a healthy lock); remove it after verifying no tailer is running.
+ 
+ Schedule it every minute:
+ 
+@@ -812,7 +815,7 @@ rm -f ~/.claude/hooks/clio-capture.sh ~/.claude/hooks/clio-store.py ~/.claude/ho
+ - **Legacy timestamps:** the raw JSONL and every `clio:id` stay **UTC** — the ID is `session_id:timestamp`, so localizing it would change all IDs, break dedup, and re-emit the note as duplicates. Only the *displayed* line is localized (`2026-07-19 14:27:50 PDT`). Conversion uses `python3` (`datetime.astimezone()`), **not** jq. Without `python3` the display falls back to UTC.
+ - **Capture filtering (permanent):** the writer skips two classes of prompt outright, for every agent:
+   - *Automated turns* — anything containing `<task-notification>` or the `[SYSTEM NOTIFICATION - NOT USER INPUT]` preamble (background-task and monitor events). Matched on the raw prompt before tag stripping.
+-  - *Short prompts* — under `CLIO_MIN_PROMPT_CHARS` (default **100**) after injected blocks are stripped, so `yes` / `push it` are dropped while substantive session-opening prompts are kept. Set `CLIO_MIN_PROMPT_CHARS=0` to capture everything again.
++  - *Short prompts* — under `CLIO_MIN_PROMPT_CHARS` (default **20**) after injected blocks are stripped, so `yes` / `push it` are dropped while substantive session-opening prompts are kept. Set `CLIO_MIN_PROMPT_CHARS=0` to capture everything again.
+ 
+   This is a **drop, not a hide** — unlike `PROMPT_LOG_EXCLUDE` below, a skipped prompt is unrecoverable. Prefer the render-side filter if you might want the text back later. Covered by `test/clio-capture.sh`.
+ - **Legacy same-second collisions:** two substantive prompts in the same session within one second share an ID; the second is suppressed and traced to the error log (content-free) rather than written as a duplicate.
+diff --git a/utils/CLIO/clio-agy-tail.sh b/utils/CLIO/clio-agy-tail.sh
+index 30d12ee..6b5792d 100755
+--- a/utils/CLIO/clio-agy-tail.sh
++++ b/utils/CLIO/clio-agy-tail.sh
+@@ -16,6 +16,8 @@
+ # newlines and only after the writer accepted the chunk, rescan on inode
+ # change or size regression, no history import on first sighting unless
+ # CLIO_TAIL_BACKFILL=1, and a busy append lock aborts without advancing.
++# A busy tailer lock is a silent no-op; a lock older than 300 s is reaped by
++# one serialized reaper.
+ set -euo pipefail
+ AGY_ROOT="${CLIO_AGY_ROOT:-$HOME/.gemini/antigravity-cli}"
+ STATE="$HOME/.claude/prompt-log-agy-tail.state"
+@@ -37,7 +39,22 @@ else
+ fi
+ 
+ # Overlapping invocations: busy tailer lock is a silent no-op, never a failure.
+-mkdir "$TAIL_LOCK" 2>/dev/null || exit 0
++# A lock older than 300 s is a dead run's leftover; reap it, or that agent's capture
++# stops for good. Reaping is serialized and rechecked so no contender deletes a lock
++# another one just took.
++lock_stale() { # born stamp, else dir mtime; empty/non-numeric = not stale
++  born=$(cat "$TAIL_LOCK/born" 2>/dev/null || stat -f %m "$TAIL_LOCK" 2>/dev/null || stat -c %Y "$TAIL_LOCK" 2>/dev/null || echo "")
++  case "$born" in ''|*[!0-9]*) return 1 ;; esac
++  [ $(( $(date +%s) - born )) -gt 300 ]
++}
++if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
++  lock_stale || exit 0
++  mkdir "$TAIL_LOCK.reap" 2>/dev/null || exit 0
++  lock_stale && { rm -rf "$TAIL_LOCK"; diag "reaped stale tail lock born at $born"; }
++  got=0; mkdir "$TAIL_LOCK" 2>/dev/null || got=1
++  rmdir "$TAIL_LOCK.reap"
++  [ "$got" = 0 ] || exit 0
++fi
+ trap 'rm -rf "$TAIL_LOCK"' EXIT
+ date +%s > "$TAIL_LOCK/born" 2>/dev/null || true
+ 
+@@ -179,7 +196,11 @@ while IFS= read -r file; do
+     continue
+   fi
+ 
+-  [ "$offset" -ge "$size" ] && { state_update "$file" "$inode" "$offset"; continue; }
++  if [ "$offset" -ge "$size" ]; then
++    # Idle tick: rewrite state only when the stored record would change.
++    [ "$cached" = "$inode $offset" ] || state_update "$file" "$inode" "$offset"
++    continue
++  fi
+ 
+   rows_file=$(mktemp "${TMPDIR:-/tmp}/clio-agy-rows.XXXXXX")
+   err_file=$(mktemp "${TMPDIR:-/tmp}/clio-agy-err.XXXXXX")
+diff --git a/utils/CLIO/clio-codex-tail.sh b/utils/CLIO/clio-codex-tail.sh
+index 50ea5cc..7a7f4fe 100755
+--- a/utils/CLIO/clio-codex-tail.sh
++++ b/utils/CLIO/clio-codex-tail.sh
+@@ -27,7 +27,8 @@
+ #   migration = legacy pending bytes remain eligible on their original inode; a
+ #             reset adopts capture-start eligibility instead of importing old history.
+ #   overlap = a tailer lock serializes invocations; a busy lock is a silent
+-#             no-op (the next tick catches up).
++#             no-op (the next tick catches up); a lock older than 300 s is
++#             reaped by one serialized reaper.
+ #   lock-busy on the shared append lock (writer exit 3) aborts WITHOUT
+ #             advancing the cursor; the chunk is retried next run.
+ set -euo pipefail
+@@ -46,7 +47,22 @@ command -v python3 >/dev/null 2>&1 || { echo "clio-codex-tail: python3 is requir
+ command -v jq >/dev/null 2>&1 || { echo "clio-codex-tail: jq is required" >&2; exit 1; }
+ 
+ # Overlapping invocations: busy tailer lock is a silent no-op, never a failure.
+-mkdir "$TAIL_LOCK" 2>/dev/null || exit 0
++# A lock older than 300 s is a dead run's leftover; reap it, or that agent's capture
++# stops for good. Reaping is serialized and rechecked so no contender deletes a lock
++# another one just took.
++lock_stale() { # born stamp, else dir mtime; empty/non-numeric = not stale
++  born=$(cat "$TAIL_LOCK/born" 2>/dev/null || stat -f %m "$TAIL_LOCK" 2>/dev/null || stat -c %Y "$TAIL_LOCK" 2>/dev/null || echo "")
++  case "$born" in ''|*[!0-9]*) return 1 ;; esac
++  [ $(( $(date +%s) - born )) -gt 300 ]
++}
++if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
++  lock_stale || exit 0
++  mkdir "$TAIL_LOCK.reap" 2>/dev/null || exit 0
++  lock_stale && { rm -rf "$TAIL_LOCK"; diag "reaped stale tail lock born at $born"; }
++  got=0; mkdir "$TAIL_LOCK" 2>/dev/null || got=1
++  rmdir "$TAIL_LOCK.reap"
++  [ "$got" = 0 ] || exit 0
++fi
+ trap 'rm -rf "$TAIL_LOCK"' EXIT
+ date +%s > "$TAIL_LOCK/born" 2>/dev/null || true
+ 
+@@ -82,9 +98,11 @@ state_update() { # $1 = path, $2 = inode, $3 = offset, $4 = session_id, $5 = cwd
+ # preceding session_meta before the offset.
+ extract_rows() {
+   python3 - "$1" "$2" "${3:-}" "${4:-}" "$5" <<'PYEOF'
+-import hashlib, json, sys
++import hashlib, json, re, sys
+ from datetime import datetime, timezone
+ 
++IDE_REQUEST = re.compile(r"^## My request(?: for Codex)?:[ \t]*\n?", re.M)
++
+ def parse_ts(ts):
+     """Validate before cutoff comparison; output IDs still use UTC seconds."""
+     try:
+@@ -162,6 +180,12 @@ if cut != -1 and cut >= (offset - scan_start):
+             continue
+         if since is not None and instant < since:
+             continue
++        if text.lstrip().startswith("# Context from my IDE setup:"):
++            # Codex IDE turns prepend editor context; keep only the request itself.
++            parts = IDE_REQUEST.split(text, 1)
++            text = parts[1].strip() if len(parts) == 2 else text
++            if not text:
++                continue
+         repo = cwd.rstrip("/").rsplit("/", 1)[-1] if cwd else ""
+         print(json.dumps({
+             "timestamp": instant.strftime("%Y-%m-%dT%H:%M:%SZ"),
+@@ -224,7 +248,13 @@ while IFS= read -r -d '' file; do
+     [ "$BACKFILL" != 1 ] || cached_since=0
+   fi
+ 
+-  [ "$offset" -ge "$size" ] && { state_update "$file" "$inode" "$offset" "$cached_sid" "$cached_cwd" "$cached_since"; continue; }
++  if [ "$offset" -ge "$size" ]; then
++    # Idle tick: rewrite state only when the stored record would change.
++    record=$(printf '%s\t%s\t%s\t%s\t%s' "$inode" "$offset" \
++      "$(printf '%s' "$cached_sid" | tr '\t' ' ')" "$(printf '%s' "$cached_cwd" | tr '\t' ' ')" "$cached_since")
++    [ "$cached" = "$record" ] || state_update "$file" "$inode" "$offset" "$cached_sid" "$cached_cwd" "$cached_since"
++    continue
++  fi
+ 
+   rows_file=$(mktemp "${TMPDIR:-/tmp}/clio-codex-rows.XXXXXX")
+   err_file=$(mktemp "${TMPDIR:-/tmp}/clio-codex-err.XXXXXX")

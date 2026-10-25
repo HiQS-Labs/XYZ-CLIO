@@ -1,0 +1,12 @@
+a-stale-born: out='clio-codex-tail: delivered=2 deferred_files=0' rows=2 reaped=1 lock_after=gone
+b-fresh-born: out='<none>' rows=0 reaped=0 lock_after=present
+b2-no-born-old-mtime: out='clio-codex-tail: delivered=2 deferred_files=0' rows=2 reaped=1 lock_after=gone
+b3-nonnumeric-born: out='<none>' rows=0 reaped=0 lock_after=present
+c-codex-idle: mtime 1792910535->1792910535 sha bff83cb847dd->bff83cb847dd UNCHANGED
+c-agy-idle: mtime 1792910536->1792910536 sha ef1f2f8f121a->ef1f2f8f121a UNCHANGED
+d-ide: rows=3
+  stored: Please refactor the exporter loop so it handles rotation cleanly.
+  stored: Explain why the tailer cursor only lands after a newline character.
+  stored: Quoting the marker on purpose: ## My request: keep this whole prompt exactly as typed please.
+e-threshold: 'Run the CLIO suites again now' (29 chars) rows=1
+e-threshold: 'push it' (7 chars) rows=0

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -75,5 +75,20 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Pass] The reaper matches the approved serialized/rechecked shape in both tailers: `utils/CLIO/clio-agy-tail.sh:43-57` and `utils/CLIO/clio-codex-tail.sh:53-67` re-check after acquiring `.reap`, remove it after the attempted reacquire, and set `born` after lock acquisition. The permitted static probe `bash -n utils/CLIO/clio-agy-tail.sh; bash -n utils/CLIO/clio-codex-tail.sh` exited 0 for both; receipt `TESTS-RESULTS/2026-10-24-gh13/b4-head.txt` reports `30/30` single-reap/single-owner for each tailer.
+- [Pass] Idle writes compare exactly the intended records: Agy `utils/CLIO/clio-agy-tail.sh:197-200` compares `"$inode $offset"`; Codex `utils/CLIO/clio-codex-tail.sh:251-256` builds the sanitized five-field TSV. Receipt `TESTS-RESULTS/2026-10-24-gh13/mc-head.txt` records unchanged mtime and SHA for both, while `mc-base.txt` shows rewritten mtimes.
+- [Pass] IDE handling is correctly gated and preserves the original source-line hash: `utils/CLIO/clio-codex-tail.sh:104,183-198`. The permitted regex probe exited 0 and split both supported headers while retaining an inline quoted marker; the receipt's `d-ide` rows in `mc-head.txt` corroborate both real forms and the quoted-marker control.
+- [Should] `utils/CLIO/INSTALL.md:700-705` still tells operators that an abandoned tailer lock needs manual recovery and that this update adds no lock supervisor. That is now false for the planned >300-second stale-lock reaper. Replace it with the actual 300-second reap behavior (including the accepted SIGKILL `.reap` residual if documenting it) so the installed operational guidance does not instruct needless recovery.
+- [Should] The explicit default-20 sweep is incomplete: `test/clio-capture.sh:28` says the minimum is one hundred characters, and `utils/CLIO/INSTALL.md:282` says the capture threshold is one hundred characters. Change these descriptions to 20 (or neutral wording). This is required by the plan/DoD's “no other place asserting 100”; the actual writer and boundary assertion are correct at `utils/CLIO/INSTALL.md:78` and `test/clio-capture.sh:92-98`.
+- [Should] The Agy delivery-contract header does not receive plan change 1's overlap note: compare `utils/CLIO/clio-agy-tail.sh:14-18` with the updated Codex contract at `utils/CLIO/clio-codex-tail.sh:29-31`. Add that a lock older than 300 seconds is reaped by one serialized reaper, as the approved plan explicitly requires.
+
+VERDICT: FAIL
+
+Basis: The behavioral implementation and receipt are sufficient, but the three cited documentation/contract omissions leave the artifact short of the approved plan and Definition of Done. No other pre-existing defects were found in the swept artifacts.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

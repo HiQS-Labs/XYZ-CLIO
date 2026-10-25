@@ -1,0 +1,35 @@
+a    dirty source: exit=2 (publish-from-rebalance: source checkout has uncommitted changes)
+a2   origin https://github.com/HiQS-Labs/rebalanceOS-fork.git: exit=2
+a2   origin https://github.com/Someone/rebalanceOS.git: exit=2
+a2   origin https://attacker.invalid/HiQS-Labs/rebalanceOS.git: exit=2
+b    unmerged source HEAD: exit=2 (publish-from-rebalance: source HEAD is not merged into origin/development)
+c    --apply on main: exit=2 (publish-from-rebalance: refusing to publish on main; create a branch first)
+d0   source has utils/CLIO/README.md and LICENSE
+d    preview: exit=0 no CLIO content changes
+d    apply: exit=0; commit files: utils/CLIO/UPSTREAM ; README/LICENSE here: 0; status lines: 0
+e    --check: exit=0 (CLIO matches HiQS-Labs/rebalanceOS@e4a7abb9218b (12 files))
+f    byte edit INSTALL.md: exit=1 (changed: utils/CLIO/INSTALL.md)
+g    stray utils/CLIO/extra.sh: exit=1 (not published: utils/CLIO/extra.sh)
+g      restored: exit=0
+g    stray test/clio-extra.sh: exit=1 (not published: test/clio-extra.sh)
+g      restored: exit=0
+g    stray test/fixtures/clio/extra.jsonl: exit=1 (not published: test/fixtures/clio/extra.jsonl)
+g      restored: exit=0
+g    deleted fixture: exit=1 (missing: test/fixtures/clio/agy-transcript.jsonl)
+g      restored: exit=0
+h    rerun, later date: exit=0 (no changes: already published from HiQS-Labs/rebalanceOS@e4a7abb9218b); new commit: no; status lines: 0
+i    preview after upstream change: exit=0; listed: test/fixtures/clio/ >fcsT.... codex-rollout.jsonl 
+i    apply: exit=0; commit files: test/fixtures/clio/codex-rollout.jsonl utils/CLIO/UPSTREAM 
+i    --check: exit=0
+i    after upstream revert, apply: exit=0; fixture back to original bytes: yes
+j    publish spaced fixture: exit=0
+j    edit 'a b.jsonl': exit=1 (changed: test/fixtures/clio/a b.jsonl)
+j      restored: exit=0
+k    target stray symlink: exit=1 (not a regular file: test/fixtures/clio/stray-link)
+k      removed: exit=0
+k    source symlink: exit=2 (publish-from-rebalance: source revision has non-regular files in the published set: utils/CLIO/linked.md); new commit: no
+suite test/clio-capture.sh: exit=0
+suite test/clio-exporter.sh: exit=0
+suite test/clio-codex-tail.sh: exit=0
+suite test/clio-agy-tail.sh: exit=0
+suite test/clio-store.py: exit=1 (1 = known date-dependent case)

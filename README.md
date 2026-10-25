@@ -9,6 +9,10 @@
 > the same combined fleet note; see the device-independent integration section
 > in INSTALL.md. No new Git push loop or task-status writer is introduced.
 
+> **Upstream:** CLIO is developed in [HiQS-Labs/rebalanceOS `utils/CLIO/`](https://github.com/HiQS-Labs/rebalanceOS/tree/development/utils/CLIO)
+> and published here unchanged by `scripts/publish-from-rebalance.sh` (revision recorded in
+> `utils/CLIO/UPSTREAM`). Send CLIO changes there, not here.
+
 # CLIO
 
 A local history of captured prompts across repos and coding agents, with device
@@ -104,6 +108,7 @@ test/
   clio-agy-tail.sh      # Agy tailer against a fixture transcript
   clio-store.py         # SQLite acceptance and failure cases
   fixtures/clio/        # fixture rollout + transcript
+scripts/publish-from-rebalance.sh  # publish CLIO from the rebalanceOS upstream; --check verifies UPSTREAM
 FRONTDOOR.md            # onboarding health board, refreshed by re-running its checks
 SHAKEDOWN/              # dated script-path audits of the clio skill
 ```
@@ -128,6 +133,7 @@ bash test/clio-exporter.sh
 bash test/clio-codex-tail.sh
 bash test/clio-agy-tail.sh
 python3 test/clio-store.py
+bash scripts/publish-from-rebalance.sh --check   # published files still match utils/CLIO/UPSTREAM
 ```
 
 ## Safety

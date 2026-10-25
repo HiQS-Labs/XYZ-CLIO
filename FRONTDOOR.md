@@ -23,6 +23,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 | Execution environment | ⚠️ | macOS/Linux only, stated up front. A sandboxed agent may be blocked from `launchctl` and from the git credential helper — see FD-06. |
 | Auth & access | ✅ | No hoops at all: no account, API key, OAuth, paid tier, or admin grant. Everything is local. |
 | First success | ⚠️ | The install block ends in a smoke test that prints a captured row, but there is no troubleshooting path when it prints nothing — FD-05. |
+| Upstream parity | ✅ | `utils/CLIO/` and the CLIO tests are published from rebalanceOS and recorded in `utils/CLIO/UPSTREAM`; `bash scripts/publish-from-rebalance.sh --check` exits 0 when nothing here was edited directly. |
 | Doc ↔ code drift | ✅ | One overview, one install doc, and the writer plus both shims are extracted from `INSTALL.md` by the tests, so they cannot drift from what is exercised. |
 
 ## Findings

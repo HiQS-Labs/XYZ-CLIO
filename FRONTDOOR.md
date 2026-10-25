@@ -3,7 +3,7 @@
 How hard is it for someone with zero context to get CLIO running? This board tracks that,
 and every status on it is backed by a command in [Deterministic checks](#deterministic-checks--re-run-to-refresh)
 — nothing here is merely asserted. Refresh it after any change to `README.md`,
-`utils/CLIO/INSTALL.md`, the bundled scripts, or the repo's top-level layout: run the
+`utils/clio-capture/INSTALL.md`, the bundled scripts, or the repo's top-level layout: run the
 checks block from the repo root and flip any finding whose check has gone silent.
 
 | | |
@@ -17,13 +17,13 @@ checks block from the repo root and flip any finding whose check has gone silent
 
 | Dimension | | Note |
 | --- | --- | --- |
-| One front door | ✅ | Root `README.md` is the only overview; `utils/CLIO/INSTALL.md` is the only install procedure. The competing skill-local README was removed. |
+| One front door | ✅ | Root `README.md` is the only overview; `utils/clio-capture/INSTALL.md` is the only install procedure. The competing skill-local README was removed. |
 | 🔑 Leaked secrets | ✅ | No live-looking credential in the tree. Fixtures are synthetic prompt text. |
 | Install path | ✅ | Resolves from a checkout *or* an installed skill dir via `CLIO_SRC`; `jq` and `python3` are declared. |
 | Execution environment | ⚠️ | macOS/Linux only, stated up front. A sandboxed agent may be blocked from `launchctl` and from the git credential helper — see FD-06. |
 | Auth & access | ✅ | No hoops at all: no account, API key, OAuth, paid tier, or admin grant. Everything is local. |
 | First success | ⚠️ | The install block ends in a smoke test that prints a captured row, but there is no troubleshooting path when it prints nothing — FD-05. |
-| Upstream parity | ✅ | `utils/CLIO/` and the CLIO tests are published from rebalanceOS and recorded in `utils/CLIO/UPSTREAM`; `bash scripts/publish-from-rebalance.sh --check` exits 0 when nothing here was edited directly. |
+| Upstream parity | ✅ | `utils/clio-capture/` and the CLIO tests are published from rebalanceOS and recorded in `utils/clio-capture/UPSTREAM`; `bash scripts/publish-from-rebalance.sh --check` exits 0 when nothing here was edited directly. |
 | Doc ↔ code drift | ✅ | One overview, one install doc, and the writer plus both shims are extracted from `INSTALL.md` by the tests, so they cannot drift from what is exercised. |
 
 ## Findings
@@ -62,20 +62,20 @@ test suite.
 
 ```bash
 # --- open findings ----------------------------------------------------------
-grep -q 'install -m 0755 utils/CLIO/' utils/CLIO/INSTALL.md \
-  && echo "FD-01 OPEN: install command is still CWD-relative (utils/CLIO/ prefix)"
-grep -q 'CLIO_SRC' utils/CLIO/INSTALL.md \
+grep -q 'install -m 0755 utils/clio-capture/' utils/clio-capture/INSTALL.md \
+  && echo "FD-01 OPEN: install command is still CWD-relative (utils/clio-capture/ prefix)"
+grep -q 'CLIO_SRC' utils/clio-capture/INSTALL.md \
   || echo "FD-01 OPEN: the CLIO_SRC resolver is missing from INSTALL.md"
-test -f utils/CLIO/README.md \
+test -f utils/clio-capture/README.md \
   && echo "FD-02 OPEN: a second, skill-local README is back alongside the root one"
 stale=$(grep -rl '5-minute `launchd`' --include='*.md' . 2>/dev/null \
   | grep -v -e '^\./SHAKEDOWN/' -e '^\./FRONTDOOR\.md$')
 [ -n "$stale" ] && echo "FD-03 OPEN: a doc still advertises the 5-minute schedule: $stale"
-grep -q 'clio-agy-tail: delivered=.*>&2' utils/CLIO/clio-agy-tail.sh \
+grep -q 'clio-agy-tail: delivered=.*>&2' utils/clio-capture/clio-agy-tail.sh \
   && echo "FD-04 OPEN: the agy tailer summary went back to stderr; its harness will fail"
-grep -qi '^## Troubleshooting' utils/CLIO/INSTALL.md \
+grep -qi '^## Troubleshooting' utils/clio-capture/INSTALL.md \
   || echo "FD-05 OPEN: INSTALL.md has no troubleshooting section"
-grep -q 'Then schedule it like the Codex tailer' utils/CLIO/INSTALL.md \
+grep -q 'Then schedule it like the Codex tailer' utils/clio-capture/INSTALL.md \
   && echo "FD-06 OPEN: the Agy scheduling step is still prose, not a copy-pasteable block"
 test -f .gitignore \
   || echo "FD-07 OPEN: no .gitignore at the repo root"
@@ -87,12 +87,12 @@ grep -rlE 'sk-[A-Za-z0-9]{16,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z 
   | while read -r f; do
       echo "BL-01 FAILED: possible live credential in $f (value withheld) — rotate it at the provider FIRST, then purge history"
     done
-grep -q '^cat > ~/.claude/hooks/clio-capture.sh << .EOF.$' utils/CLIO/INSTALL.md \
+grep -q '^cat > ~/.claude/hooks/clio-capture.sh << .EOF.$' utils/clio-capture/INSTALL.md \
   || echo "BL-02 FAILED: the clio-capture.sh heredoc marker moved; test/clio-capture.sh can no longer extract it"
-grep -q '^cat > ~/.claude/hooks/log-prompt.sh << .EOF.$' utils/CLIO/INSTALL.md \
+grep -q '^cat > ~/.claude/hooks/log-prompt.sh << .EOF.$' utils/clio-capture/INSTALL.md \
   || echo "BL-02 FAILED: the log-prompt.sh heredoc marker moved; test/clio-capture.sh can no longer extract it"
 for t in clio-codex-tail clio-agy-tail; do
-  grep -q 'WRITER="\$HOME/.claude/hooks/clio-capture.sh"' "utils/CLIO/$t.sh" \
+  grep -q 'WRITER="\$HOME/.claude/hooks/clio-capture.sh"' "utils/clio-capture/$t.sh" \
     || echo "BL-03 FAILED: $t.sh no longer reaches the writer by absolute path"
 done
 for t in clio-capture clio-exporter clio-codex-tail clio-agy-tail; do

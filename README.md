@@ -1,6 +1,6 @@
 > **SQLite pilot:** opt-in full-history SQLite capture, read-only lookup, a rolling
 > 168-hour Markdown view and per-device export are documented in
-> [INSTALL.md](utils/CLIO/INSTALL.md#sqlite-history-and-seven-day-view-opt-in-pilot).
+> [INSTALL.md](utils/clio-capture/INSTALL.md#sqlite-history-and-seven-day-view-opt-in-pilot).
 > Migration keeps the existing Obsidian path and exporter schedule, with a verified
 > backup and complete old-note coverage before switching. Existing installations
 > stay on JSONL until explicit migration/activation. Studio fleet delivery is locally deployed through Rebalance #303;
@@ -9,9 +9,9 @@
 > the same combined fleet note; see the device-independent integration section
 > in INSTALL.md. No new Git push loop or task-status writer is introduced.
 
-> **Upstream:** CLIO is developed in [HiQS-Labs/rebalanceOS `utils/CLIO/`](https://github.com/HiQS-Labs/rebalanceOS/tree/development/utils/CLIO)
+> **Upstream:** CLIO is developed in [HiQS-Labs/rebalanceOS `utils/clio-capture/`](https://github.com/HiQS-Labs/rebalanceOS/tree/development/utils/clio-capture)
 > and published here unchanged by `scripts/publish-from-rebalance.sh` (revision recorded in
-> `utils/CLIO/UPSTREAM`). Send CLIO changes there, not here.
+> `utils/clio-capture/UPSTREAM`). Send CLIO changes there, not here.
 
 # CLIO
 
@@ -82,7 +82,7 @@ one file you can grep, sync to notes, or keep as an audit trail.
 ## Install
 
 Full install, verify, export, auto-sync, and uninstall instructions are in
-[`utils/CLIO/INSTALL.md`](utils/CLIO/INSTALL.md). That file is also the skill
+[`utils/clio-capture/INSTALL.md`](utils/clio-capture/INSTALL.md). That file is also the skill
 definition (it carries the `name: clio` frontmatter), so a Claude Code install
 can invoke it directly.
 
@@ -93,7 +93,7 @@ layouts, and honors a `CLIO_SRC` you set yourself.
 ## Layout
 
 ```
-utils/CLIO/
+utils/clio-capture/
   INSTALL.md            # the skill: install / verify / uninstall procedure,
                         # and the source of truth for the capture writer and
                         # the Claude + ZCode shims (embedded as heredocs)
@@ -101,19 +101,23 @@ utils/CLIO/
   clio-agy-tail.sh      # Agy transcript tailer
   prompt-log-to-md.sh   # legacy exporter or SQLite drain + projection
   clio-store.py         # SQLite history, query, migration and device exports
+  clio-runtime.sh       # device installer: status / install / uninstall from the Skills Army copy
+  SKILL.md              # clio-capture skill entry (Skills Army HQ deploys this folder)
+  UPSTREAM              # published revision and file checksums (written by the publisher)
 test/
   clio-capture.sh       # capture writer + Claude shim, against a throwaway $HOME
   clio-exporter.sh      # exporter behavior, state file, idempotency
   clio-codex-tail.sh    # Codex tailer against a fixture rollout
   clio-agy-tail.sh      # Agy tailer against a fixture transcript
   clio-store.py         # SQLite acceptance and failure cases
+  clio-runtime.sh       # installer against a throwaway HOME and stubbed launchctl
   fixtures/clio/        # fixture rollout + transcript
 scripts/publish-from-rebalance.sh  # publish CLIO from the rebalanceOS upstream; --check verifies UPSTREAM
 FRONTDOOR.md            # onboarding health board, refreshed by re-running its checks
 SHAKEDOWN/              # dated script-path audits of the clio skill
 ```
 
-The root `README.md` is the only overview; `utils/CLIO/INSTALL.md` is the only
+The root `README.md` is the only overview; `utils/clio-capture/INSTALL.md` is the only
 install procedure. There is deliberately no second, skill-local README to drift
 out of sync with this one.
 
@@ -133,7 +137,8 @@ bash test/clio-exporter.sh
 bash test/clio-codex-tail.sh
 bash test/clio-agy-tail.sh
 python3 test/clio-store.py
-bash scripts/publish-from-rebalance.sh --check   # published files still match utils/CLIO/UPSTREAM
+bash test/clio-runtime.sh        # device installer (clio-runtime.sh) in a throwaway HOME
+bash scripts/publish-from-rebalance.sh --check   # published files still match utils/clio-capture/UPSTREAM
 ```
 
 ## Safety

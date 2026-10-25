@@ -1,7 +1,7 @@
 # CLIO engineering contract
 
-- **Upstream is rebalanceOS.** `utils/CLIO/` and the CLIO tests (`test/clio-*`, `test/fixtures/clio/`) are published from HiQS-Labs/rebalanceOS `utils/CLIO/` by `scripts/publish-from-rebalance.sh`, recorded in `utils/CLIO/UPSTREAM`. Never edit them here. Change them in rebalanceOS first through a reviewed PR, then publish on a branch and open a PR here. `bash scripts/publish-from-rebalance.sh --check` runs with the suites and flags a direct edit.
-- `utils/CLIO/INSTALL.md` owns the shared capture writer and installation procedure; tests extract its heredocs. Preserve that single capture boundary.
+- **Upstream is rebalanceOS.** `utils/clio-capture/` and the CLIO tests (`test/clio-*`, `test/fixtures/clio/`) are published from HiQS-Labs/rebalanceOS `utils/clio-capture/` by `scripts/publish-from-rebalance.sh`, recorded in `utils/clio-capture/UPSTREAM`. Never edit them here. Change them in rebalanceOS first through a reviewed PR, then publish on a branch and open a PR here. `bash scripts/publish-from-rebalance.sh --check` runs with the suites and flags a direct edit.
+- `utils/clio-capture/INSTALL.md` owns the shared capture writer and installation procedure; tests extract its heredocs. Preserve that single capture boundary.
 - Apply SOLID proportionally: focused functions and existing seams, without speculative abstractions or extra services. Prefer Python's standard library for SQLite work.
 - Preserve private prompt history, unknown metadata and tailer retry/cursor semantics. Never publish live prompts, databases, snapshots or credentials in this repository.
 - Storage migration work follows `doc/gh3-plan.md` and issue #3. A reviewed PR is not permission to modify installed hooks, source history or launchd jobs.

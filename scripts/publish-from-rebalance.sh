@@ -58,13 +58,14 @@ trap 'rm -rf "${EXP:?}"' EXIT
 git -C "$SRC" archive "$srev" utils/CLIO test | tar -x -C "$EXP" || die "could not export $srev"
 mkdir -p "$EXP/test/fixtures/clio" "$ROOT/test/fixtures/clio"
 
-# The same rsync drives preview and apply: three scopes, mirror within them, modes kept.
+# The same rsync drives preview and apply: three scopes, mirror within them, content (checksum) and
+# modes compared, never mtimes, so a preview lists only real changes.
 # utils/CLIO and test/ copy top-level files only, matching published_files.
 sync() { # $@ = extra rsync flags
-  rsync -a --checksum --itemize-changes --delete "$@" \
+  rsync -rlp --checksum --itemize-changes --delete "$@" \
     --exclude README.md --exclude LICENSE --exclude UPSTREAM --exclude '*/' "$EXP/utils/CLIO/" "$ROOT/utils/CLIO/" | sed 's#^#utils/CLIO/ #'
-  rsync -a --checksum --itemize-changes --delete "$@" --include 'clio-*' --exclude '*/' --exclude '*' "$EXP/test/" "$ROOT/test/" | sed 's#^#test/ #'
-  rsync -a --checksum --itemize-changes --delete "$@" "$EXP/test/fixtures/clio/" "$ROOT/test/fixtures/clio/" | sed 's#^#test/fixtures/clio/ #'
+  rsync -rlp --checksum --itemize-changes --delete "$@" --include 'clio-*' --exclude '*/' --exclude '*' "$EXP/test/" "$ROOT/test/" | sed 's#^#test/ #'
+  rsync -rlp --checksum --itemize-changes --delete "$@" "$EXP/test/fixtures/clio/" "$ROOT/test/fixtures/clio/" | sed 's#^#test/fixtures/clio/ #'
 }
 
 if [ "$APPLY" = 0 ]; then

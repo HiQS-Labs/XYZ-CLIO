@@ -109,7 +109,7 @@ if [ "$body" = "$old_body" ]; then
 fi
 { printf '%s\n' "$body" | sed -n '1,4p'; echo "published: ${CLIO_PUBLISH_DATE:-$(date +%Y-%m-%d)}"; printf '%s\n' "$body" | sed '1,4d'; } > "$ROOT/$RECORD"
 # Stage exactly the published list (plus deletions inside the scopes) and prove nothing else moved.
-published_files "$ROOT" | (cd "$ROOT" && xargs git add -- "$RECORD")
+published_files "$ROOT" | tr '\n' '\0' | (cd "$ROOT" && xargs -0 git add -- "$RECORD")
 git -C "$ROOT" add -u -- utils/CLIO test
 git -C "$ROOT" commit -q -m "publish: CLIO from HiQS-Labs/rebalanceOS@${srev:0:12}"
 left=$(git -C "$ROOT" status --porcelain)

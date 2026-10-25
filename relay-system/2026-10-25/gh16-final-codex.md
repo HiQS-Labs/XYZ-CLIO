@@ -126,4 +126,12 @@ Basis: Both concrete Round 1 failures are corrected without expanding the publis
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T14:59:10Z
+task: RELAY-gh16-final-codex
+reviewer: codex
+status: Approved
+reviewed-head: e3f54c4ee51a7b26777d4cba04c59436ce99c003
+added-range: 11392+2519
+added-sha256: 421574fe91b3039f0d2bd7831fade63f138f753b727df238d7c39a6edfad4b6a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -16,6 +16,8 @@
 # newlines and only after the writer accepted the chunk, rescan on inode
 # change or size regression, no history import on first sighting unless
 # CLIO_TAIL_BACKFILL=1, and a busy append lock aborts without advancing.
+# A busy tailer lock is a silent no-op; a lock older than 300 s is reaped by
+# one serialized reaper.
 set -euo pipefail
 AGY_ROOT="${CLIO_AGY_ROOT:-$HOME/.gemini/antigravity-cli}"
 STATE="$HOME/.claude/prompt-log-agy-tail.state"

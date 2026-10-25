@@ -279,7 +279,7 @@ install -m 0755 "$CLIO_SRC/clio-store.py" ~/.claude/hooks/clio-store.py
 install -m 0755 "$CLIO_SRC/prompt-log-to-md.sh" ~/.claude/hooks/prompt-log-to-md.sh
 
 echo "✅ Installed. Smoke test (uses the Claude shim; expects agent=claude-code):"
-echo '{"prompt":"a substantive session-opening prompt that runs well past the one hundred character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
+echo '{"prompt":"a substantive session-opening prompt that runs well past the twenty character capture threshold on its own","session_id":"install-check"}' | ~/.claude/hooks/log-prompt.sh
 tail -1 ~/.claude/prompt-log.jsonl
 ```
 
@@ -701,8 +701,11 @@ Upgrading preserves legacy pending records on their original file. Replacement o
 truncation switches those legacy files to the capture boundary, so previously
 skipped history is not imported; older pending records cannot be recovered
 automatically once that file provenance is lost. Clean polling delays retain the
-boundary. An abandoned tailer lock after a forced kill still requires operator
-recovery after verifying no tailer is running; this update adds no lock supervisor.
+boundary. An abandoned tailer lock (a run killed mid-tick) is reaped by the next
+tick once it is older than 300 seconds; reaping is serialized behind
+`<lock>.reap` and rechecked, so a live lock is never taken. Only a kill inside that
+millisecond reap step can leave `<lock>.reap` behind, which disables reaping (not
+capture of a healthy lock); remove it after verifying no tailer is running.
 
 Schedule it every minute:
 

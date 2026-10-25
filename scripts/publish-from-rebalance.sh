@@ -70,7 +70,8 @@ sync() { # $@ = extra rsync flags
 
 if [ "$APPLY" = 0 ]; then
   echo "source: HiQS-Labs/rebalanceOS@${srev:0:12}"
-  changes=$(sync --dry-run | grep -v '^[^ ]* \.d' || true)
+  # Keep only real changes: a transfer (>, c, h), a deletion, or a permission change (column 6 = p).
+  changes=$(sync --dry-run | awk '$2 ~ /^(\*deleting|[<>ch]|.....p)/' || true)
   [ -n "$changes" ] && printf '%s\n' "$changes" || echo "no CLIO content changes"
   exit 0
 fi

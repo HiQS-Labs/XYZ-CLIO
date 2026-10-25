@@ -1,0 +1,17 @@
+# Published from the CLIO upstream. Do not edit utils/CLIO/ or the CLIO tests here:
+# change HiQS-Labs/rebalanceOS utils/CLIO first, then run scripts/publish-from-rebalance.sh.
+source: HiQS-Labs/rebalanceOS
+revision: e4a7abb9218b43c39daf46d5947afcac03b170a4
+published: 2026-10-25
+d8f3d3f149fbc3e8e1ee97ac843da87db06b0afef0230b1430cd80e655c5a18e  test/clio-agy-tail.sh
+c74ab634b04d2dd15b0f3c390cd3a5e6d8924a4c5abe8f3d46048ab35de40b40  test/clio-capture.sh
+29751d1caae6d2f39697d5bfc76a52ddf582704badbdb1bd67e501e4bc4ea565  test/clio-codex-tail.sh
+8dc095a8edd5a96ec50d0c05bdd35c692e0452d48b0898e59aa2f5d4bd51bf42  test/clio-exporter.sh
+1ef94522f9735b1bf76029fcd238d8539d0b068bb85b211d7f64cab5c5067740  test/clio-store.py
+fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984  test/fixtures/clio/agy-transcript.jsonl
+117614da8141bd213b3f16bf2746c14e9ed7cf54b9472fb63c253fa0e58d5399  test/fixtures/clio/codex-rollout.jsonl
+17cead91f130df0a4b4f1e41b2d65052d6a90003a364de4d2382eb53e542b087  utils/CLIO/INSTALL.md
+1b1b8f4c2aadf111c79d70b0aa3b769736eebbc1bb166aca8e0ae6ee9d98e0ba  utils/CLIO/clio-agy-tail.sh
+fd7fe836599f00ae59862ee26eda375d45fb2db9531a25a560ccaf30499781dc  utils/CLIO/clio-codex-tail.sh
+8c3040cbc3595670597df249f10e394731a31d138d830c29160b221ab02c3c5b  utils/CLIO/clio-store.py
+66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f  utils/CLIO/prompt-log-to-md.sh

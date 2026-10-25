@@ -1,0 +1,1 @@
+FAIL: expected 99-char prompt to be skipped, got 1 line(s)

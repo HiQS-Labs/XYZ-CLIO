@@ -37,7 +37,7 @@ Mirror semantics apply within those three scopes: a file removed upstream is rem
 
 **Preview (default):** `publish-from-rebalance.sh <rebalanceOS checkout>`.
 1. Source checks, refusing with exit 2 and the reason:
-   - `origin` resolves to `HiQS-Labs/rebalanceOS` (https or ssh);
+   - `origin`'s URL matches `(^|[/:])HiQS-Labs/rebalanceOS(\.git)?$`. This one rule admits `https://github.com/HiQS-Labs/rebalanceOS(.git)`, `git@github.com:HiQS-Labs/rebalanceOS(.git)` and a local mirror path ending in `/HiQS-Labs/rebalanceOS.git` (check i's stand-in). Any other repository name or owner is refused (plan QA R1);
    - the working tree is clean (`git status --porcelain` empty);
    - after `git -C <src> fetch -q origin development`, `HEAD` is an ancestor of `origin/development` (merged).
 2. Print the source revision and an `rsync --dry-run --itemize-changes --checksum` listing for the three scopes, then "no CLIO content changes" when the listing is empty.
@@ -46,7 +46,7 @@ Mirror semantics apply within those three scopes: a file removed upstream is rem
 - Target checks: the current branch is not `main`, and the working tree is clean (exit 2 otherwise).
 - Run the same rsync for real, preserving modes (`-a --checksum --delete`, scoped with include/exclude filters).
 - Write `utils/CLIO/UPSTREAM`, then `git add` the published scopes and commit `publish: CLIO from HiQS-Labs/rebalanceOS@<short>`.
-- If the only change would be `UPSTREAM`'s date, nothing is committed and a "no changes" exit 0 is reported. The revision line still updates when the source revision moved, because the record must name what the bytes came from.
+- Rerun rule (plan QA R1): build the new manifest in memory first. If the copied bytes and the new `revision` + manifest lines equal the existing `UPSTREAM` (everything but the `published:` date), the script does **not** rewrite `UPSTREAM`, commits nothing, and leaves the working tree clean (`git status --porcelain` empty). It reports "no changes" and exits 0. A moved source revision rewrites `UPSTREAM`, so the record names what the bytes came from, and that is committed even when no content changed.
 - Never pushes.
 
 **`--check` (read-only, no source needed):**
@@ -91,8 +91,13 @@ published: <YYYY-MM-DD>
   - d. A clean merged source: preview prints "no CLIO content changes", and `--apply` commits only `UPSTREAM`.
   - e. `--check` → exit 0.
   - f. A one-byte edit to `utils/CLIO/INSTALL.md` → `--check` exit 1, naming the file (red control).
-  - g. A stray `utils/CLIO/extra.sh` → `--check` exit 1.
-  - h. A second `--apply` from the same source → "no changes", no commit (rerun path).
+  - g. Stray and deleted files, one at a time and restored between runs (plan QA R1). Each of the following gives `--check` exit 1 naming that path, and each restore gives exit 0 again:
+    - a stray `utils/CLIO/extra.sh`;
+    - a stray `test/clio-extra.sh`;
+    - a stray `test/fixtures/clio/extra.jsonl`;
+    - a deleted `test/fixtures/clio/agy-transcript.jsonl`.
+  - h. A second `--apply` from the same source with the date forced to a later day (`CLIO_PUBLISH_DATE` override, test-only) → "no changes", no new commit, and `git status --porcelain` is empty (rerun path).
+  - a2. An origin of `https://github.com/HiQS-Labs/rebalanceOS-fork.git` or `https://github.com/Someone/rebalanceOS.git` → refused (exit 2).
   - i. Upstream change, full path: the disposable source's `origin` is a local bare repo at `<tmp>/HiQS-Labs/rebalanceOS.git`, so the origin check and fetch run for real. Commit a one-line fixture change to its `development`, pull it into the source, preview: exactly that file is listed. `--apply`: one fixture plus `UPSTREAM` committed; `--check` passes. Then revert it in the source and publish again: back to identical bytes.
 - The README suites still pass.
 - Receipt under `TESTS-RESULTS/2026-10-25-gh16/`.

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -92,5 +92,11 @@ VERDICT: FAIL
 Basis: The plan has the right minimal shape, but the specified local-origin integration control is internally inconsistent, and two required `--check`/rerun properties are not yet falsifiably verified.
 
 handing off to Producer — go to the Producer window and say 'take your turn'
+
+### Producer · Round 1
+
+- [Should] origin rule vs check i → **Implemented**: a single allow-list regex `(^|[/:])HiQS-Labs/rebalanceOS(\.git)?$` admits the GitHub https/ssh forms and the local bare stand-in, and refuses other names and owners. New check a2 covers the refusals.
+- [Should] rerun must leave the tree clean → **Implemented**: the manifest is compared in memory, ignoring `published:`. With the same bytes and revision, `UPSTREAM` is not rewritten, nothing is committed, and `git status --porcelain` is empty. Check h now forces a later date (test-only `CLIO_PUBLISH_DATE`) and asserts a clean tree. A moved revision still rewrites and commits.
+- [Should] three-scope deletion/stray controls → **Implemented** in check g: a stray in each scope plus a deleted fixture, each exit 1 naming the path, restored back to exit 0.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

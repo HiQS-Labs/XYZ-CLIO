@@ -698,6 +698,154 @@ class History(unittest.TestCase):
             store.import_snapshot(nodes[1][2], (store.encode(manifest) + '\n').encode() + payload,
                                   'fixture-regression', owners[0], cumulative=True)
 
+    def test_fleet_discovery_and_peer_note_join(self):
+        # Three stores share one fixture remote; no store edits another's configuration.
+        fleet = self.home / 'gh11'
+        fleet.mkdir()
+        remote = fleet / 'remote.git'
+        def git(repo, *args):
+            self.assertTrue(repo.resolve().is_relative_to(self.home.resolve()))
+            return subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
+                                   '-c', 'commit.gpgsign=false', '-c', 'user.name=Fixture',
+                                   '-c', 'user.email=fixture@example.invalid', *args],
+                                  check=True, capture_output=True).stdout
+        git(fleet, 'init', '--bare', '-q', '--initial-branch=main', str(remote))
+        nodes = []
+        for number in range(3):
+            home = fleet / str(number)
+            home.mkdir()
+            checkout = home / 'pulse'
+            git(home, 'clone', '-q', str(remote), str(checkout))
+            if number == 0:
+                git(checkout, 'commit', '-q', '--allow-empty', '-m', 'fixture seed')
+                git(checkout, 'push', '-q', 'origin', 'main')
+            db = home / 'history.sqlite3'
+            nodes.append((home, checkout, db, store.initialize(db)))
+        a, b, c = nodes
+        owners = [node[3] for node in nodes]
+        def context(node):
+            return patch.object(store, 'CONFIG', node[0] / 'config.json')
+        def publish(node):
+            git(node[1], 'pull', '-q', '--ff-only')
+            with context(node):
+                store.export_device(node[2], node[1] / 'devices' / node[3] / 'clio.jsonl')
+            git(node[1], 'add', 'devices')
+            git(node[1], 'commit', '-q', '-m', 'owned snapshot')
+            git(node[1], 'push', '-q', 'origin', 'main')
+        def reconcile(node):
+            git(node[1], 'pull', '-q', '--ff-only')
+            with context(node):
+                return store.reconcile_fleet(node[2])
+        def states(result):
+            return {item['owner']: item['state'] for item in result['origins']}
+        note_a = a[0] / '0. Claude Prompts.md'
+        with context(a):
+            store.activate(a[2], a[0] / 'absent.jsonl', fresh=True)
+            note_a.write_text('# Personal header\n<!-- CLIO:ENTRIES -->\n')
+            store.migrate_view(a[2], note_a, True, True)
+            store.configure_fleet(a[2], a[1], [owners[0], owners[1]], True)
+        for node in (b, c):
+            with context(node):
+                store.activate(node[2], node[0] / 'absent.jsonl', fresh=True, capture_only=True)
+        with context(c):
+            store.configure_fleet(c[2], c[1], [], discover=True)
+            self.assertEqual(store.config()['fleet']['origins'], [owners[2]])
+        # Inside the 5-minute-floored fleet cutoff, so every default render shows these rows.
+        earlier = store.utc(datetime.now(timezone.utc) - timedelta(minutes=15))
+        for node in nodes:
+            with context(node):
+                store.capture(node[2], node[3], self.row(timestamp=earlier, source_event_id='gh11-' + node[3]))
+        publish(a)
+        publish(c)
+        # Red control: an explicit inventory ignores the newcomer and reports the pinned peer missing.
+        self.assertEqual(states(reconcile(a)), {owners[0]: 'accepted', owners[1]: 'missing'})
+        # Opt-in discovery picks up the newcomer with no step on any other store.
+        with context(a):
+            store.configure_fleet(a[2], a[1], [owners[0], owners[1]], True, discover=True)
+        result = reconcile(a)
+        self.assertEqual(result['discovered'], [owners[2]])
+        self.assertEqual(states(result), {owners[0]: 'accepted', owners[1]: 'missing', owners[2]: 'accepted'})
+        self.assertFalse(states(reconcile(c)).get(owners[1]))
+        publish(b)
+        # Only canonical-UUID folders holding clio.jsonl are origins.
+        git(a[1], 'pull', '-q', '--ff-only')
+        (a[1] / 'devices/fixture-name').mkdir(parents=True)
+        (a[1] / 'devices/fixture-name/clio.jsonl').write_text('not a snapshot\n')
+        (a[1] / 'devices/fixture.yaml').write_text('device: fixture\n')
+        decoy = '00000000-0000-4000-8000-000000000001'
+        (a[1] / 'devices' / decoy / 'nested').mkdir(parents=True)
+        (a[1] / 'devices' / decoy / 'nested/clio.jsonl').write_text('nested decoy\n')
+        (a[1] / 'devices' / (decoy[:-1] + '2\n')).mkdir()
+        (a[1] / 'devices' / (decoy[:-1] + '2\n') / 'clio.jsonl').write_text('newline decoy\n')
+        git(a[1], 'add', 'devices')
+        git(a[1], 'commit', '-q', '-m', 'fixture non-origin entries')
+        git(a[1], 'push', '-q', 'origin', 'main')
+        result = reconcile(a)
+        self.assertEqual(states(result), dict.fromkeys(owners, 'accepted'))
+        self.assertFalse(result['partial'])
+        # A bad discovered snapshot is isolated to its own origin.
+        saved = (a[1] / 'devices' / owners[2] / 'clio.jsonl').read_bytes()
+        (a[1] / 'devices' / owners[2] / 'clio.jsonl').write_bytes(b'corrupt\n')
+        git(a[1], 'commit', '-q', '-am', 'fixture corrupt discovered snapshot')
+        result = reconcile(a)
+        self.assertEqual(states(result), {owners[0]: 'accepted', owners[1]: 'accepted', owners[2]: 'error'})
+        (a[1] / 'devices' / owners[2] / 'clio.jsonl').write_bytes(saved)
+        git(a[1], 'commit', '-q', '-am', 'fixture restore discovered snapshot')
+        git(a[1], 'push', '-q', 'origin', 'main')
+        self.assertFalse(reconcile(a)['partial'])
+        # Turning discovery off restores the explicit inventory.
+        with context(a):
+            store.configure_fleet(a[2], a[1], owners, True)
+            self.assertNotIn('discover', store.config()['fleet'])
+            store.configure_fleet(a[2], a[1], owners, True, discover=True)
+            kept = store.config()['fleet']
+            self.assertTrue(kept['discover'] and kept['repair_generated_note'])
+            self.assertTrue(kept['header_sha256'] and kept['coverage'])
+        # A capture-only store joins the note another store already renders.
+        with context(a):
+            store.project(a[2], note_a)
+        rendered = note_a.read_bytes()
+        note_b = b[0] / '0. Claude Prompts.md'
+        note_b.write_bytes(rendered)
+        with context(b):
+            with self.assertRaisesRegex(ValueError, 'excludes'):
+                store.migrate_view(b[2], note_b, True, False, True)
+            with self.assertRaisesRegex(ValueError, 'excludes'):
+                store.migrate_view(b[2], note_b, False, True, True)
+            with self.assertRaisesRegex(ValueError, 'configure and reconcile'):
+                store.migrate_view(b[2], note_b, join_fleet_note=True)
+            store.configure_fleet(b[2], b[1], [], discover=True)
+            with self.assertRaisesRegex(ValueError, 'not yet in this replica'):
+                store.migrate_view(b[2], note_b, join_fleet_note=True)
+        self.assertFalse(reconcile(b)['partial'])
+        note_b.write_bytes(rendered.replace(b'> Synthetic', b'> Edited', 1))
+        with context(b):
+            with self.assertRaisesRegex(ValueError, 'not an exact fleet rendering'):
+                store.migrate_view(b[2], note_b, join_fleet_note=True)
+            self.assertNotIn('view', store.config())
+        note_b.write_bytes(rendered)
+        with context(b):
+            joined = store.migrate_view(b[2], note_b, join_fleet_note=True)
+            self.assertEqual(joined['coverage'], 'archived-not-reconciled')
+            store.configure_fleet(b[2], b[1], [], True, discover=True)
+        scheduled = subprocess.run([sys.executable, str(ROOT / 'utils/CLIO/clio-store.py'), '--db', str(b[2]),
+                                    'scheduled-export', str(note_b)], capture_output=True, text=True,
+                                   env=dict(os.environ, HOME=str(b[0]), CLIO_CONFIG=str(b[0] / 'config.json')))
+        self.assertEqual(scheduled.returncode, 0, scheduled.stderr)
+        self.assertEqual(json.loads(scheduled.stdout)['note_publication'], 'published')
+        # A later-cutoff render from the joiner is not one of A's accepted hashes, so A must
+        # recognise it as a peer rendering, without an archive.
+        later = store.utc(datetime.now(timezone.utc) + timedelta(seconds=90))
+        with context(b):
+            store.project(b[2], note_b, cutoff=later)
+        self.assertNotEqual(note_b.read_bytes(), note_a.read_bytes())
+        note_a.write_bytes(note_b.read_bytes())
+        with context(a):
+            count = store.recovery_metrics(a[2])['count']
+            store.project(a[2])
+            self.assertEqual(store.config()['view']['last_note_repair']['state'], 'peer_generated')
+            self.assertEqual(store.recovery_metrics(a[2])['count'], count)
+
     def test_simultaneous_capture_read_export(self):
         rows = [self.row() for _ in range(16)]
         self.add(self.row())

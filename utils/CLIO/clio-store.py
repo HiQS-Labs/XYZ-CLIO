@@ -617,17 +617,7 @@ def checked_view(conn, path, target):
                 raise ValueError('waiting_for_history; note preserved until bounded expiry')
         else:
             view.pop('waiting_since', None)
-        peer = False
-        match = re.search(r'^UTC cutoff: (.+)$', text, re.M)
-        if not unknown and len(ids) == len(set(ids)) and match:
-            try:
-                cutoff = utc(instant(match[1]))
-                if cutoff == match[1] and instant(cutoff) <= instant(utc()) + timedelta(minutes=5):
-                    peer = any(render_markdown([known[i] for i in ids], cutoff,
-                                               view['header'], coverage)[0] == original
-                               for coverage in ('verified', 'archived-not-reconciled'))
-            except (ValueError, OverflowError):
-                pass
+        peer = not unknown and peer_render_coverage(known, original, view['header']) is not None
         archive = None if peer else preserve_recovery(path, original, 'conflict', '.md')
         view['last_note_repair'] = {'at': utc(), 'state': 'peer_generated' if peer else 'archived_conflict',
                                     'digest': current, 'archive': str(archive) if archive else None}
@@ -635,8 +625,28 @@ def checked_view(conn, path, target):
     return cfg, current
 
 
-def migrate_view(path, markdown=None, publishers_paused=False, archive_unreconciled_note=False):
-    if not publishers_paused:
+def peer_render_coverage(known, original, header):
+    """Return the coverage banner under which this renderer reproduces the note exactly, else None."""
+    text = original.decode('utf-8')
+    ids = re.findall(r'^<!-- clio:record:(clio1-[0-9a-f]{64}) -->$', text, re.M)
+    match = re.search(r'^UTC cutoff: (.+)$', text, re.M)
+    if set(ids).difference(known) or len(ids) != len(set(ids)) or not match:
+        return None
+    try:
+        cutoff = utc(instant(match[1]))
+        if cutoff == match[1] and instant(cutoff) <= instant(utc()) + timedelta(minutes=5):
+            for coverage in ('verified', 'archived-not-reconciled'):
+                if render_markdown([known[i] for i in ids], cutoff, header, coverage)[0] == original:
+                    return coverage
+    except (ValueError, OverflowError):
+        pass
+    return None
+
+
+def migrate_view(path, markdown=None, publishers_paused=False, archive_unreconciled_note=False, join_fleet_note=False):
+    if join_fleet_note and (publishers_paused or archive_unreconciled_note):
+        raise ValueError('--join-fleet-note registers a peer-rendered note; it excludes the single-publisher migration flags')
+    if not publishers_paused and not join_fleet_note:
         raise ValueError('pause all shared-note publishers and designate one owner before --publishers-paused')
     target = existing_destination(markdown)
     with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
@@ -648,7 +658,25 @@ def migrate_view(path, markdown=None, publishers_paused=False, archive_unreconci
                 return {'registered': True, 'already_registered': True, 'markdown': str(target)}
             safe_output(conn, path, target, historical=True)
             original = target.read_bytes()
-            if archive_unreconciled_note:
+            if join_fleet_note:
+                # Another device already renders this note from the shared fleet history:
+                # register it only when this replica reproduces it byte for byte.
+                if not cfg.get('fleet'):
+                    raise ValueError('configure and reconcile the fleet before joining its note')
+                text = original.decode('utf-8')
+                markers = list(re.finditer(r'(?m)^[ \t]*<!-- CLIO:ENTRIES -->[ \t]*\r?\n', text))
+                if len(markers) != 1:
+                    raise ValueError('expected one standalone historical marker; preserve and inspect the note')
+                header, count = text[:markers[0].end()], None
+                known = {item['record_id']: item for item in
+                         (json.loads(r[0]) for r in conn.execute('SELECT payload FROM events'))}
+                ids = re.findall(r'^<!-- clio:record:(clio1-[0-9a-f]{64}) -->$', text, re.M)
+                if set(ids).difference(known):
+                    raise ValueError('note holds records not yet in this replica; reconcile after the next delivery and retry')
+                coverage = peer_render_coverage(known, original, header)
+                if coverage is None:
+                    raise ValueError('note is not an exact fleet rendering; preserve and inspect it')
+            elif archive_unreconciled_note:
                 # Explicit operator acceptance: preserve all original bytes, but do
                 # not claim archived entries were reconciled into SQLite.
                 text = original.decode('utf-8')
@@ -658,7 +686,8 @@ def migrate_view(path, markdown=None, publishers_paused=False, archive_unreconci
                 header, count = text[:marker.end()], None
             else:
                 header, count = legacy_coverage(conn, original)
-            coverage = 'archived-not-reconciled' if archive_unreconciled_note else 'verified'
+            if not join_fleet_note:
+                coverage = 'archived-not-reconciled' if archive_unreconciled_note else 'verified'
             folder = Path(path).expanduser().resolve().parent / (Path(path).name + '.view-backups')
             folder.mkdir(mode=0o700, parents=True, exist_ok=True)
             backup_path = folder / (str(uuid.uuid4()) + '.md')
@@ -932,9 +961,9 @@ def git_read(checkout, args, deadline):
     return result.stdout
 
 
-def configure_fleet(path, checkout, origins, repair=False):
-    owners = [valid_origin(value) for value in origins]
-    if not owners or len(owners) > 16 or len(set(owners)) != len(owners):
+def configure_fleet(path, checkout, origins, repair=False, discover=False):
+    owners = [valid_origin(value) for value in origins or []]
+    if (not owners and not discover) or len(owners) > 16 or len(set(owners)) != len(owners):
         raise ValueError('fleet inventory must contain 1 to 16 unique origins')
     checkout = Path(checkout).expanduser().resolve()
     root = git_read(checkout, ['rev-parse', '--show-toplevel'], time.monotonic() + 5).decode().strip()
@@ -943,9 +972,16 @@ def configure_fleet(path, checkout, origins, repair=False):
     with lock(str(Path(path).expanduser().absolute()) + '.project.lock'):
         with contextlib.closing(database(path)) as conn:
             cfg = active_config(conn, path)
+            if discover and cfg['owner'] not in owners:
+                owners.append(cfg['owner'])
+                if len(owners) > 16:
+                    raise ValueError('fleet inventory must contain 1 to 16 unique origins')
             if cfg['owner'] not in owners:
                 raise ValueError('fleet inventory must include this owner')
             fleet = {'checkout': str(checkout), 'origins': sorted(owners), 'repair_generated_note': repair}
+            if discover:
+                # Opt-in: also import every committed devices/<uuid>/clio.jsonl at reconcile time.
+                fleet['discover'] = True
             if repair:
                 view = cfg.get('view', {})
                 if not view or digest(Path(view['backup']).read_bytes()) != view['backup_sha256']:
@@ -953,7 +989,8 @@ def configure_fleet(path, checkout, origins, repair=False):
                 if not Path(view['path']).read_bytes().startswith(view['header'].encode()):
                     raise ValueError('personal header differs; repair not enabled')
                 fleet.update(header_sha256=digest(view['header'].encode()), coverage=view['coverage'])
-            if all(cfg.get('fleet', {}).get(k) == v for k, v in fleet.items()):
+            if (cfg.get('fleet', {}).get('discover', False) == discover
+                    and all(cfg.get('fleet', {}).get(k) == v for k, v in fleet.items())):
                 return {'configured': True, 'unchanged': True, 'fleet': cfg['fleet']}
             cfg['fleet'] = fleet
             atomic(CONFIG, (encode(cfg) + '\n').encode())
@@ -976,6 +1013,20 @@ def reconcile_fleet(path):
         if not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', head):
             raise ValueError('invalid committed revision')
         status['revision'] = head
+        if fleet.get('discover'):
+            listed = git_read(fleet['checkout'], ['ls-tree', '-r', '-z', '--name-only', head, '--', 'devices'], deadline)
+            found = set()
+            for name in listed.decode('utf-8', 'replace').split('\0'):
+                match = re.fullmatch(r'devices/([0-9a-f-]{36})/clio\.jsonl', name)
+                if match:
+                    try:
+                        found.add(valid_origin(match[1]))
+                    except ValueError:
+                        pass
+            status['discovered'] = sorted(found.difference(owners))
+            owners = sorted(set(owners) | found)
+            if len(owners) > 16:
+                raise ValueError('discovered fleet exceeds 16 origins')
         for owner in owners:
             spec = head + ':devices/' + owner + '/clio.jsonl'
             try:
@@ -1042,6 +1093,8 @@ def main():
     migration.add_argument('--publishers-paused', action='store_true')
     migration.add_argument('--archive-unreconciled-note', action='store_true',
                            help='accept historical gaps/repeated sections; archive the whole note without claiming SQLite parity')
+    migration.add_argument('--join-fleet-note', action='store_true',
+                           help='register a note another device already renders from the shared fleet history')
     scheduled = commands.add_parser('scheduled-export')
     scheduled.add_argument('markdown')
     scheduled.add_argument('--mode', default='export')
@@ -1065,7 +1118,8 @@ def main():
     exporter.add_argument('--origin', help='explicit one-time bootstrap of a known preserved origin')
     fleet = commands.add_parser('configure-fleet')
     fleet.add_argument('checkout')
-    fleet.add_argument('--origin', action='append', required=True)
+    fleet.add_argument('--origin', action='append', default=[])
+    fleet.add_argument('--discover-origins', action='store_true', help='also import every committed devices/<uuid>/clio.jsonl; this owner is implied')
     fleet.add_argument('--repair-generated-note', action='store_true', help='machine-owned body: archive unknown body edits before rebuilding; preserve personal header')
     commands.add_parser('reconcile-fleet')
     importer = commands.add_parser('import-device')
@@ -1089,9 +1143,9 @@ def main():
         elif args.command == 'activate':
             result = activate(path, args.source, args.fresh, args.capture_only)
         elif args.command == 'migrate-view':
-            result = migrate_view(path, args.markdown, args.publishers_paused, args.archive_unreconciled_note)
+            result = migrate_view(path, args.markdown, args.publishers_paused, args.archive_unreconciled_note, args.join_fleet_note)
         elif args.command == 'configure-fleet':
-            result = configure_fleet(path, args.checkout, args.origin, args.repair_generated_note)
+            result = configure_fleet(path, args.checkout, args.origin, args.repair_generated_note, args.discover_origins)
         elif args.command == 'reconcile-fleet':
             result = reconcile_fleet(path)
         elif args.command == 'scheduled-export':

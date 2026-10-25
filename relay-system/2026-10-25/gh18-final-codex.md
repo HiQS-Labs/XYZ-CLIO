@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -73,5 +73,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Pass] No live legacy path remains: the scratch-scoped probe `rg -n --glob '!doc/**' --glob '!TESTS-RESULTS/**' --glob '!relay-system/**' --glob '!SHAKEDOWN/**' 'utils/CLIO' .` exited 0 and returned only FRONTDOOR's two fixed-finding history rows (`FRONTDOOR.md:33-34`). `utils/CLIO` is absent; the current layout and README test command use `utils/clio-capture` at `README.md:96-115` and `README.md:129-142`.
+- [Pass] The publisher consistently scopes its manifest, irregular-file guard, archive, three rsync destinations, record, and staging to the renamed path (`scripts/publish-from-rebalance.sh:14-32`, `scripts/publish-from-rebalance.sh:70-85`, `scripts/publish-from-rebalance.sh:101-114`). Narrow syntax probe `bash -n scripts/publish-from-rebalance.sh` exited 0.
+- [Pass] The local published set matches the record: scratch probe `published manifest SHA-256 compared with UPSTREAM` exited 0 with `entries=15`; the record names the new path at `utils/clio-capture/UPSTREAM:1-20`.
+- [Pass] The receipt substantiates parity and the required runtime harness: it records `bash test/clio-runtime.sh -> exit 0` and `differences: 0` at `TESTS-RESULTS/2026-10-25-gh18/suites.txt:2-11`; the README also lists the runtime test at `README.md:140`. The same receipt transparently notes the pre-existing date-dependent `clio-store.py` failure at `TESTS-RESULTS/2026-10-25-gh18/README.md:12`, so it is not being misrepresented as a clean all-suite run.
+- [Pass] Full touched-file sweep found no pre-existing defect within the files changed by this artifact that blocks the mechanical rename; the new runtime test uses a throwaway HOME and stubbed launchctl as declared in `test/clio-runtime.sh:1-35`, and the published skill describes the deployed-copy-only boundary at `utils/clio-capture/SKILL.md:8-17`.
+
+VERDICT: PASS
+
+Basis: The rename is complete outside explicitly preserved history, publisher modes and receipt now use `utils/clio-capture`, README accurately lists the new layout/runtime test, and the evidence plus a current manifest probe substantiate the published bytes. No blocker or should-fix finding.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

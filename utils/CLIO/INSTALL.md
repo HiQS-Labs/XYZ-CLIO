@@ -866,3 +866,30 @@ local deployment receipt and configuration-error hardening. No further history c
 
 Rebalance #304 configuration-error hardening is also merged and deployed as 0.97.1. The
 [final local recheck](https://github.com/HiQS-Labs/rebalanceOS/blob/535bb7a/TESTS-RESULTS/2026-10-02%2BGH-282/deployment-recheck.json) records committed-origin reconcile, the enabled capture hook with natural arrivals after the helper upgrade, owner-only delivery, preserved backup payloads and the same note/header. These are local observations, not four-device qualification.
+
+### Joining without a central device (GH-11)
+
+No Mac controls the fleet. A device joins by delivering its own snapshot, and any Mac with the converged replica can publish the same note.
+
+**Discovery (opt-in per device).** With `--discover-origins`, `reconcile-fleet` also imports every committed `devices/<canonical-UUID>/clio.jsonl` at the pinned HEAD. Your own origin is implied, so `--origin` becomes optional. Any `--origin` you still pass stays pinned, and a pinned origin with no snapshot still reports `missing`. Discovered snapshots get the same digest, owner, size and regression checks as configured ones. Pulse's own non-UUID `devices/<name>` entries are ignored. The result lists new origins under `discovered`.
+
+**One-time upgrade.** This is the last step you ever run on a peer. `configure-fleet` rebuilds the fleet settings from the flags it is given, so repeat the flags you rely on:
+
+```bash
+# Capture-only device:
+python3 ~/.claude/hooks/clio-store.py configure-fleet /path/to/private/pulse-checkout --discover-origins
+# Device that already publishes the note: keep repair mode (and any --origin pins you still want).
+python3 ~/.claude/hooks/clio-store.py configure-fleet /path/to/private/pulse-checkout --discover-origins --repair-generated-note
+```
+
+**Join a new device, or turn a capture-only device into a publisher.** Nothing runs on any other Mac:
+
+1. Run `init`, import and verify, then `activate --capture-only`, as described above.
+2. Run `configure-fleet <checkout> --discover-origins`. The existing collector delivers `devices/<this-UUID>/clio.jsonl`, and each peer imports it on its next scheduled export.
+3. Run `reconcile-fleet` once the checkout holds the peers' snapshots.
+4. Run `migrate-view --join-fleet-note` against the existing synced note. It registers the note only if this replica reproduces it byte for byte, with every record ID known and the same header. It refuses with "not yet in this replica" until reconcile has caught up, and refuses a hand-edited body. It cannot be combined with `--publishers-paused` or `--archive-unreconciled-note`.
+5. Run `configure-fleet <checkout> --discover-origins --repair-generated-note`. From now on `scheduled-export` publishes, and the other publishers accept this device's render as `peer_generated`.
+
+**Retirement** needs no change anywhere. A device that stops delivering just stops changing, and its committed snapshot and imported rows remain as history.
+
+**Rollback:** rerun `configure-fleet` without `--discover-origins` to return to an explicit list. Restore a pre-join `clio-storage.json` backup to return a joined device to capture-only.

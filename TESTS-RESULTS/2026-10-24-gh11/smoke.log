@@ -1,0 +1,15 @@
+== publisher: note registered, discovery on
+{"backup":"<tmp>/pub/h.sqlite3.view-backups/228537e
+{"configured":true,"fleet":{"checkout":"<tmp>/pub/pulse","coverage":"archived-not-reconcile
+== MAIN: new device delivers; publisher reconciles with NO config change
+discovered= ['4fcfe993-a574-48d5-ac4f-3dd6d508f905'] states= {'45b63305': ('accepted', 0), '4fcfe993': ('accepted', 1)} partial= False
+== ADJACENT 1: rerun reconcile adds nothing
+discovered= ['4fcfe993-a574-48d5-ac4f-3dd6d508f905'] added= 0 partial= False
+== ADJACENT 2: publisher renders; capture-only device joins the note and publishes twice
+pub note= published
+join registered= True coverage= archived-not-reconciled
+new run 1 note= published pending= 0
+new run 2 note= published pending= 0
+records in joined note: 2
+== ADJACENT 3: join refused when already registered / note hand-edited elsewhere
+{"already_registered":true,"markdown":"<tmp>

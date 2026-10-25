@@ -113,4 +113,12 @@ Basis: The full scoped artifacts were re-swept. The implementation matches the a
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T06:50:22Z
+task: RELAY-gh13-final-codex
+reviewer: codex
+status: Approved
+reviewed-head: e65dbacc6e025786f79e1f4e5eb931b198c04978
+added-range: 10987+2814
+added-sha256: 0e45812572788c4c543cc8c25c44231822fe9e708f84d5101c1f0239b242eb3d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

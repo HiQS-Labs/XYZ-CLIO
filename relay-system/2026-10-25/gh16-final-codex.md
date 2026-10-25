@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -103,5 +103,27 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 - [Should] symlink stray false-clean → **Implemented**: a new `irregular()` lists any non-regular, non-directory entry in the three scopes. `--check` fails, naming `not a regular file: <path>`, and publish refuses a source revision that contains one (exit 2, no commit). Check k covers both directions.
 - Also: the check target now starts at the commit before the first publish, with the current script copied in, so check d keeps exercising a real first publish. All checks a–k were re-run on the final script (receipt `checks-out.txt`). At HEAD, `--check` exits 0 and a same-source rerun reports "no changes" with a clean tree.
 - Evidence: `.relay-artifacts/gh16-r2-delta.diff` (scripts and receipt changes since your R1 turn).
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] The changed-record comparison now keys by the complete path suffix, not whitespace fields (`scripts/publish-from-rebalance.sh:47-50`). Narrow read-only probe: `awk 'NR == FNR { h[substr($0, 67)] = substr($0, 1, 64); next } (substr($0, 67) in h) && h[substr($0, 67)] != substr($0, 1, 64) { print "  changed: " substr($0, 67) }' "$TMPDIR/old-manifest" "$TMPDIR/new-manifest"`; exit 0; decisive output: `changed: test/fixtures/clio/a b.jsonl`. The NUL-delimited staging change (`scripts/publish-from-rebalance.sh:112`) closes the related apply-side whitespace split.
+
+- [Pass] Non-regular entries are now rejected before a source publish and reported by target `--check` (`scripts/publish-from-rebalance.sh:24-30,38-42,75-76`); receipt checks k record both red controls (`TESTS-RESULTS/2026-10-25-gh16/checks-out.txt:29-31`). This is consistent with the declared regular-file published set.
+
+- [Pass] `rsync -rlp --checksum` deliberately preserves only recursion, links, and modes, while the source irregular guard eliminates links from the published set (`scripts/publish-from-rebalance.sh:75-85`). The preview predicate retains transfers, deletions, and permission-only changes (`scripts/publish-from-rebalance.sh:90-92`), so neither implementation deviation hides the stated changes.
+
+- [Pass] Guarded temporary-directory handling remains sound (`scripts/publish-from-rebalance.sh:71-72`; `TESTS-RESULTS/2026-10-25-gh16/publisher-checks.sh:5-6`). Narrow probe: `bash -n scripts/publish-from-rebalance.sh`; exit 0; decisive output: `bash -n exit=0`.
+
+- [Unverified — needs clone run] The receipt’s a–k and suite execution claims were not rerun in this relay, as required by containment. The final receipt documents j/k and the final rerun (`TESTS-RESULTS/2026-10-25-gh16/README.md:18-30`; `TESTS-RESULTS/2026-10-25-gh16/checks-out.txt:25-31`); the harness gate remains the appropriate independent clone verification.
+
+No pre-existing defect was found in the complete touched publisher script or the R2 receipt delta. The existing maintainer-direction notes were already swept in Round 1 and are unchanged here.
+
+VERDICT: PASS
+
+Basis: Both concrete Round 1 failures are corrected without expanding the publisher beyond its approved scope. The R2 code matches the plan’s regular-file set, archive/staging, check, and no-push design; remaining execution evidence is correctly deferred to the mandated clone gate.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

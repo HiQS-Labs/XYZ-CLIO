@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -76,5 +76,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Should] Reconcile the origin admission rule with verification i. The plan says only HTTPS/SSH origins are accepted (`doc/gh16-plan.md:40`), but i requires the source origin to be the local bare path `<tmp>/HiQS-Labs/rebalanceOS.git` (`doc/gh16-plan.md:96`); that required full-path control is refused if the former rule is implemented literally. Observed input: `origin=<tmp>/HiQS-Labs/rebalanceOS.git` in check i. Affected scope: source-origin validation for every preview/apply. Falsifier: a disposable source with that exact local bare origin; preview must reach its rsync listing (exit 0), while a similarly shaped non-`HiQS-Labs/rebalanceOS.git` origin must still refuse (exit 2). Fix: specify an exact allow-list that admits canonical GitHub HTTPS/SSH URLs and the test-only local suffix, or revise i to use a testable canonical URL without weakening provenance.
+- [Should] Make the rerun rule leave no target worktree modification. `--apply` writes `published: <YYYY-MM-DD>` (`doc/gh16-plan.md:56-64`), yet the same-source rerun promises “no changes, no commit” (`doc/gh16-plan.md:49`, `95`) without saying that it skips/restores the date-only rewrite. Observed input: an already-published revision rerun on the following calendar day. Affected scope: `--apply` when manifest hashes and revision equal the recorded values. Falsifier: after that rerun, `git diff --exit-code` and `test -z "$(git status --porcelain)"` both succeed; a changed source revision still creates a revision-line commit. Fix: compare before writing and do not rewrite a date-only manifest (or restore it before exit), and record those clean-worktree assertions in h.
+- [Should] Add falsifiable parity controls for deletion and all three published scopes. The stated `--check` contract detects missing entries (`doc/gh16-plan.md:52-54`), but verification only edits `utils/CLIO/INSTALL.md` and adds `utils/CLIO/extra.sh` (`doc/gh16-plan.md:93-94`), so it cannot demonstrate deletion handling or enumeration of `test/clio-*` and `test/fixtures/clio/`. Observed input: removal of listed `test/fixtures/clio/agy-transcript.jsonl`, plus stray `test/clio-extra.sh` and `test/fixtures/clio/extra.jsonl`. Affected scope: manifest comparison/enumeration across all three published scopes. Falsifier: each case, run separately with the other paths restored, exits 1 and names its altered path; each restoration returns exit 0. Fix: add these red controls (a content edit can remain in `utils/CLIO`) to the disposable-clone receipt.
+- [Pass] The intended set explicitly excludes the upstream-only README/LICENSE and the locally generated `UPSTREAM`, while limiting delete behavior to the three named scopes (`doc/gh16-plan.md:31-36`, `76-83`); that is proportionate and avoids a second CLIO README. Mode tracking is deliberately excluded with a stated Git-review rationale (`doc/gh16-plan.md:76-80`). No other pre-existing defect found in the reviewed plan.
+- Probe record: `find utils/CLIO test/fixtures/clio -type f -exec stat -f '%HT %Mp%Lp %N' {} \\; ; find test -maxdepth 1 -type f -name 'clio-*' -exec stat -f '%HT %Mp%Lp %N' {} \\;` (exit 0) listed exactly 5 `utils/CLIO` content files, 5 `test/clio-*` files, and 2 fixture files; `sed -n '1,320p' doc/gh16-plan.md` (exit 0) read the entire 98-line artifact. No executable fixtures or suites were run.
+
+VERDICT: FAIL
+
+Basis: The plan has the right minimal shape, but the specified local-origin integration control is internally inconsistent, and two required `--check`/rerun properties are not yet falsifiably verified.
+
+handing off to Producer — go to the Producer window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

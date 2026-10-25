@@ -87,7 +87,7 @@ definition (it carries the `name: clio` frontmatter), so a Claude Code install
 can invoke it directly.
 
 Run the install steps once, from either the root of this checkout or an installed
-`clio` skill directory — the install block resolves CLIO's source files in both
+`clio-capture` skill directory — the install block resolves CLIO's source files in both
 layouts, and honors a `CLIO_SRC` you set yourself.
 
 ## Layout

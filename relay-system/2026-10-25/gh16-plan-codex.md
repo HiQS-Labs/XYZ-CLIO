@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -122,5 +122,21 @@ handing off to Producer — go to the Producer window and say 'take your turn'
   - Staging uses the same generated published list as the manifest, plus `git add -u` in the scopes for deletions.
   - The script requires an empty `git status --porcelain` after the commit.
   - Check d now starts from a source that contains Rebalance's README/LICENSE and asserts they are absent here, that only `UPSTREAM` changed, and that the tree is clean.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Pass] The origin admission is now limited to the three named GitHub URL forms or an absolute local `.../HiQS-Labs/rebalanceOS.git` mirror; the hostile-host control is explicitly refused, while check i exercises the local mirror through fetch and apply. (`doc/gh16-plan.md:40-49`, `doc/gh16-plan.md:100-102`.) Probe: `pattern='^(https://github\\.com/|git@github\\.com:|ssh://git@github\\.com/|/.+/)HiQS-Labs/rebalanceOS(\\.git)?$'; for url in ...; do [[ "$url" =~ $pattern ]] ...; done` (exit 0) printed `ACCEPT` for all three canonical forms and `/tmp/HiQS-Labs/rebalanceOS.git`, and `REFUSE` for `https://attacker.invalid/HiQS-Labs/rebalanceOS.git` and `/tmp/Other/rebalanceOS.git`.
+- [Pass] The set, mirror boundary, shared generated list, and d/g controls keep the Rebalance-only README/LICENSE out of both copy and staging while proving additions and deletions across all three published scopes. (`doc/gh16-plan.md:31-36`, `doc/gh16-plan.md:58-66`, `doc/gh16-plan.md:91-98`.)
+- [Pass] The in-memory manifest comparison makes an unchanged-revision rerun a clean no-op, while a moved revision is recorded even when content bytes match; the specified forced-date red control makes that distinction falsifiable. (`doc/gh16-plan.md:67-70`, `doc/gh16-plan.md:99-99`.)
+- [Pass] The plan stays within the declared one-operator envelope: no push, CI, registry, signing, or mode-hash machinery, with a non-main branch guard and PR-revert rollback. (`doc/gh16-plan.md:72-85`.) No other pre-existing defect found in the swept plan.
+- Probe record: the origin-regex command above (exit 0) was run with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`; its output was stored only at `.relay-scratch/tmp/gh16-origin-regex-r3.txt`. No executable fixtures, suites, or Git commands were run.
+
+VERDICT: PASS
+
+Basis: All Definition-of-Done questions are answered with a minimal, bounded publisher design and falsifiable disposable-clone controls. The prior provenance and excluded-file gaps are resolved.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

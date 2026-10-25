@@ -1,0 +1,12 @@
+$ scripts/publish-from-rebalance.sh <rebalanceOS checkout>
+source: HiQS-Labs/rebalanceOS@f10764f6db90
+utils/clio-capture/ >fcsT.... INSTALL.md
+utils/clio-capture/ >f+++++++ SKILL.md
+utils/clio-capture/ >f+++++++ clio-runtime.sh
+test/ >fcsT.... clio-agy-tail.sh
+test/ >fcsT.... clio-capture.sh
+test/ >fcsT.... clio-codex-tail.sh
+test/ >fcsT.... clio-exporter.sh
+test/ >f+++++++ clio-runtime.sh
+test/ >fcsT.... clio-store.py
+exit=0

@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -76,5 +76,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (aider) — r1
+
+VERDICT: PASS
+Basis: The implementation covers approved plan steps 1–4 without adding another subsystem or exceeding the stated operational envelope. No `[Blocker]`, `[Should]`, or `[Nit]` findings. This was a static review plus receipt inspection; I did not rerun suites under this turn's constraints.
+swept file: yes
+
+- [Pass] **1 — Plan and scope.** Origin configuration/discovery, reconciliation, the shared peer-render helper, note joining, CLI wiring, tests, and documentation are all present (`utils/CLIO/clio-store.py:628-711`, `utils/CLIO/clio-store.py:964-1062`, `utils/CLIO/clio-store.py:1091-1150`, `test/clio-store.py:701-847`, `utils/CLIO/INSTALL.md:870-895`). No approved step appears missing.
+- [Pass] **2 — Discovery.** The pinned-HEAD listing splits on NUL, full-matches the complete path, and then applies `valid_origin`; the sorted union is bounded before the `cat-file` snapshot loop (`utils/CLIO/clio-store.py:1012-1038`). Every origin uses the same bounded `import_snapshot` call with owner, cumulative-regression, and self-recovery handling (`utils/CLIO/clio-store.py:1030-1057`). Listing and over-bound failures enter the existing status path, and `scheduled-export` retains its reconciliation failure guard (`utils/CLIO/clio-store.py:1039-1061`, `utils/CLIO/clio-store.py:1174-1188`).
+- [Pass] **3 — Configuration.** The owner is appended only when discovery is enabled, explicit inventories retain the previous validation, and the persisted mapping adds `discover` only for opt-in use (`utils/CLIO/clio-store.py:964-984`). The `unchanged` predicate compares the old and requested discovery states, so disabling discovery rebuilds the mapping and drops the key; repair metadata remains pinned when requested (`utils/CLIO/clio-store.py:985-997`).
+- [Pass] **4 — Join and factoring.** Flag exclusion precedes the no-fleet, unknown-ID, and non-reproducible-body refusals, with the required messages (`utils/CLIO/clio-store.py:646-678`). Registration still uses the exclusive verified backup, accepted hash, coverage, and `legacy_entries: None` path (`utils/CLIO/clio-store.py:691-711`). The helper preserves unique-ID, known-ID, canonical-cutoff, future-bound, and both-coverage guards; `checked_view` also retains its explicit `not unknown` gate (`utils/CLIO/clio-store.py:617-643`).
+- [Pass] **5 — Complexity.** There is one peer-reproduction implementation with two call sites and one snapshot-import path, not a duplicate writer or new service (`utils/CLIO/clio-store.py:620`, `utils/CLIO/clio-store.py:676`, `utils/CLIO/clio-store.py:1050-1052`). The added configuration is a single persisted boolean, proportionate to the plan.
+- [Pass] **6 — Tests and receipts.** The test contains real negative controls for discovery-off, malformed inventory entries, corrupt snapshots, missing fleet configuration, unknown IDs, edited bytes, and forbidden flag pairs (`test/clio-store.py:758-795`, `test/clio-store.py:810-829`), followed by publication and cross-publisher `peer_generated` checks (`test/clio-store.py:830-847`). The receipts report the expected suite/smoke outcomes and a base-helper red control (`TESTS-RESULTS/2026-10-24-gh11/README.md:9-24`, `TESTS-RESULTS/2026-10-24-gh11/smoke.log:4-15`). The pre-existing failure attribution is credible but was not independently rerun: fixture timestamps are fixed at 2026-09-29 while rendering uses a moving 168-hour window (`test/clio-store.py:63-69`, `utils/CLIO/clio-store.py:741-745`), and the receipt explicitly records the same base failure (`TESTS-RESULTS/2026-10-24-gh11/README.md:13`).
+- [Pass] **7 — Installation order.** The procedure registers the joined view before enabling repair, matching the repair guard, and the upgrade example tells existing publishers to retain repair mode and desired origin pins (`utils/CLIO/INSTALL.md:876-893`, `utils/CLIO/clio-store.py:985-991`). Capture-only joining, repeated reconciliation, publication, retirement, and rollback are in a workable order.
+
+Whole-file sweep covered the complete helper, test file, and INSTALL.md, not only the supplied diff. I found no additional pre-existing defects in those touched files.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

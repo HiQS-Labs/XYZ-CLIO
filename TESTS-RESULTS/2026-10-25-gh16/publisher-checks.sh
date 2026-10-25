@@ -8,7 +8,11 @@ q() { "$@" >/dev/null 2>&1; }
 BARE="$W/HiQS-Labs/rebalanceOS.git"; mkdir -p "$W/HiQS-Labs"
 q git clone --bare "$UPSRC" "$BARE"
 q git clone "$BARE" "$W/src"; git -C "$W/src" checkout -q development
-q git clone "$TASK" "$W/xyz"; git -C "$W/xyz" checkout -q -b test-pub
+q git clone "$TASK" "$W/xyz"
+# Target = the task branch just before its first publish commit, so d exercises a real first publish
+# with the current script copied in.
+pre=$(git -C "$W/xyz" log --format=%H --grep='^publish: CLIO' -1); git -C "$W/xyz" checkout -q -b test-pub "${pre:-HEAD}~1"
+cp "$TASK/scripts/publish-from-rebalance.sh" "$W/xyz/scripts/"; q git -C "$W/xyz" commit -qam "current publisher"
 P="$W/xyz/scripts/publish-from-rebalance.sh"
 run() { out=$(bash "$P" "$@" 2>&1); rc=$?; }
 say() { printf '%-4s %s\n' "$1" "$2"; }
@@ -39,4 +43,12 @@ i0=$(git -C "$W/xyz" rev-parse HEAD); run "$W/src" --apply; say i "apply: exit=$
 run --check; say i "--check: exit=$rc"
 q git -C "$W/pusher" revert --no-edit HEAD; q git -C "$W/pusher" push -q origin development; q git -C "$W/src" pull -q --ff-only
 run "$W/src" --apply; say i "after upstream revert, apply: exit=$rc; fixture back to original bytes: $([ "$orig" = "$(shasum -a 256 < "$W/xyz/test/fixtures/clio/codex-rollout.jsonl")" ] && echo yes || echo NO)"
+# j. a published name with a space: a change is reported with the full path (final QA R1)
+echo '{"synthetic":"spaced"}' > "$W/pusher/test/fixtures/clio/a b.jsonl"; q git -C "$W/pusher" add -A; q git -C "$W/pusher" commit -qm "spaced fixture"; q git -C "$W/pusher" push -q origin development
+q git -C "$W/src" pull -q --ff-only; run "$W/src" --apply; say j "publish spaced fixture: exit=$rc"
+printf 'x' >> "$W/xyz/test/fixtures/clio/a b.jsonl"; run --check; say j "edit 'a b.jsonl': exit=$rc ($(printf '%s' "$out" | grep -o 'changed: .*' | head -1))"; git -C "$W/xyz" checkout -q -- "test/fixtures/clio/a b.jsonl"; run --check; say j "  restored: exit=$rc"
+# k. symlinks: a target stray link fails --check; a source link is refused at publish (final QA R1)
+ln -s /dev/null "$W/xyz/test/fixtures/clio/stray-link"; run --check; say k "target stray symlink: exit=$rc ($(printf '%s' "$out" | grep -o 'not a regular file: .*' | head -1))"; rm "$W/xyz/test/fixtures/clio/stray-link"; run --check; say k "  removed: exit=$rc"
+ln -s INSTALL.md "$W/pusher/utils/CLIO/linked.md"; q git -C "$W/pusher" add -A; q git -C "$W/pusher" commit -qm "symlink"; q git -C "$W/pusher" push -q origin development; q git -C "$W/src" pull -q --ff-only
+k0=$(git -C "$W/xyz" rev-parse HEAD); run "$W/src" --apply; say k "source symlink: exit=$rc ($(printf '%s' "$out" | tail -1)); new commit: $([ "$k0" = "$(git -C "$W/xyz" rev-parse HEAD)" ] && echo no || echo YES)"
 (cd "$W/xyz" && unset CLIO_MIN_PROMPT_CHARS && for t in clio-capture clio-exporter clio-codex-tail clio-agy-tail; do bash test/$t.sh >/dev/null 2>&1; echo "suite test/$t.sh: exit=$?"; done; python3 test/clio-store.py >/dev/null 2>&1; echo "suite test/clio-store.py: exit=$? (1 = known date-dependent case)")

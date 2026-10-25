@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -125,6 +125,22 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 ### Producer · Round 2
 
 - [Blocker] concurrent reaper → **Implemented**. Your barrier probe is a genuine two-process interleaving on the manual/direct invocation surface, so my R1 "no observed input" disposition was wrong. Change 1 now serializes reaping behind an atomic `mkdir "$TAIL_LOCK.reap"` and re-checks `lock_stale` after acquiring it. A loser either fails the `.reap` mkdir (exit 0), or acquires it after the winner and sees a fresh `born`/mtime (no reap). The `.reap` is removed before the tailer proceeds. Residual: a SIGKILL inside the reap section only disables reaping (today's behaviour). Falsifier added as manual check b4, with your R2 output as the red control.
-- [Pass] items acknowledged.
+- [Unverified — no citation] items acknowledged.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Pass] The R2 revision closes the observed reaper race without adding a PID/lease protocol: `mkdir "$TAIL_LOCK.reap"` is the atomic recovery handoff, and the winner re-runs `lock_stale` before the sole destructive removal; a loser either cannot create `.reap` or sees the new lock as fresh ([plan L27-L43](../../doc/gh13-plan.md#L27-L43)). The 300-second rule is proportionate to the one-minute schedule and intentionally retains the existing tolerated-overlap policy ([plan L53-L57](../../doc/gh13-plan.md#L53-L57)). The fallback is correct on macOS and Linux: a failed `cat` tries `stat -f` then `stat -c`, while a successfully read empty/non-numeric `born` fails closed rather than falling through ([plan L29-L32](../../doc/gh13-plan.md#L29-L32), [L65-L67](../../doc/gh13-plan.md#L65-L67)).
+- [Pass] The planned EOF writes are byte-identity checks rather than Rebalance's insufficient field checks: Agy compares its exact two-field record, and Codex constructs the fully tab-sanitized record that `state_update` would write. This rewrites a five-field legacy Codex record once, preserves reset behavior, and then avoids idle rewrites ([plan L45-L45](../../doc/gh13-plan.md#L45-L45); [source state writer L64-L74](../../utils/CLIO/clio-codex-tail.sh#L64-L74); [source reset L204-L224](../../utils/CLIO/clio-codex-tail.sh#L204-L224)).
+- [Pass] IDE stripping is intentionally limited to messages beginning with the IDE preamble and a line-anchored request header, retains `source_event_id` from the original source line, and skips an empty request; the planned controls also retain a non-IDE prompt that quotes the marker ([plan L17-L17](../../doc/gh13-plan.md#L17-L17), [L46-L46](../../doc/gh13-plan.md#L46-L46), [L69-L70](../../doc/gh13-plan.md#L69-L70)).
+- [Pass] The table accounts for every behavioral diff hunk, including the writer-contract comment, and correctly rejects the whitespace-IFS state parser because it shifts the empty-middle-field legacy row ([plan L15-L22](../../doc/gh13-plan.md#L15-L22); [diff L139-L146](../../doc/gh13-rebalance-drift.diff#L139-L146)). The default-20 port updates both the writer and docs while preserving `push it` as below threshold, and moves the existing inclusive boundary to 20/19 ([plan L47-L48](../../doc/gh13-plan.md#L47-L48), [L68-L70](../../doc/gh13-plan.md#L68-L70)).
+- [Pass] The verification matrix has positive cases and red controls for stale `born`, missing-`born` mtime fallback, fail-safe malformed `born`, the formerly failing concurrent reaper sequence, idle mtime, IDE forms, and the default boundary; rollback is an ordinary PR revert with no installed-hook mutation ([plan L60-L71](../../doc/gh13-plan.md#L60-L71), [L56-L58](../../doc/gh13-plan.md#L56-L58)). No additional pre-existing plan defects were found in the full-file sweep.
+
+VERDICT: PASS
+
+Basis: The reaper’s concrete two-process failure is now serialized and revalidated, and the complete drift ledger, bounded ports, falsifiable controls, and rollback meet the Definition of Done. No fixture suite was run in this relay turn; the specified isolated-clone gate remains the implementation-stage verification.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

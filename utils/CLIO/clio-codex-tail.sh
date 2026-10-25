@@ -27,7 +27,8 @@
 #   migration = legacy pending bytes remain eligible on their original inode; a
 #             reset adopts capture-start eligibility instead of importing old history.
 #   overlap = a tailer lock serializes invocations; a busy lock is a silent
-#             no-op (the next tick catches up).
+#             no-op (the next tick catches up); a lock older than 300 s is
+#             reaped by one serialized reaper.
 #   lock-busy on the shared append lock (writer exit 3) aborts WITHOUT
 #             advancing the cursor; the chunk is retried next run.
 set -euo pipefail
@@ -46,7 +47,22 @@ command -v python3 >/dev/null 2>&1 || { echo "clio-codex-tail: python3 is requir
 command -v jq >/dev/null 2>&1 || { echo "clio-codex-tail: jq is required" >&2; exit 1; }
 
 # Overlapping invocations: busy tailer lock is a silent no-op, never a failure.
-mkdir "$TAIL_LOCK" 2>/dev/null || exit 0
+# A lock older than 300 s is a dead run's leftover; reap it, or that agent's capture
+# stops for good. Reaping is serialized and rechecked so no contender deletes a lock
+# another one just took.
+lock_stale() { # born stamp, else dir mtime; empty/non-numeric = not stale
+  born=$(cat "$TAIL_LOCK/born" 2>/dev/null || stat -f %m "$TAIL_LOCK" 2>/dev/null || stat -c %Y "$TAIL_LOCK" 2>/dev/null || echo "")
+  case "$born" in ''|*[!0-9]*) return 1 ;; esac
+  [ $(( $(date +%s) - born )) -gt 300 ]
+}
+if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
+  lock_stale || exit 0
+  mkdir "$TAIL_LOCK.reap" 2>/dev/null || exit 0
+  lock_stale && { rm -rf "$TAIL_LOCK"; diag "reaped stale tail lock born at $born"; }
+  got=0; mkdir "$TAIL_LOCK" 2>/dev/null || got=1
+  rmdir "$TAIL_LOCK.reap"
+  [ "$got" = 0 ] || exit 0
+fi
 trap 'rm -rf "$TAIL_LOCK"' EXIT
 date +%s > "$TAIL_LOCK/born" 2>/dev/null || true
 
@@ -82,8 +98,10 @@ state_update() { # $1 = path, $2 = inode, $3 = offset, $4 = session_id, $5 = cwd
 # preceding session_meta before the offset.
 extract_rows() {
   python3 - "$1" "$2" "${3:-}" "${4:-}" "$5" <<'PYEOF'
-import hashlib, json, sys
+import hashlib, json, re, sys
 from datetime import datetime, timezone
+
+IDE_REQUEST = re.compile(r"^## My request(?: for Codex)?:[ \t]*\n?", re.M)
 
 def parse_ts(ts):
     """Validate before cutoff comparison; output IDs still use UTC seconds."""
@@ -162,6 +180,12 @@ if cut != -1 and cut >= (offset - scan_start):
             continue
         if since is not None and instant < since:
             continue
+        if text.lstrip().startswith("# Context from my IDE setup:"):
+            # Codex IDE turns prepend editor context; keep only the request itself.
+            parts = IDE_REQUEST.split(text, 1)
+            text = parts[1].strip() if len(parts) == 2 else text
+            if not text:
+                continue
         repo = cwd.rstrip("/").rsplit("/", 1)[-1] if cwd else ""
         print(json.dumps({
             "timestamp": instant.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -224,7 +248,13 @@ while IFS= read -r -d '' file; do
     [ "$BACKFILL" != 1 ] || cached_since=0
   fi
 
-  [ "$offset" -ge "$size" ] && { state_update "$file" "$inode" "$offset" "$cached_sid" "$cached_cwd" "$cached_since"; continue; }
+  if [ "$offset" -ge "$size" ]; then
+    # Idle tick: rewrite state only when the stored record would change.
+    record=$(printf '%s\t%s\t%s\t%s\t%s' "$inode" "$offset" \
+      "$(printf '%s' "$cached_sid" | tr '\t' ' ')" "$(printf '%s' "$cached_cwd" | tr '\t' ' ')" "$cached_since")
+    [ "$cached" = "$record" ] || state_update "$file" "$inode" "$offset" "$cached_sid" "$cached_cwd" "$cached_since"
+    continue
+  fi
 
   rows_file=$(mktemp "${TMPDIR:-/tmp}/clio-codex-rows.XXXXXX")
   err_file=$(mktemp "${TMPDIR:-/tmp}/clio-codex-err.XXXXXX")

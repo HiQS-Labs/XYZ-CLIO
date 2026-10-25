@@ -37,7 +37,22 @@ else
 fi
 
 # Overlapping invocations: busy tailer lock is a silent no-op, never a failure.
-mkdir "$TAIL_LOCK" 2>/dev/null || exit 0
+# A lock older than 300 s is a dead run's leftover; reap it, or that agent's capture
+# stops for good. Reaping is serialized and rechecked so no contender deletes a lock
+# another one just took.
+lock_stale() { # born stamp, else dir mtime; empty/non-numeric = not stale
+  born=$(cat "$TAIL_LOCK/born" 2>/dev/null || stat -f %m "$TAIL_LOCK" 2>/dev/null || stat -c %Y "$TAIL_LOCK" 2>/dev/null || echo "")
+  case "$born" in ''|*[!0-9]*) return 1 ;; esac
+  [ $(( $(date +%s) - born )) -gt 300 ]
+}
+if ! mkdir "$TAIL_LOCK" 2>/dev/null; then
+  lock_stale || exit 0
+  mkdir "$TAIL_LOCK.reap" 2>/dev/null || exit 0
+  lock_stale && { rm -rf "$TAIL_LOCK"; diag "reaped stale tail lock born at $born"; }
+  got=0; mkdir "$TAIL_LOCK" 2>/dev/null || got=1
+  rmdir "$TAIL_LOCK.reap"
+  [ "$got" = 0 ] || exit 0
+fi
 trap 'rm -rf "$TAIL_LOCK"' EXIT
 date +%s > "$TAIL_LOCK/born" 2>/dev/null || true
 
@@ -179,7 +194,11 @@ while IFS= read -r file; do
     continue
   fi
 
-  [ "$offset" -ge "$size" ] && { state_update "$file" "$inode" "$offset"; continue; }
+  if [ "$offset" -ge "$size" ]; then
+    # Idle tick: rewrite state only when the stored record would change.
+    [ "$cached" = "$inode $offset" ] || state_update "$file" "$inode" "$offset"
+    continue
+  fi
 
   rows_file=$(mktemp "${TMPDIR:-/tmp}/clio-agy-rows.XXXXXX")
   err_file=$(mktemp "${TMPDIR:-/tmp}/clio-agy-err.XXXXXX")

@@ -1,0 +1,13 @@
+$ scripts/publish-from-rebalance.sh <rebalanceOS checkout>
+source: HiQS-Labs/rebalanceOS@e4a7abb9218b
+no CLIO content changes
+exit=0
+$ scripts/publish-from-rebalance.sh <rebalanceOS checkout> --apply
+committed on feat/XYZ-CLIO-gh16-rebalance-publisher-2026-10-25: CLIO from HiQS-Labs/rebalanceOS@e4a7abb9218b (not pushed)
+exit=0
+commit: 68d47aa publish: CLIO from HiQS-Labs/rebalanceOS@e4a7abb9218b
+files in commit: utils/CLIO/UPSTREAM 
+status lines after: 0
+$ scripts/publish-from-rebalance.sh --check
+CLIO matches HiQS-Labs/rebalanceOS@e4a7abb9218b (12 files)
+exit=0

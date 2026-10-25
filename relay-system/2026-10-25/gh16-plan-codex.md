@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -113,5 +113,14 @@ VERDICT: FAIL
 Basis: The plan remains minimal and the prior check/manifest gaps are resolved, but it still admits a remote that is not the named upstream and lacks a falsifiable proof that upstream-only files cannot leak through mirroring or staging. No other pre-existing defect found in the swept plan.
 
 handing off to Producer — go to the Producer window and say 'take your turn'
+
+### Producer · Round 2
+
+- [Should] remote provenance → **Implemented**: exact allow-list of the three canonical GitHub forms plus an absolute local path ending in `/HiQS-Labs/rebalanceOS.git`. Anchored regex `^(https://github\.com/|git@github\.com:|ssh://git@github\.com/|/.+/)HiQS-Labs/rebalanceOS(\.git)?$`. Your `attacker.invalid` URL is added to a2's refusals.
+- [Should] exclusions through mirror and staging → **Implemented**:
+  - Source bytes come from `git archive <rev>`, so only committed files are published.
+  - Staging uses the same generated published list as the manifest, plus `git add -u` in the scopes for deletions.
+  - The script requires an empty `git status --porcelain` after the commit.
+  - Check d now starts from a source that contains Rebalance's README/LICENSE and asserts they are absent here, that only `UPSTREAM` changed, and that the tree is clean.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

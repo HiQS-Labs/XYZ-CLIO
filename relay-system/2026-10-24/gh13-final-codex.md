@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,20 @@ Basis: The behavioral implementation and receipt are sufficient, but the three c
 - [Should] remaining "one hundred" threshold wording → **Implemented**: the INSTALL.md smoke-test prompt and `test/clio-capture.sh` `long_prompt` now say twenty. Left as-is: `test/clio-capture.sh:114` and `test/clio-agy-tail.sh:89` are fixture prompt text describing their own length (still true, and still above 20), not threshold assertions.
 - [Should] Agy contract header → **Implemented**: added the busy-lock and 300 s reap lines.
 - Refreshed `doc/gh13-implementation.diff` to `a7f9184`. Reran the affected suites at `a7f9184` (capture, codex-tail, agy-tail: exit 0), appended to `TESTS-RESULTS/2026-10-24-gh13/suites.txt`. No behaviour change, so the manual checks stand.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] All three Round-1 documentation/contract findings are resolved: the Agy delivery contract now states the serialized 300-second reap (`utils/CLIO/clio-agy-tail.sh:14-20`); the writer and smoke-test wording state 20 (`utils/CLIO/INSTALL.md:78,281-283`); and operational guidance documents the reaper plus accepted SIGKILL `.reap` residual (`utils/CLIO/INSTALL.md:700-708`). The narrow default sweep command `rg -n -i 'default.{0,30}100|100.{0,30}(default|character|prompt|threshold|min)|one hundred' utils/CLIO test/clio-capture.sh doc/gh13-implementation.diff TESTS-RESULTS/2026-10-24-gh13` exited 0 and found only historical diff deletions plus the independent automated-notification fixture text, not a live default assertion.
+- [Pass] The identical reaper blocks meet plan change 1: `utils/CLIO/clio-agy-tail.sh:45-59` and `utils/CLIO/clio-codex-tail.sh:53-67` re-check under `.reap`, remove `.reap` after either reacquire result, and stamp `born` only after ownership. `awk '/^lock_stale\\(\\)/,/^fi$/'` extraction for each tailer and `cmp -s` exited `0, 0, 0`; the block uses `lock_stale &&` and `got=0; mkdir ... || got=1`, so nonzero status is in conditional lists rather than an unsafe `set -e` position. The receipt retains the two-tailer b4 result, `TESTS-RESULTS/2026-10-24-gh13/b4-head.txt:1-3`.
+- [Pass] The idle-record and IDE changes match the narrowed plan: Agy compares inode/offset at `utils/CLIO/clio-agy-tail.sh:199-202`; Codex compares the sanitized five-field record at `utils/CLIO/clio-codex-tail.sh:251-256`; IDE splitting stays preamble-gated and hashes the original line at `utils/CLIO/clio-codex-tail.sh:183-198`. The narrow probe `python3 - <<'PY' ... re.compile(r'^## My request(?: for Codex)?:[ \\t]*\\n?', re.M) ... PY` exited 0 with `for-codex: parts=2 tail='ask'`, `plain: parts=2 tail='ask'`, and `quoted: parts=1 tail='Quoting ## My request: retain'`; receipt evidence is `TESTS-RESULTS/2026-10-24-gh13/mc-head.txt:5-12`.
+- [Pass] Default 20 and the corrected existing boundary case are complete: `utils/CLIO/INSTALL.md:78,818` and `test/clio-capture.sh:92-98`. The receipt explicitly discloses the plan's inaccurate case name and records the actual `boundary_is_inclusive` 20/19 update at `TESTS-RESULTS/2026-10-24-gh13/README.md:19`; affected-suite reruns at the final documentation revision are recorded at `TESTS-RESULTS/2026-10-24-gh13/suites.txt:6-8`.
+
+VERDICT: PASS
+
+Basis: The full scoped artifacts were re-swept. The implementation matches the approved plan, the receipt supplies the requested red controls and harness naming disclosure, and no further pre-existing defects were found in the swept artifacts. No executable fixture or suite was run in this review turn.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

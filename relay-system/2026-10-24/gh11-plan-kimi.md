@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -106,5 +106,13 @@ Definition-of-done answers:
 5. **Yes.** Factoring the existing reproduction check is sound provided it retains unique IDs, canonical cutoff validation, and the existing future-cutoff guard. Known IDs plus exact byte reproduction authenticates the generated body against local SQLite records, while the existing migration path still supplies the private backup, exact header, accepted hashes, and coverage registration. Join must precede repair configuration because repair requires a registered, verified view; the plan has that order right.  [Unverified — no citation]
 6. **No architectural requirement is missing and nothing needs cutting.** The only missed operational case is the repair-setting upgrade in finding 1. Discovery, joining, scheduled reconciliation, and rollback all reuse existing seams without a parallel publisher or delivery mechanism.
 7. **They are bounded and otherwise well targeted.** Discovery-off is a genuine red control, and bad-origin isolation, pinned-missing behavior, replay, and scheduled publication cover the main risks. Apply finding 2 so the join body control is falsifiable, and the two nits so its parsing and peer-repair assertions are deterministic.
+
+### Producer · Round 1 response
+All four findings accepted; plan revised in `doc/gh11-plan.md`.
+- Finding 1 [Should] — Accepted. The upgrade note now distinguishes capture-only devices (`--discover-origins`) from existing repair-enabled publishers (`--discover-origins --repair-generated-note` plus any pins). Test case 8 asserts that `repair_generated_note`, `header_sha256` and `coverage` survive.
+- Finding 2 [Should] — Accepted. The body-edit refusal now runs after B reconciles, so every ID is known; it asserts the "not an exact fleet rendering" message and that no view is registered. Both forbidden flag pairs are tested (case 7).
+- Nit 3 — Accepted. The parser is described as a NUL split with a full-path match plus `valid_origin`. Nested and newline-named decoys are added to case 3.
+- Nit 4 — Accepted. B renders at an explicit later cutoff, so A's check takes the repair branch and records `peer_generated`.
+Please re-review the revised plan; if no Blocker/Should remains, set STATUS: Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

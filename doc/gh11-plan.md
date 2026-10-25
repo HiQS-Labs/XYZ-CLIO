@@ -30,6 +30,7 @@ Extend the existing helper (`utils/CLIO/clio-store.py`), its docs (`utils/CLIO/I
    - Without the flag, behaviour is byte-identical to today, so existing configs keep working unchanged.
 2. **Discovery in `reconcile_fleet`** when `fleet.get('discover')`:
    - After pinning HEAD, run one bounded read: `git_read(checkout, ['ls-tree', '-r', '-z', '--name-only', head, '--', 'devices'], deadline)`.
+   - Split the output on NUL, not on newlines. Each complete path must full-match `devices/<36 chars of [0-9a-f-]>/clio.jsonl` and then pass `valid_origin` (canonical UUID). Nested paths and names containing a newline therefore never match.
    - Keep only paths matching `devices/<canonical-uuid>/clio.jsonl` that pass `valid_origin`. Non-UUID device folders (Pulse's own `devices/<name>/…`) are ignored.
    - Union the result with the configured origins, sorted and deduplicated.
    - Apply the existing 16-origin bound to the union. Exceeding it raises `ValueError`, which follows the existing partial/error path.
@@ -46,7 +47,9 @@ Extend the existing helper (`utils/CLIO/clio-store.py`), its docs (`utils/CLIO/I
    - After joining, the operator reruns `configure-fleet … --repair-generated-note`, exactly as INSTALL.md already describes. `scheduled-export` then publishes, because `capture_only and not view` becomes false. `scheduled-export` itself does not change.
 4. **Docs.**
    - In INSTALL.md's device-independent section, add a short "Join without touching other Macs" procedure: init/activate, `configure-fleet --discover-origins`, collector delivery, `reconcile-fleet`, `migrate-view --join-fleet-note`, then `configure-fleet --discover-origins --repair-generated-note`.
-   - Add a one-time upgrade note: each existing device runs `configure-fleet --discover-origins` once, and that is the last per-peer step.
+   - Add a one-time upgrade note, which is the last per-peer step. `configure_fleet` rebuilds the fleet mapping, so omitted flags are dropped (QA R1 finding 1):
+    - A capture-only device runs `configure-fleet <checkout> --discover-origins`.
+    - An existing note-writing device must keep its flags: `configure-fleet <checkout> --discover-origins --repair-generated-note`, plus any `--origin` pins it wants to keep. Otherwise repair mode and its header/coverage pins are lost.
    - Retirement needs no peer change. A device that stops delivering just stops changing, and its committed snapshot stays as history. Imports never delete rows, so there is nothing to retire.
 
 ## Non-goals
@@ -76,18 +79,19 @@ Extend `test/clio-store.py` with one method, `test_fleet_discovery_and_peer_note
 
 1. **Discovery off is a red control.** Node A has an explicit list `[A, B]`. Node C commits a snapshot. Reconcile on A does not import C.
 2. **Discovery on.** A runs `configure_fleet(discover=True)` with no origins. After reconcile, C is `accepted` and listed in `discovered`, with no step on any other node.
-3. **Non-UUID entries are ignored.** A committed `devices/fixture-name/clio.jsonl` and `devices/fixture.yaml` produce no origin entry.
+3. **Non-UUID entries are ignored.** None of these produce an origin entry: a committed `devices/fixture-name/clio.jsonl`, a `devices/fixture.yaml`, a nested `devices/<uuid>/nested/clio.jsonl`, or a newline-named `devices/<uuid>\n/clio.jsonl`.
 4. **A bad discovered snapshot is isolated.** C's snapshot is corrupted and committed. C reports `error`, and A and B still report `accepted`.
 5. **Pinned missing.** An explicitly pinned origin with no snapshot still reports `missing` when discovery is on.
 6. **Joining the note:**
    - B is capture-only; A publishes the note.
    - Join refuses when the fleet is not configured.
    - Join refuses when the note holds a record B lacks. That is the red control, set up before B reconciles.
-   - Join refuses after a body edit.
+   - After B reconciles, so every ID is known: join refuses a one-byte body edit with "not an exact fleet rendering" and registers no view. Then join succeeds on the pristine bytes (QA R1 finding 2).
    - After reconcile, join succeeds and records the matching coverage.
    - After `configure_fleet(repair=True)`, `scheduled-export` on B reports `note_publication: published`.
-   - A then accepts B's render as `peer_generated` with no new archive.
-7. **Flag rules.** `--join-fleet-note` together with `--publishers-paused` is refused.
+   - B renders at an explicitly later cutoff, so its bytes are not in A's `accepted_hashes`. A then takes the repair path and records `peer_generated` with no new archive (QA R1 nit 4).
+7. **Flag rules.** `--join-fleet-note` is refused together with `--publishers-paused` and with `--archive-unreconciled-note`.
+8. **The upgrade keeps repair mode.** After `configure_fleet(..., repair=True, discover=True)` on the note-writing device, `repair_generated_note`, `header_sha256` and `coverage` are still present. Turning discovery off removes `discover`.
 
 Run all five README suites once on the final commit in a disposable full clone with throwaway HOME. Record the results under `TESTS-RESULTS/2026-10-24-gh11/`.
 

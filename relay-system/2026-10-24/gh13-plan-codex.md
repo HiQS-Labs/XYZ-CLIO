@@ -143,4 +143,12 @@ Basis: The reaper’s concrete two-process failure is now serialized and revalid
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T06:39:40Z
+task: RELAY-gh13-plan-codex
+reviewer: codex
+status: Approved
+reviewed-head: 48677566b310a43b56de03187bc6bfc3a192fa11
+added-range: 17908+3233
+added-sha256: d9237dec88c45150f59244177c36f1a0e144a2d2293df40e34c34b50a8ae7636
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

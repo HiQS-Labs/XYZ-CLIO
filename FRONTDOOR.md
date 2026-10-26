@@ -45,7 +45,7 @@ checks block from the repo root and flip any finding whose check has gone silent
 | BL-01 | No live-looking secret in the tree | CLIO logs prompt text; a credential landing here would be a stop-everything finding. |
 | BL-02 | The writer and Claude shim heredoc markers are intact in `INSTALL.md` | The test harnesses extract them by marker. If a marker moves, the tests stop exercising the shipped code — and they fail loudly rather than silently passing. |
 | BL-03 | Both tailers reach the writer by absolute path | `$HOME/.claude/hooks/clio-capture.sh`, not a relative path — this is what makes them CWD-robust wherever `launchd` starts them. |
-| BL-04 | Five test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
+| BL-04 | Six test harnesses present and referenced by the README | The README's Tests section lists exactly what exists. |
 
 **Recorded suite state (updated by hand, never auto-derived):** 2026-09-30 final
 gate passed after relay approval: four shell suites and 16 SQLite cases. Evidence:
@@ -95,7 +95,7 @@ for t in clio-codex-tail clio-agy-tail; do
   grep -q 'WRITER="\$HOME/.claude/hooks/clio-capture.sh"' "utils/clio-capture/$t.sh" \
     || echo "BL-03 FAILED: $t.sh no longer reaches the writer by absolute path"
 done
-for t in clio-capture clio-exporter clio-codex-tail clio-agy-tail; do
+for t in clio-capture clio-exporter clio-codex-tail clio-agy-tail clio-runtime; do
   test -f "test/$t.sh" || echo "BL-04 FAILED: test/$t.sh is missing"
   grep -q "bash test/$t.sh" README.md || echo "BL-04 FAILED: README does not list test/$t.sh"
 done

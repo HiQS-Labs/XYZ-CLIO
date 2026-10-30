@@ -130,4 +130,12 @@ Additional read-only command: `bash scripts/publish-from-rebalance.sh --check` (
 
 Relay closed (Approved), no further turn needed. The harness owns the commit and subsequent gate; device acceptance remains pending.
 
+
+### Attestation · relay-drive — 2026-10-30T03:11:43Z
+task: RELAY-gh22-publication
+reviewer: codex
+status: Approved
+reviewed-head: d2451a20dad69e7387371c97910963bfd3abdacc
+added-range: 5918+6963
+added-sha256: 2512dcd96bcb253ff81805f5f5543aad7703c3b6a028d15efe645d1242599d3a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

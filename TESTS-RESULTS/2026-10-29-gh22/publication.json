@@ -1,0 +1,127 @@
+{
+  "timestamp": "2026-10-30T03:07:15.818420+00:00",
+  "source_revision": "f0819314c078f58e9d51b6ccd698c76b700ec1cc",
+  "publication_revision": "b8ed9700f1f36f3d00120c540ebe1664e5aeff28",
+  "files": [
+    {
+      "path": "test/clio-agy-tail.sh",
+      "sha256": "affd42fa3d2379e43d2e6515f9972d6a0be584e68e1bd31c42ce7e5b22109d99",
+      "executable": true
+    },
+    {
+      "path": "test/clio-capture.sh",
+      "sha256": "6d3ac0a686067307e13bfdff47e8ebceb16c641e369e1fa18af4e234cbb3f256",
+      "executable": true
+    },
+    {
+      "path": "test/clio-codex-tail.sh",
+      "sha256": "50b6ac4b8e30a57da2e56cb5e9bf438dd3fba5fa7917b80e150d4458292dfc7b",
+      "executable": true
+    },
+    {
+      "path": "test/clio-exporter.sh",
+      "sha256": "b5ba3caf4dd803d2476e22d2593be6bf1fdc087103b7aa9b80b385662da5b622",
+      "executable": true
+    },
+    {
+      "path": "test/clio-runtime.sh",
+      "sha256": "89874c5b2034cdc4d0d26d49ae9d868020d965b73732d4df613a40f9a8a2ab80",
+      "executable": true
+    },
+    {
+      "path": "test/clio-store.py",
+      "sha256": "4501f64c5092de5b727e28d81f6221af30f08b631575b0329400b3903b570637",
+      "executable": false
+    },
+    {
+      "path": "test/fixtures/clio/agy-transcript.jsonl",
+      "sha256": "fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984",
+      "executable": false
+    },
+    {
+      "path": "test/fixtures/clio/codex-rollout.jsonl",
+      "sha256": "57aca7a293a5bf6fdbcf7067ffef06d5734a966f6d1dc5d4d4f1b6e2ad467da8",
+      "executable": false
+    },
+    {
+      "path": "utils/clio-capture/INSTALL.md",
+      "sha256": "676f203fa8bd9c8182c5e1db10ebda5c1a655f829cdaf303d2b3ca7c108963e7",
+      "executable": false
+    },
+    {
+      "path": "utils/clio-capture/SKILL.md",
+      "sha256": "e044d5274cdf8ed96dbc69e9b09fb15734f0c601e8cfa8390df874b60d568f42",
+      "executable": false
+    },
+    {
+      "path": "utils/clio-capture/clio-agy-tail.sh",
+      "sha256": "1b1b8f4c2aadf111c79d70b0aa3b769736eebbc1bb166aca8e0ae6ee9d98e0ba",
+      "executable": true
+    },
+    {
+      "path": "utils/clio-capture/clio-codex-tail.sh",
+      "sha256": "92f000593b1f9816ca84abf078ce3e15bdf8538a35561b088c0c8056f6c3e564",
+      "executable": true
+    },
+    {
+      "path": "utils/clio-capture/clio-runtime.sh",
+      "sha256": "d0f116fadd149b9d98523711ee8b2959cf0ca0e4118b9b28fa45049586ff27c2",
+      "executable": true
+    },
+    {
+      "path": "utils/clio-capture/clio-store.py",
+      "sha256": "8c3040cbc3595670597df249f10e394731a31d138d830c29160b221ab02c3c5b",
+      "executable": false
+    },
+    {
+      "path": "utils/clio-capture/prompt-log-to-md.sh",
+      "sha256": "66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f",
+      "executable": true
+    }
+  ],
+  "checks": [
+    {
+      "command": "bash test/clio-capture.sh",
+      "exit": 0,
+      "log": "1-clio-capture.sh.log"
+    },
+    {
+      "command": "bash test/clio-exporter.sh",
+      "exit": 0,
+      "log": "2-clio-exporter.sh.log"
+    },
+    {
+      "command": "bash test/clio-codex-tail.sh",
+      "exit": 0,
+      "log": "3-clio-codex-tail.sh.log"
+    },
+    {
+      "command": "bash test/clio-agy-tail.sh",
+      "exit": 0,
+      "log": "4-clio-agy-tail.sh.log"
+    },
+    {
+      "command": "python3 test/clio-store.py",
+      "exit": 0,
+      "log": "5-clio-store.py.log"
+    },
+    {
+      "command": "bash test/clio-runtime.sh",
+      "exit": 0,
+      "log": "6-clio-runtime.sh.log"
+    },
+    {
+      "command": "bash scripts/publish-from-rebalance.sh --check",
+      "exit": 0,
+      "log": "7-publish-from-rebalance.sh.log"
+    },
+    {
+      "command": "publisher --check after byte mutation",
+      "exit": 1,
+      "expected": "1 (red)"
+    }
+  ],
+  "identity_intact": true,
+  "suites": 6,
+  "result": "PASS"
+}

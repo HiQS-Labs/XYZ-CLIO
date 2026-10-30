@@ -1,20 +1,20 @@
 # Published from the CLIO upstream. Do not edit utils/clio-capture/ or the CLIO tests here:
 # change HiQS-Labs/rebalanceOS utils/clio-capture first, then run scripts/publish-from-rebalance.sh.
 source: HiQS-Labs/rebalanceOS
-revision: f10764f6db909b9c3b770a05213bd43285452589
-published: 2026-10-25
+revision: f0819314c078f58e9d51b6ccd698c76b700ec1cc
+published: 2026-10-29
 affd42fa3d2379e43d2e6515f9972d6a0be584e68e1bd31c42ce7e5b22109d99  test/clio-agy-tail.sh
 6d3ac0a686067307e13bfdff47e8ebceb16c641e369e1fa18af4e234cbb3f256  test/clio-capture.sh
-63917307c140e64918e9abd59cd1a13168caa3b7337f2836f468487d35c3c3c0  test/clio-codex-tail.sh
+50b6ac4b8e30a57da2e56cb5e9bf438dd3fba5fa7917b80e150d4458292dfc7b  test/clio-codex-tail.sh
 b5ba3caf4dd803d2476e22d2593be6bf1fdc087103b7aa9b80b385662da5b622  test/clio-exporter.sh
 89874c5b2034cdc4d0d26d49ae9d868020d965b73732d4df613a40f9a8a2ab80  test/clio-runtime.sh
-3499925a4c493fc5839a511625db7c61d432300c34af90bd8d71c15ff36a473d  test/clio-store.py
+4501f64c5092de5b727e28d81f6221af30f08b631575b0329400b3903b570637  test/clio-store.py
 fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984  test/fixtures/clio/agy-transcript.jsonl
-117614da8141bd213b3f16bf2746c14e9ed7cf54b9472fb63c253fa0e58d5399  test/fixtures/clio/codex-rollout.jsonl
-4ee8742e0ebb2306f836eb029e601378d93adafb2f8af3bfdf1f7933ba870c12  utils/clio-capture/INSTALL.md
+57aca7a293a5bf6fdbcf7067ffef06d5734a966f6d1dc5d4d4f1b6e2ad467da8  test/fixtures/clio/codex-rollout.jsonl
+676f203fa8bd9c8182c5e1db10ebda5c1a655f829cdaf303d2b3ca7c108963e7  utils/clio-capture/INSTALL.md
 e044d5274cdf8ed96dbc69e9b09fb15734f0c601e8cfa8390df874b60d568f42  utils/clio-capture/SKILL.md
 1b1b8f4c2aadf111c79d70b0aa3b769736eebbc1bb166aca8e0ae6ee9d98e0ba  utils/clio-capture/clio-agy-tail.sh
-fd7fe836599f00ae59862ee26eda375d45fb2db9531a25a560ccaf30499781dc  utils/clio-capture/clio-codex-tail.sh
+92f000593b1f9816ca84abf078ce3e15bdf8538a35561b088c0c8056f6c3e564  utils/clio-capture/clio-codex-tail.sh
 d0f116fadd149b9d98523711ee8b2959cf0ca0e4118b9b28fa45049586ff27c2  utils/clio-capture/clio-runtime.sh
 8c3040cbc3595670597df249f10e394731a31d138d830c29160b221ab02c3c5b  utils/clio-capture/clio-store.py
 66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f  utils/clio-capture/prompt-log-to-md.sh
